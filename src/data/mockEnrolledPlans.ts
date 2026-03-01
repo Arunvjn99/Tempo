@@ -10,6 +10,8 @@ export interface EnrolledPlan {
   planType: "Traditional 401(k)" | "Roth 401(k)" | "Roth IRA" | "403(b)" | "457(b)";
   status: PlanStatus;
   planId: string; // Plan identifier (e.g., "PLAN-001")
+  /** Short description for eligible plans (list card). */
+  description?: string;
   enrollmentDate?: string; // ISO date string
   optOutDate?: string; // ISO date string if opted out
   ineligibilityReason?: string; // Required if status is "ineligible"
@@ -161,7 +163,8 @@ export const MOCK_ENROLLED_PLANS: EnrolledPlan[] = [
     planType: "Traditional 401(k)",
     status: "eligible",
     planId: "PLAN-TRAD-401K-001",
-    ineligibilityReason: undefined,
+    description:
+      "Maximize your savings with pre-tax contributions. This plan allows you to defer taxes on your contributions and earnings until withdrawal.",
   },
   {
     id: "plan-3",
@@ -169,7 +172,8 @@ export const MOCK_ENROLLED_PLANS: EnrolledPlan[] = [
     planType: "Roth IRA",
     status: "eligible",
     planId: "PLAN-ROTH-IRA-001",
-    ineligibilityReason: undefined,
+    description:
+      "Tax-free growth and tax-free withdrawals in retirement. Perfect for those who expect to be in a higher tax bracket later in life.",
   },
   {
     id: "plan-4",
@@ -177,6 +181,7 @@ export const MOCK_ENROLLED_PLANS: EnrolledPlan[] = [
     planType: "403(b)",
     status: "ineligible",
     planId: "PLAN-403B-001",
-    ineligibilityReason: "Not available for your employment classification",
+    ineligibilityReason:
+      "Not available for your current employment classification. Please contact HR for more information regarding eligibility requirements.",
   },
 ];

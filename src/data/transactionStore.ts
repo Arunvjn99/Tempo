@@ -77,6 +77,15 @@ class TransactionStore {
   getTransactionsByType(type: Transaction["type"]): Transaction[] {
     return Array.from(this.transactions.values()).filter((txn) => txn.type === type);
   }
+
+  /**
+   * Delete a transaction (e.g. draft only)
+   */
+  deleteTransaction(id: string): boolean {
+    if (!this.transactions.has(id)) return false;
+    this.transactions.delete(id);
+    return true;
+  }
 }
 
 /**

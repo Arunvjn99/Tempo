@@ -4,6 +4,16 @@
  */
 
 /* ========== Choose Plan (Plans Page) ========== */
+/* Plan rail tiles (PlanRail): ensure shadows and surfaces use theme in dark */
+.dark .plan-selection__page-glow {
+  opacity: 0.06;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 50%,
+    rgb(var(--enroll-brand-rgb) / 0.18) 0%,
+    transparent 70%
+  );
+}
+
 .dark .choose-plan__advisory {
   background-color: rgba(14, 165, 233, 0.15);
   border: 1px solid rgba(14, 165, 233, 0.3);
@@ -37,11 +47,9 @@
   color: var(--color-text-secondary);
 }
 
-/* Enrollment Footer - unified sticky footer */
+/* Enrollment Footer - inline CTA section */
 .dark .enrollment-footer {
   border-top-color: var(--color-border);
-  background-color: var(--color-background);
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .dark .enrollment-footer__back:hover:not(:disabled) {
@@ -584,4 +592,19 @@
 }
 
 /* ========== Review Page (Step 4/4) ========== */
-/* Dark mode now handled via Tailwind dark: variants in Review.tsx */
+.dark {
+  --enroll-plan-overview-bg: linear-gradient(134deg, rgb(30 58 95 / 0.4) 0%, rgb(15 23 42 / 0.5) 100%);
+  --enroll-risk-badge-bg: rgb(var(--enroll-brand-rgb) / 0.15);
+  --enroll-risk-badge-border: rgb(var(--enroll-brand-rgb) / 0.3);
+  --enroll-table-header-bg: var(--color-background-tertiary);
+  --enroll-next-steps-bg: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+  --enroll-next-steps-text: #e2e8f0;
+  --enroll-next-steps-heading: #f8fafc;
+  --enroll-success-tint-bg: rgb(var(--color-success-rgb) / 0.08);
+  --enroll-success-tint-border: rgb(var(--color-success-rgb) / 0.2);
+  --enroll-active-badge-bg: rgb(var(--color-success-rgb) / 0.15);
+  --enroll-active-badge-border: rgb(var(--color-success-rgb) / 0.25);
+  --enroll-donut-track: var(--color-border);
+  --enroll-donut-fill: var(--color-primary);
+  --enroll-donut-text: var(--color-primary);
+}

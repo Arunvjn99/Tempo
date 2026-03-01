@@ -19,8 +19,31 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/** Map Supabase auth errors to user-friendly messages. */
+function getAuthErrorMessage(error: AuthError | null): string {
+  if (!error) return "An unexpected error occurred.";
+  const msg = (error as { message?: string }).message ?? error.toString();
+  // Supabase often returns message in error.message; some APIs use error_description
+  const desc = (error as { error_description?: string }).error_description;
+  const text = desc ?? msg;
+  // Common cases users hit
+  if (text.includes("already registered") || text.includes("already exists")) return "This email is already registered. Try signing in or use a different email.";
+  if (text.includes("Invalid login credentials")) return "Invalid email or password.";
+  if (text.includes("Email not confirmed")) return "Please confirm your email using the link we sent you, then try signing in again.";
+  if (text.includes("Password should be at least 6")) return "Password must be at least 6 characters.";
+  if (text.includes("Unable to validate email")) return "Please enter a valid email address.";
+  if (text.includes("rate limit") || text.includes("too many")) return "Too many attempts. Please wait a few minutes and try again.";
+  if (text.includes("signup disabled") || text.includes("Signup disabled")) return "Sign-up is currently disabled. Please contact support.";
+  return text;
+}
+
 function throwIfError(error: AuthError | null): void {
-  if (error) throw error;
+  if (error) {
+    const friendlyMessage = getAuthErrorMessage(error);
+    const err = new Error(friendlyMessage) as Error & { originalError?: AuthError };
+    err.originalError = error;
+    throw err;
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -77,7 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: metadata ? { data: metadata } : undefined,
+      options: {
+        ...(metadata ? { data: metadata } : {}),
+        // After email confirmation, user lands on our verify page
+        emailRedirectTo: typeof window !== "undefined" ? `${window.location.origin}/verify?mode=signup` : undefined,
+      },
     });
     throwIfError(error);
     return { session: data.session ?? null, user: data.user ?? null };

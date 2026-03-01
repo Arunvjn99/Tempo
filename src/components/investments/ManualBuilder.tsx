@@ -2,80 +2,53 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { FundAllocationSection } from "./FundAllocationSection";
-import { PlanDefaultPortfolioCard } from "./PlanDefaultPortfolioCard";
 import { useInvestment } from "../../context/InvestmentContext";
+import { useEnrollmentOptional } from "../../enrollment/context/EnrollmentContext";
+import { useInvestmentWizardOpen } from "../../context/InvestmentWizardContext";
+import { deriveStyleFromRiskScore } from "../../utils/investmentAllocationHelpers";
+import type { InvestmentStyleKey } from "../../utils/investmentAllocationHelpers";
+import { Shield, Scale, TrendingUp, Zap } from "lucide-react";
 
-type PersonalityKey = "conservative" | "balanced" | "growth" | "aggressive";
+const STYLE_LABEL_KEYS: Record<InvestmentStyleKey, string> = {
+  conservative: "enrollment.personalityConservative",
+  balanced: "enrollment.personalityBalanced",
+  growth: "enrollment.personalityGrowth",
+  aggressive: "enrollment.personalityAggressive",
+};
 
-interface PersonalityProfile {
-  labelKey: string;
-  descKey: string;
-  icon: string;
-  allocations: Record<string, number>;
-}
+const STYLE_DESC_KEYS: Record<InvestmentStyleKey, string> = {
+  conservative: "enrollment.personalityDescStability",
+  balanced: "enrollment.personalityDescGrowthStability",
+  growth: "enrollment.personalityDescHigherReturns",
+  aggressive: "enrollment.personalityDescMaxGrowth",
+};
 
-const PERSONALITY_PROFILES: Record<PersonalityKey, PersonalityProfile> = {
-  conservative: {
-    labelKey: "enrollment.personalityConservative",
-    descKey: "enrollment.personalityDescStability",
-    icon: "🛡️",
-    allocations: { "fund-7": 50, "fund-8": 20, "fund-1": 20, "fund-9": 10 },
-  },
-  balanced: {
-    labelKey: "enrollment.personalityBalanced",
-    descKey: "enrollment.personalityDescGrowthStability",
-    icon: "⚖️",
-    allocations: { "fund-1": 40, "fund-5": 20, "fund-7": 30, "fund-9": 10 },
-  },
-  growth: {
-    labelKey: "enrollment.personalityGrowth",
-    descKey: "enrollment.personalityDescHigherReturns",
-    icon: "📈",
-    allocations: { "fund-1": 45, "fund-3": 20, "fund-5": 25, "fund-7": 10 },
-  },
-  aggressive: {
-    labelKey: "enrollment.personalityAggressive",
-    descKey: "enrollment.personalityDescMaxGrowth",
-    icon: "🚀",
-    allocations: { "fund-1": 35, "fund-4": 25, "fund-6": 25, "fund-3": 15 },
-  },
+const STYLE_ICONS: Record<InvestmentStyleKey, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  conservative: Shield,
+  balanced: Scale,
+  growth: TrendingUp,
+  aggressive: Zap,
+};
+
+const cardStyle: React.CSSProperties = {
+  background: "var(--enroll-card-bg)",
+  border: "1px solid var(--enroll-card-border)",
+  borderRadius: "var(--enroll-card-radius)",
+  boxShadow: "var(--enroll-elevation-2)",
 };
 
 export const ManualBuilder = () => {
   const { t } = useTranslation();
-  const [activePersonality, setActivePersonality] = useState<PersonalityKey>("balanced");
-  const { activeSources, updateSourceAllocation, getFundsForSource, addFundToSource } = useInvestment();
-
-  const applyPersonality = useCallback((key: PersonalityKey) => {
-    setActivePersonality(key);
-    const profile = PERSONALITY_PROFILES[key];
-
-    for (const source of activeSources) {
-      const currentFunds = getFundsForSource(source);
-      const targetFundIds = Object.keys(profile.allocations);
-
-      for (const fundId of targetFundIds) {
-        const exists = currentFunds.some((f) => f.fundId === fundId);
-        if (!exists) {
-          addFundToSource(source, fundId);
-        }
-      }
-
-      for (const [fundId, pct] of Object.entries(profile.allocations)) {
-        updateSourceAllocation(source, fundId, pct);
-      }
-
-      for (const fund of currentFunds) {
-        if (!targetFundIds.includes(fund.fundId)) {
-          updateSourceAllocation(source, fund.fundId, 0);
-        }
-      }
-    }
-  }, [activeSources, updateSourceAllocation, getFundsForSource, addFundToSource]);
+  const enrollment = useEnrollmentOptional();
+  const openWizard = useInvestmentWizardOpen();
+  const profile = enrollment?.state.investmentProfile ?? null;
+  const riskTolerance = profile?.riskTolerance ?? 3;
+  const derivedStyle: InvestmentStyleKey = deriveStyleFromRiskScore(riskTolerance);
+  const StyleIcon = STYLE_ICONS[derivedStyle];
 
   return (
     <div className="space-y-6">
-      {/* Portfolio Personality Selector */}
+      {/* Single informational style card: "You belong to: X Strategy" */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -87,39 +60,46 @@ export const ManualBuilder = () => {
         >
           {t("enrollment.investmentStyle")}
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {(Object.keys(PERSONALITY_PROFILES) as PersonalityKey[]).map((key) => {
-            const profile = PERSONALITY_PROFILES[key];
-            const isActive = activePersonality === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => applyPersonality(key)}
-                className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl transition-all duration-200 text-center"
-                style={{
-                  background: isActive ? "rgb(var(--enroll-brand-rgb) / 0.08)" : "var(--enroll-card-bg)",
-                  border: isActive ? "1.5px solid var(--enroll-brand)" : "1px solid var(--enroll-card-border)",
-                  boxShadow: isActive ? "var(--enroll-elevation-2)" : "var(--enroll-elevation-1)",
-                }}
-              >
-                <span className="text-lg">{profile.icon}</span>
-                <span
-                  className="text-xs font-bold"
-                  style={{ color: isActive ? "var(--enroll-brand)" : "var(--enroll-text-primary)" }}
-                >
-                  {t(profile.labelKey)}
-                </span>
-                <span className="text-[10px]" style={{ color: "var(--enroll-text-muted)" }}>
-                  {t(profile.descKey)}
-                </span>
-              </button>
-            );
-          })}
+        <div
+          className="p-4 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          style={{ ...cardStyle, background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
+              style={{ background: "rgb(var(--enroll-brand-rgb) / 0.1)", color: "var(--enroll-brand)" }}
+            >
+              {StyleIcon && <StyleIcon style={{ width: 24, height: 24 }} />}
+            </div>
+            <div>
+              <p className="text-xs font-semibold" style={{ color: "var(--enroll-text-muted)" }}>
+                {t("enrollment.youBelongTo")}
+              </p>
+              <p className="text-sm font-bold" style={{ color: "var(--enroll-text-primary)" }}>
+                {t(STYLE_LABEL_KEYS[derivedStyle])} {t("enrollment.strategy")}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "var(--enroll-text-secondary)" }}>
+                {t(STYLE_DESC_KEYS[derivedStyle])}
+              </p>
+            </div>
+          </div>
+          {openWizard && (
+            <button
+              type="button"
+              onClick={openWizard}
+              className="shrink-0 inline-flex items-center justify-center px-4 py-2 rounded-lg text-xs font-semibold transition-colors"
+              style={{
+                background: "rgb(var(--enroll-brand-rgb) / 0.1)",
+                color: "var(--enroll-brand)",
+                border: "1px solid rgb(var(--enroll-brand-rgb) / 0.2)",
+              }}
+            >
+              {t("enrollment.edit")}
+            </button>
+          )}
         </div>
       </motion.div>
 
-      <PlanDefaultPortfolioCard />
       <FundAllocationSection />
     </div>
   );

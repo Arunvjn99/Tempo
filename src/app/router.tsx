@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Login } from "../pages/auth/Login";
 import { VerifyCode } from "../pages/auth/VerifyCode";
 import { ForgotPassword } from "../pages/auth/ForgotPassword";
@@ -19,7 +19,6 @@ import { PlansPage } from "../pages/enrollment/PlansPage";
 import { Contribution } from "../pages/enrollment/Contribution";
 import { FutureContributions } from "../pages/enrollment/FutureContributions";
 import { TransactionsPage } from "../pages/transactions/TransactionsPage";
-import { TransactionIntelligenceHub } from "../features/transaction-hub/components/TransactionIntelligenceHub";
 import { TransactionAnalysis } from "../pages/transactions/TransactionAnalysis";
 import { TransactionApplicationRouter } from "../pages/transactions/applications/TransactionApplicationRouter";
 import { EnrollmentLayout } from "../layouts/EnrollmentLayout";
@@ -138,11 +137,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "/transactions",
-        element: <ProtectedRoute><TransactionIntelligenceHub /></ProtectedRoute>,
+        element: <ProtectedRoute><TransactionsPage /></ProtectedRoute>,
       },
       {
-        path: "/transactions/legacy",
-        element: <ProtectedRoute><TransactionsPage /></ProtectedRoute>,
+        path: "/transactions/loan/new",
+        element: (
+          <ProtectedRoute>
+            <Navigate to="/transactions/loan/start" replace />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/transactions/:transactionType/start",

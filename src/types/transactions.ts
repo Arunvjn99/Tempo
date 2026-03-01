@@ -4,7 +4,18 @@
 
 export type TransactionType = "loan" | "withdrawal" | "distribution" | "rollover" | "transfer" | "rebalance";
 
-export type TransactionStatus = "draft" | "active" | "completed" | "cancelled";
+/** Includes full lifecycle; "active" is legacy alias for "submitted" */
+export type TransactionStatus =
+  | "draft"
+  | "active"
+  | "submitted"
+  | "under_review"
+  | "verifying_documents"
+  | "approved"
+  | "rejected"
+  | "funded"
+  | "cancelled"
+  | "completed";
 
 export type RetirementImpactLevel = "low" | "medium" | "high";
 
@@ -44,4 +55,20 @@ export interface Transaction {
   amountNegative?: boolean;
   /** Plan ID for multi-plan filtering (e.g. "current", "previous", "ira") */
   planId?: string;
+  /** Lifecycle: submitted/approved/funded timestamps */
+  submittedAt?: string;
+  approvedAt?: string;
+  fundedAt?: string;
+  /** ETA for completion (e.g. "24h", "72h") */
+  estimatedCompletion?: string;
+  /** Progress 0–100 for Active Tracker */
+  progressPercentage?: number;
+  /** Required document types and upload state */
+  requiredDocuments?: { id: string; type: string; label: string; uploaded: boolean; uploadedAt?: string }[];
+  /** Eligibility at time of request */
+  eligibilitySnapshot?: { eligible: boolean; maxAmount?: number; minAmount?: number; reasons: string[]; checkedAt: string };
+  /** Estimated impact on balance (e.g. negative for loan) */
+  impactOnBalance?: number;
+  notes?: string;
+  userId?: string;
 }

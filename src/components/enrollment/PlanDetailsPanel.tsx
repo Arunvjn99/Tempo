@@ -115,17 +115,35 @@ export function PlanDetailsPanel({ plan, user, rationaleKey, rationale }: PlanDe
         >
           {t("enrollment.planOverview")}
         </h4>
-        <p className="text-lg font-medium leading-snug mb-2" style={{ color: "var(--enroll-text-primary)" }}>
-          {plan.isRecommended
-            ? t("enrollment.bestForTaxFree")
-            : t("enrollment.solidOption")}
-        </p>
-        {(rationaleKey || (rationale != null && rationale !== "")) && (
+        {(rationaleKey || (rationale != null && rationale !== "")) ? (
           <p className="text-sm leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
             {rationaleKey ? t(rationaleKey, { years: user.yearsToRetire ?? 0 }) : rationale}
           </p>
-        )}
+        ) : (plan.description ?? plan.matchInfo) ? (
+          <p className="text-sm leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
+            {plan.description ?? plan.matchInfo}
+          </p>
+        ) : null}
       </div>
+
+      {Array.isArray(plan.benefits) && plan.benefits.length > 0 && (
+        <div className="p-6" style={cardStyle}>
+          <h4
+            className="text-[10px] font-bold uppercase tracking-widest mb-3"
+            style={{ color: "var(--enroll-text-muted)" }}
+          >
+            {t("enrollment.keyAdvantages")}
+          </h4>
+          <ul className="space-y-2">
+            {plan.benefits.map((value, i) => (
+              <li key={i} className="flex gap-2.5 text-sm" style={{ color: "var(--enroll-text-secondary)" }}>
+                <Check size={14} className="shrink-0 mt-0.5" style={{ color: "var(--enroll-accent)" }} />
+                <span>{value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <YourDetailsCard user={user} />
 

@@ -5,6 +5,7 @@ import {
   useMemo,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import type {
@@ -14,6 +15,7 @@ import type {
 } from "../types/investment";
 import {
   buildInitialAllocation,
+  buildAllocationFromStyle,
   getActiveSources,
   getSourceTotal,
   isSourceValid,
@@ -21,9 +23,11 @@ import {
   computeWeightedAllocation,
   fundAllocationsToChartFormat,
 } from "../utils/investmentAllocationHelpers";
+import type { InvestmentStyleKey } from "../utils/investmentAllocationHelpers";
 import { loadEnrollmentDraft } from "../enrollment/enrollmentDraftStore";
 import type { InvestmentDraftSnapshot } from "../enrollment/enrollmentDraftStore";
 import type { InvestmentProfile } from "../enrollment/types/investmentProfile";
+import { deriveStyleFromRiskScore } from "../utils/investmentAllocationHelpers";
 import { getFundById } from "../data/mockFunds";
 
 type SourceKey = "preTax" | "roth" | "afterTax";
@@ -36,6 +40,11 @@ interface InvestmentContextValue {
   /** Edit toggle: OFF = disabled, use plan default; ON = editable */
   editAllocationEnabled: boolean;
   setEditAllocationEnabled: (enabled: boolean) => void;
+  /** Custom allocation: OFF = system-managed (locked), ON = user can edit funds */
+  isCustomAllocationEnabled: boolean;
+  setCustomAllocationEnabled: (enabled: boolean) => void;
+  /** Reset all sources to model allocation for the given style (e.g. when disabling custom) */
+  applyModelAllocation: (styleKey: InvestmentStyleKey) => void;
 
   /** Get funds for a source */
   getFundsForSource: (source: SourceKey) => FundAllocation[];
@@ -110,14 +119,25 @@ export const InvestmentProvider = ({
   const [editAllocationEnabled, setEditAllocationEnabledState] = useState(
     () => getDefaultEditEnabled(investmentProfile)
   );
+  const [isCustomAllocationEnabled, setCustomAllocationEnabledState] = useState(false);
 
   const setEditAllocationEnabled = useCallback(
     (enabled: boolean) => {
       setEditAllocationEnabledState(enabled);
       if (!enabled) {
-        // When turning OFF: reset to plan default
         setInvestmentAllocation(buildInitialAllocation(sourceAllocation));
       }
+    },
+    [sourceAllocation]
+  );
+
+  const setCustomAllocationEnabled = useCallback((enabled: boolean) => {
+    setCustomAllocationEnabledState(enabled);
+  }, []);
+
+  const applyModelAllocation = useCallback(
+    (styleKey: InvestmentStyleKey) => {
+      setInvestmentAllocation(buildAllocationFromStyle(styleKey, sourceAllocation));
     },
     [sourceAllocation]
   );
@@ -167,6 +187,18 @@ export const InvestmentProvider = ({
       return changed ? next : prev;
     });
   }, [sourceAllocation, activeSources]);
+
+  // When profile changes (e.g. after wizard complete) and custom is OFF, sync allocation to model. Skip first mount to avoid overwriting draft.
+  const isFirstMountRef = useRef(true);
+  useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
+    if (!investmentProfile || isCustomAllocationEnabled) return;
+    const styleKey = deriveStyleFromRiskScore(investmentProfile.riskTolerance);
+    setInvestmentAllocation(buildAllocationFromStyle(styleKey, sourceAllocation));
+  }, [investmentProfile, isCustomAllocationEnabled, sourceAllocation]);
 
   const getFundsForSource = useCallback(
     (source: SourceKey): FundAllocation[] => {
@@ -259,6 +291,9 @@ export const InvestmentProvider = ({
     investmentAllocation,
     editAllocationEnabled,
     setEditAllocationEnabled,
+    isCustomAllocationEnabled,
+    setCustomAllocationEnabled,
+    applyModelAllocation,
     getFundsForSource,
     updateSourceAllocation,
     addFundToSource,

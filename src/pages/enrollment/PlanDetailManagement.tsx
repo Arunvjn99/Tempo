@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Printer } from "lucide-react";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { DashboardHeader } from "../../components/dashboard/DashboardHeader";
 import { DashboardCard } from "../../components/dashboard/DashboardCard";
 import Button from "../../components/ui/Button";
-import { Modal } from "../../components/ui/Modal";
 import { MOCK_ENROLLED_PLANS, type EnrolledPlan } from "../../data/mockEnrolledPlans";
 import { OptOutModal } from "../../components/enrollment/OptOutModal";
 
@@ -12,7 +13,11 @@ import { OptOutModal } from "../../components/enrollment/OptOutModal";
  * PlanDetailManagement - Detailed management view for a single enrolled plan
  * Read-only summary with controlled-edit CTAs
  */
+const formatCurrency = (n: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+
 export const PlanDetailManagement = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { planId } = useParams<{ planId: string }>();
   const [showOptOutModal, setShowOptOutModal] = useState(false);
@@ -66,99 +71,116 @@ export const PlanDetailManagement = () => {
     navigate("/enrollment");
   };
 
+  const totalBalance = plan.balance ?? 0;
+  const vestedBalance = plan.vestedBalance ?? 0;
+  const totalPct = plan.contributionElection?.totalPercentage ?? 0;
+  const healthScore = 84;
+
   return (
     <DashboardLayout header={<DashboardHeader />}>
       <div className="plan-detail-management">
-        {/* Header */}
         <div className="plan-detail-management__header">
           <button
             type="button"
             onClick={() => navigate("/enrollment")}
             className="plan-detail-management__back-button"
-            aria-label="Back to enrollment"
+            aria-label={t("enrollment.backToEnrollment")}
           >
             <span className="plan-detail-management__back-icon" aria-hidden="true">←</span>
-            <span className="plan-detail-management__back-text">Back to Enrollment</span>
+            <span className="plan-detail-management__back-text">{t("enrollment.backToEnrollment")}</span>
           </button>
-
           <div className="plan-detail-management__header-content">
-            <div className="plan-detail-management__header-info">
+          <div className="plan-detail-management__header-info">
+            <div className="flex flex-wrap items-center gap-3">
               <h1 className="plan-detail-management__title">{plan.planName}</h1>
-              <div className="plan-detail-management__header-meta">
-                <span className="plan-detail-management__plan-id">Plan ID: {plan.planId}</span>
-                <span className="plan-detail-management__plan-type">{plan.planType}</span>
-              </div>
+              <span
+                className="rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide"
+                style={{
+                  backgroundColor: "var(--color-success-light, #ecfdf5)",
+                  color: "var(--color-success, #059669)",
+                }}
+              >
+                {t("enrollment.statusEnrolled")}
+              </span>
             </div>
-            <div className="plan-detail-management__header-actions">
-              <Button
-                onClick={handlePrint}
-                className="plan-detail-management__action-button plan-detail-management__action-button--secondary"
-              >
-                Print
-              </Button>
-              <Button
-                onClick={handleOptOut}
-                className="plan-detail-management__action-button plan-detail-management__action-button--danger"
-              >
-                Opt-out Plan
-              </Button>
+            <div className="plan-detail-management__header-meta">
+              <span className="plan-detail-management__plan-id">{t("enrollment.planIdLabel")}: {plan.planId}</span>
+              <span className="plan-detail-management__plan-type">{plan.planType}</span>
+            </div>
+          </div>
+          <div className="plan-detail-management__header-actions">
+            <Button
+              onClick={handlePrint}
+              className="plan-detail-management__action-button plan-detail-management__action-button--secondary flex items-center gap-2"
+            >
+              <Printer className="h-4 w-4" aria-hidden />
+              {t("enrollment.print")}
+            </Button>
+            <Button
+              onClick={handleOptOut}
+              className="plan-detail-management__action-button plan-detail-management__action-button--danger"
+            >
+              {t("enrollment.optOutPlan")}
+            </Button>
+          </div>
+        </div>
+        </div>
+
+        {/* Summary cards: Total Balance, Vested Balance, My Contribution, Health Score */}
+        <div className="plan-detail-management__summary-cards grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <p className="text-sm font-medium uppercase tracking-wide" style={{ color: "var(--color-text-secondary)" }}>
+              {t("enrollment.totalBalance")}
+            </p>
+            <p className="mt-1 text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              {formatCurrency(totalBalance)}
+            </p>
+            <p className="mt-0.5 text-sm" style={{ color: "var(--color-success)" }}>+2.4% {t("enrollment.thisMonth")}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <p className="text-sm font-medium uppercase tracking-wide" style={{ color: "var(--color-text-secondary)" }}>
+              {t("enrollment.vestedBalance")}
+            </p>
+            <p className="mt-1 text-2xl font-bold" style={{ color: "var(--color-text)" }}>
+              {formatCurrency(vestedBalance)}
+            </p>
+            <p className="mt-0.5 text-sm" style={{ color: "var(--color-text-secondary)" }}>{t("enrollment.percentVested")}</p>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <p className="text-sm font-medium uppercase tracking-wide" style={{ color: "var(--color-text-secondary)" }}>
+              {t("enrollment.myContribution")}
+            </p>
+            <p className="mt-1 text-2xl font-bold" style={{ color: "var(--color-text)" }}>{totalPct}%</p>
+            <p className="mt-0.5 text-sm" style={{ color: "var(--color-text-secondary)" }}>
+              {t("enrollment.belowEmployerMatch", { percent: "2" })}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <p className="text-sm font-medium uppercase tracking-wide" style={{ color: "var(--color-text-secondary)" }}>
+              {t("enrollment.healthScore")}
+            </p>
+            <p className="mt-1 text-2xl font-bold" style={{ color: "var(--color-text)" }}>{healthScore}/100</p>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[var(--color-border)]">
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${healthScore}%`,
+                  backgroundColor: "var(--color-primary)",
+                }}
+              />
             </div>
           </div>
         </div>
 
-        {/* Balance Snapshot */}
-        <DashboardCard title="Balance Snapshot">
-          <div className="plan-detail-management__balance-grid">
-            <div className="plan-detail-management__balance-item">
-              <span className="plan-detail-management__balance-label">Plan Balance</span>
-              <span className="plan-detail-management__balance-value">
-                {plan.balance !== undefined
-                  ? new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(plan.balance)
-                  : "Not available"}
-              </span>
-            </div>
-            <div className="plan-detail-management__balance-item">
-              <span className="plan-detail-management__balance-label">Vested Balance</span>
-              <span className="plan-detail-management__balance-value">
-                {plan.vestedBalance !== undefined
-                  ? new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }).format(plan.vestedBalance)
-                  : "Not available"}
-              </span>
-            </div>
-            <div className="plan-detail-management__balance-item">
-              <span className="plan-detail-management__balance-label">Last Contribution Date</span>
-              <span className="plan-detail-management__balance-value">
-                {plan.lastContributionDate
-                  ? new Date(plan.lastContributionDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })
-                  : "Not available"}
-              </span>
-            </div>
-          </div>
-        </DashboardCard>
-
         {/* Contribution Election */}
         <DashboardCard
-          title="Contribution Election"
+          title={t("enrollment.contributionElection")}
           action={
             <Button
               onClick={handleEditContribution}
               className="plan-detail-management__edit-button"
             >
-              Edit Contribution
+              {t("enrollment.editContribution")}
             </Button>
           }
         >
@@ -216,13 +238,13 @@ export const PlanDetailManagement = () => {
 
         {/* Investment Election */}
         <DashboardCard
-          title="Investment Election"
+          title={t("enrollment.investmentElection")}
           action={
             <Button
               onClick={handleChangeInvestments}
               className="plan-detail-management__edit-button"
             >
-              Change Investments
+              {t("enrollment.changeInvestments")}
             </Button>
           }
         >
@@ -288,15 +310,15 @@ export const PlanDetailManagement = () => {
           </div>
         </DashboardCard>
 
-        {/* Auto-Features */}
+        {/* Auto Features */}
         <DashboardCard
-          title="Auto-Features"
+          title={t("enrollment.autoFeatures")}
           action={
             <Button
               onClick={handleEditAutoFeatures}
               className="plan-detail-management__edit-button"
             >
-              Edit Auto-Features
+              {t("enrollment.manageFeatures")}
             </Button>
           }
         >
@@ -360,13 +382,13 @@ export const PlanDetailManagement = () => {
 
         {/* Beneficiaries */}
         <DashboardCard
-          title="Beneficiaries"
+          title={t("enrollment.beneficiaries")}
           action={
             <Button
               onClick={handleManageBeneficiaries}
               className="plan-detail-management__edit-button"
             >
-              Manage Beneficiaries
+              {t("enrollment.updateBeneficiaries")}
             </Button>
           }
         >
@@ -417,7 +439,7 @@ export const PlanDetailManagement = () => {
         </DashboardCard>
 
         {/* Documents */}
-        <DashboardCard title="Documents">
+        <DashboardCard title={t("enrollment.documents")}>
           <div className="plan-detail-management__documents">
             <div className="plan-detail-management__document-item">
               <span className="plan-detail-management__document-name">Plan Documents</span>
@@ -441,7 +463,19 @@ export const PlanDetailManagement = () => {
         </DashboardCard>
 
         {/* Activity Log */}
-        <DashboardCard title="Activity Log">
+        <DashboardCard
+          title={t("enrollment.activityLog")}
+          action={
+            <button
+              type="button"
+              onClick={() => {}}
+              className="text-sm font-medium"
+              style={{ color: "var(--color-primary)" }}
+            >
+              {t("enrollment.viewAllActivity")}
+            </button>
+          }
+        >
           <div className="plan-detail-management__activity-log">
             {plan.activityLog && plan.activityLog.length > 0 ? (
               <div className="plan-detail-management__activity-items">

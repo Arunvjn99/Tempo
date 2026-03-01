@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import { AllocationChart } from "./AllocationChart";
 import { useInvestment } from "../../context/InvestmentContext";
 import { AdvisorHelpWizard } from "./AdvisorHelpWizard";
 import { useUser } from "../../context/UserContext";
+import { useEnrollmentOptional } from "../../enrollment/context/EnrollmentContext";
+import { useInvestmentWizardOpen } from "../../context/InvestmentWizardContext";
 
 type AllocationSummaryVariant = "enrollment" | "dashboard";
 
@@ -20,40 +23,78 @@ const cardStyle: React.CSSProperties = {
   boxShadow: "var(--enroll-elevation-2)",
 };
 
-function getRiskLevelKey(risk: number): string {
-  if (risk < 3) return "enrollment.riskConservative";
-  if (risk < 5) return "enrollment.riskModerate";
-  if (risk < 7) return "enrollment.riskModerateAggressive";
-  return "enrollment.riskAggressive";
-}
-
-function getRiskColor(risk: number): string {
-  if (risk < 3) return "var(--enroll-accent)";
-  if (risk < 5) return "var(--enroll-brand)";
-  if (risk < 7) return "var(--color-warning)";
-  return "var(--color-danger)";
-}
-
 export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryProps) => {
   const { t } = useTranslation();
-  const { weightedSummary, chartAllocations } = useInvestment();
+  const { weightedSummary, chartAllocations, isCustomAllocationEnabled } = useInvestment();
   const { profile } = useUser();
+  const enrollment = useEnrollmentOptional();
+  const openWizard = useInvestmentWizardOpen();
   const [showAdvisorWizard, setShowAdvisorWizard] = useState(false);
 
-  const riskPercent = Math.min(100, (weightedSummary.riskLevel / 10) * 100);
-  const riskLabel = t(getRiskLevelKey(weightedSummary.riskLevel));
-  const riskColor = getRiskColor(weightedSummary.riskLevel);
   const totalAllocation = chartAllocations.reduce((s, a) => s + a.percentage, 0);
+  const currentAge = enrollment?.state.currentAge ?? 30;
+  const retirementAge = enrollment?.state.retirementAge ?? 65;
+  const yearsToRetirement = Math.max(0, retirementAge - currentAge);
+  const retirementYear = new Date().getFullYear() + yearsToRetirement;
+  const riskComfortKey = weightedSummary.riskLevel < 4 ? "enrollment.riskConservative" : weightedSummary.riskLevel < 7 ? "enrollment.riskModerate" : "enrollment.riskAggressive";
 
   return (
     <>
       <div className="space-y-6">
-        {/* Advisor help card — first */}
+        {/* Compact Investor Profile Summary — above Advisor card */}
+        {variant === "enrollment" && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+            className="p-3.5 rounded-xl"
+            style={{
+              background: "var(--enroll-soft-bg)",
+              border: "1px solid var(--enroll-card-border)",
+            }}
+          >
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>
+                {t("enrollment.investorProfile")}
+              </h4>
+              {openWizard ? (
+                <button
+                  type="button"
+                  onClick={openWizard}
+                  className="text-[11px] font-semibold"
+                  style={{ color: "var(--enroll-brand)" }}
+                >
+                  {t("enrollment.editProfile")}
+                </button>
+              ) : (
+                <Link
+                  to="/enrollment/contribution"
+                  className="text-[11px] font-semibold"
+                  style={{ color: "var(--enroll-brand)" }}
+                >
+                  {t("enrollment.editProfile")}
+                </Link>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+              <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.ageLabel")}</span>
+              <span className="font-medium" style={{ color: "var(--enroll-text-primary)" }}>{currentAge}</span>
+              <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.retirementTargetYear")}</span>
+              <span className="font-medium" style={{ color: "var(--enroll-text-primary)" }}>{retirementYear}</span>
+              <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.riskComfort")}</span>
+              <span className="font-medium" style={{ color: "var(--enroll-text-primary)" }}>{t(riskComfortKey)}</span>
+              <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.investmentHorizon")}</span>
+              <span className="font-medium" style={{ color: "var(--enroll-text-primary)" }}>{yearsToRetirement} {t("enrollment.years")}</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Advisor card — "Optimize your portfolio with AI" */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.1 }}
-          className="p-5"
+          className="p-5 relative overflow-hidden"
           style={{
             ...cardStyle,
             background: "rgb(var(--enroll-brand-rgb) / 0.04)",
@@ -62,20 +103,19 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
         >
           <div className="flex items-center gap-3 mb-3">
             <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg advisor-card-icon-pulse"
               style={{ background: "rgb(var(--enroll-brand-rgb) / 0.1)", color: "var(--enroll-brand)" }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
+                <path d="M12 2a10 10 0 0 1 7.38 16.75l-1.67-4.38A4 4 0 0 0 14 12h-4a4 4 0 0 0-3.71 2.37l-1.67 4.38A10 10 0 0 1 12 2z" />
               </svg>
             </div>
             <h4 className="text-sm font-bold" style={{ color: "var(--enroll-text-primary)" }}>
-              {t("enrollment.needHelpChoosing")}
+              {t("enrollment.optimizePortfolioWithAi")}
             </h4>
           </div>
           <p className="text-xs leading-relaxed mb-3" style={{ color: "var(--enroll-text-secondary)" }}>
-            {t("enrollment.advisorHelpDesc")}
+            {t("enrollment.advisorDescOptimize")}
           </p>
           <Button
             type="button"
@@ -83,11 +123,11 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
             className="w-full text-sm"
             onClick={() => setShowAdvisorWizard(true)}
           >
-            {t("enrollment.getAdvisorHelp")}
+            {isCustomAllocationEnabled ? t("enrollment.reoptimizeAllocation") : t("enrollment.optimizeAutomatically")}
           </Button>
         </motion.div>
 
-        {/* Allocation summary widget — second */}
+        {/* Allocation summary — donut + legend only; risk block removed */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +142,6 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
             {t("enrollment.realtimeImpactElections")}
           </p>
 
-          {/* Donut chart */}
           <AllocationChart
             allocations={chartAllocations}
             centerLabel={t("enrollment.totalLabel")}
@@ -110,25 +149,6 @@ export const AllocationSummary = ({ variant = "dashboard" }: AllocationSummaryPr
             showValidBadge
             isValid={weightedSummary.isValid}
           />
-
-          {/* Risk meter */}
-          <div className="mt-6 pt-5" style={{ borderTop: "1px solid var(--enroll-card-border)" }}>
-            <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--enroll-text-muted)" }}>
-              <span>{t("enrollment.riskConservative")}</span>
-              <span>{t("enrollment.riskAggressive")}</span>
-            </div>
-            <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "var(--enroll-soft-bg)" }}>
-              <motion.div
-                className="h-full rounded-full"
-                animate={{ width: `${riskPercent}%` }}
-                transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-                style={{ background: riskColor }}
-              />
-            </div>
-            <p className="text-xs font-semibold mt-2" style={{ color: riskColor }}>
-              {t("enrollment.riskLevelLabel", { level: riskLabel })}
-            </p>
-          </div>
         </motion.div>
       </div>
 

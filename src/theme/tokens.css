@@ -123,6 +123,11 @@
   /* Slider track (unfilled) - light mode */
   --slider-track-unfilled: #e2e8f0;
 
+  /* Financial / allocation slider (enrollment) - token-based dimensions */
+  --financial-slider-track-height: var(--spacing-3);
+  --financial-slider-thumb-size: 1.375rem;
+  --financial-slider-thumb-focus-ring: 2px;
+
   /* Card tokens */
   --card-bg: var(--color-surface-elevated);
   --card-border: rgb(17 24 39 / 0.08);
@@ -189,6 +194,24 @@
   --enroll-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04);
   --enroll-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.06);
   --enroll-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* Review page: plan overview, risk badge, table header, next steps */
+  --enroll-plan-overview-bg: linear-gradient(134deg, #f0f7ff 0%, #e0effe 100%);
+  --enroll-risk-badge-bg: #eff6ff;
+  --enroll-risk-badge-border: #dbeafe;
+  --enroll-table-header-bg: rgba(248, 250, 252, 0.5);
+  --enroll-next-steps-bg: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+  --enroll-next-steps-text: #e2e8f0;
+  --enroll-next-steps-heading: #f8fafc;
+  --enroll-success-tint-bg: rgba(16, 185, 129, 0.05);
+  --enroll-success-tint-border: rgba(16, 185, 129, 0.1);
+  --enroll-active-badge-bg: rgba(16, 185, 129, 0.1);
+  --enroll-active-badge-border: rgba(16, 185, 129, 0.2);
+
+  /* Donut chart: track (background ring) and fill (progress) — theme-aware */
+  --enroll-donut-track: var(--enroll-card-border);
+  --enroll-donut-fill: var(--enroll-brand);
+  --enroll-donut-text: var(--enroll-brand);
 
   /* ── Dashboard Command Center Design System ── */
   --color-bg-primary: var(--enroll-bg);

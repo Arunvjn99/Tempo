@@ -59,12 +59,15 @@ interface InvestmentProfileWizardProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
+  /** When provided, wizard pre-fills with these answers (e.g. when reopening to edit) */
+  initialProfile?: InvestmentProfile | null;
 }
 
 export const InvestmentProfileWizard = ({
   isOpen,
   onClose,
   onComplete,
+  initialProfile,
 }: InvestmentProfileWizardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -72,6 +75,20 @@ export const InvestmentProfileWizard = ({
   const [step, setStep] = useState(1);
   const [profile, setProfile] = useState<Partial<InvestmentProfile>>({});
   const [direction, setDirection] = useState(1);
+
+  /* Pre-fill when opening with existing profile */
+  useEffect(() => {
+    if (isOpen && initialProfile) {
+      setProfile({
+        riskTolerance: initialProfile.riskTolerance,
+        investmentHorizon: initialProfile.investmentHorizon,
+        investmentPreference: initialProfile.investmentPreference,
+      });
+    }
+    if (!isOpen) {
+      setStep(1);
+    }
+  }, [isOpen, initialProfile]);
 
   const config = STEP_CONFIGS[step - 1];
   const currentValue = profile[config.key];
@@ -115,19 +132,21 @@ export const InvestmentProfileWizard = ({
   }, [step, canProceed, profile, setInvestmentProfile, setInvestmentProfileCompleted, onComplete, navigate]);
 
   const handleClose = useCallback(() => {
-    setInvestmentProfile(DEFAULT_INVESTMENT_PROFILE);
-    setInvestmentProfileCompleted(true);
-    const draft = loadEnrollmentDraft();
-    if (draft) {
-      saveEnrollmentDraft({
-        ...draft,
-        investmentProfile: DEFAULT_INVESTMENT_PROFILE,
-        investmentProfileCompleted: true,
-      });
+    if (!initialProfile) {
+      setInvestmentProfile(DEFAULT_INVESTMENT_PROFILE);
+      setInvestmentProfileCompleted(true);
+      const draft = loadEnrollmentDraft();
+      if (draft) {
+        saveEnrollmentDraft({
+          ...draft,
+          investmentProfile: DEFAULT_INVESTMENT_PROFILE,
+          investmentProfileCompleted: true,
+        });
+      }
     }
     onClose();
     navigate("/enrollment/investments");
-  }, [setInvestmentProfile, setInvestmentProfileCompleted, onClose, navigate]);
+  }, [initialProfile, setInvestmentProfile, setInvestmentProfileCompleted, onClose, navigate]);
 
   /* ── Feedback message for current selection ── */
   const feedbackMessageKey = (() => {

@@ -1,17 +1,18 @@
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { TransactionApplication } from "../../../components/transactions/TransactionApplication";
 import type { TransactionStepDefinition } from "../../../components/transactions/TransactionApplication";
-import type { TransactionType } from "../../../types/transactions";
-import type { Transaction } from "../../../types/transactions";
+import type { TransactionType, Transaction } from "../../../types/transactions";
 import { transactionStore } from "../../../data/transactionStore";
+import { createTransaction, submitTransaction } from "../../../services/transactionService";
 import { ACCOUNT_OVERVIEW } from "../../../data/accountOverview";
+import { DEFAULT_LOAN_PLAN_CONFIG } from "../../../config/loanPlanConfig";
 import { getStepLabels } from "../../../config/transactionSteps";
 
-// Loan steps
+// Loan steps (Figma: Eligibility → Configuration → Review → Confirmation)
 import { EligibilityStep } from "./loan/steps/EligibilityStep";
-import { LoanAmountStep } from "./loan/steps/LoanAmountStep";
-import { RepaymentTermsStep } from "./loan/steps/RepaymentTermsStep";
+import { LoanConfigurationStep } from "./loan/steps/LoanConfigurationStep";
 import { ReviewStep } from "./loan/steps/ReviewStep";
+import { LoanConfirmationStep } from "./loan/steps/LoanConfirmationStep";
 
 // Withdrawal steps
 import { WithdrawalEligibilityStep } from "./withdrawal/steps/WithdrawalEligibilityStep";
@@ -42,25 +43,18 @@ const getStepDefinitions = (type: TransactionType): TransactionStepDefinition[] 
 
   switch (type) {
     case "loan": {
-      const moneyFlowValid = (data: any) => {
-        const method = data?.paymentMethod ?? "EFT";
-        if (method === "Check") return true;
-        const routing = String(data?.routingNumber ?? "").replace(/\D/g, "");
-        const account = String(data?.accountNumber ?? "").replace(/\D/g, "");
-        return routing.length === 9 && account.length >= 4 && account.length <= 17;
+      const configValid = (data: any) => {
+        const amount = typeof data?.amount === "number" ? data.amount : 0;
+        const min = DEFAULT_LOAN_PLAN_CONFIG.minLoanAmount;
+        const max = Math.min(DEFAULT_LOAN_PLAN_CONFIG.maxLoanAbsolute, ACCOUNT_OVERVIEW.vestedBalance * DEFAULT_LOAN_PLAN_CONFIG.maxLoanPctOfVested);
+        const term = data?.termMonths ?? 36;
+        return amount >= min && amount <= max && [12, 36, 60].includes(term);
       };
-      const complianceValid = (data: any) =>
-        !!(data?.agreedToTerms && data?.agreedToDisclosures && data?.spousalConsent);
       return [
         { stepId: "eligibility", label: stepLabels[0], component: EligibilityStep },
-        { stepId: "loan-amount", label: stepLabels[1], component: LoanAmountStep, validate: moneyFlowValid },
-        { stepId: "repayment-terms", label: stepLabels[2], component: RepaymentTermsStep, validate: complianceValid },
-        {
-          stepId: "review-submit",
-          label: stepLabels[3],
-          component: ReviewStep,
-          validate: (data) => !!data?.confirmationAccepted,
-        },
+        { stepId: "configuration", label: stepLabels[1], component: LoanConfigurationStep, validate: configValid },
+        { stepId: "review", label: stepLabels[2], component: ReviewStep, validate: (data) => !!data?.confirmationAccepted },
+        { stepId: "confirmation", label: stepLabels[3], component: LoanConfirmationStep },
       ];
     }
     case "withdrawal":
@@ -144,9 +138,9 @@ export const TransactionApplicationRouter = () => {
 
   const steps = getStepDefinitions(transactionType);
 
-  // Handle "start" route - create draft and redirect
-  if (!transactionId || transactionId === "start") {
-    const draft = transactionStore.createDraft(transactionType);
+  // Handle "start" or "new" route - create draft and redirect
+  if (!transactionId || transactionId === "start" || transactionId === "new") {
+    const draft = createTransaction(transactionType);
     return <Navigate to={`/transactions/${transactionType}/${draft.id}`} replace />;
   }
 
@@ -168,7 +162,7 @@ export const TransactionApplicationRouter = () => {
     let rationale: string;
     switch (transaction.type) {
       case "loan":
-        amount = typeof data?.amount === "number" ? data.amount : transaction.amount ?? 0;
+        amount = typeof data?.amount === "number" ? data.amount : (transaction.amount ?? 0);
         rationale = "Loan repayment schedule in place. Impact will be recalculated after disbursement.";
         break;
       case "withdrawal":
@@ -186,9 +180,9 @@ export const TransactionApplicationRouter = () => {
     }
     transactionStore.updateTransaction(transaction.id, {
       amount,
-      status: "active",
       retirementImpact: { level: "low", rationale },
     });
+    submitTransaction(transaction.id);
   };
 
   const handleSuccessNavigate = (transaction: Transaction, data: Record<string, unknown>) => {

@@ -11,6 +11,8 @@ interface TransactionFlowFooterProps {
   onSaveAndExit: () => void;
   summaryText?: string;
   summaryError?: boolean;
+  /** When true (e.g. confirmation step), only Back + Primary are shown */
+  hideSaveAndExit?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export function TransactionFlowFooter({
   onSaveAndExit,
   summaryText,
   summaryError = false,
+  hideSaveAndExit = false,
 }: TransactionFlowFooterProps) {
   const { t } = useTranslation();
   const isFirstStep = currentStep === 0;
@@ -59,13 +62,15 @@ export function TransactionFlowFooter({
           )}
         </div>
         <div className="transaction-flow-footer__right">
-          <Button
-            type="button"
-            onClick={onSaveAndExit}
-            className="transaction-flow-footer__save-exit"
-          >
-            {t("transactions.saveAndExit")}
-          </Button>
+          {!hideSaveAndExit && (
+            <Button
+              type="button"
+              onClick={onSaveAndExit}
+              className="transaction-flow-footer__save-exit"
+            >
+              {t("transactions.saveAndExit")}
+            </Button>
+          )}
           <Button
             type="button"
             onClick={onPrimary}

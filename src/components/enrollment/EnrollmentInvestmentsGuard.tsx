@@ -13,7 +13,7 @@ export const EnrollmentInvestmentsGuard = ({ children }: EnrollmentInvestmentsGu
   const { state } = useEnrollment();
 
   if (!state.isInitialized || !state.selectedPlan) {
-    return <Navigate to="/enrollment/plans" replace />;
+    return <Navigate to="/enrollment/choose-plan" replace />;
   }
 
   if (state.contributionAmount <= 0) {

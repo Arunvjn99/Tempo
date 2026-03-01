@@ -2,10 +2,11 @@ import { Outlet, useLocation } from "react-router-dom";
 import { CoreAIFab } from "../components/ai/CoreAIFab";
 import { DemoSwitcher } from "../components/demo/DemoSwitcher";
 import { RouteErrorBoundary } from "../components/RouteErrorBoundary";
+import { SplashScreen } from "../components/SplashScreen";
 import { useAISettings } from "../context/AISettingsContext";
 import { CoreAIModalProvider } from "../context/CoreAIModalContext";
 
-const HIDE_CORE_AI_PATHS = ["/"];
+const HIDE_CORE_AI_PATHS = ["/", "/dashboard"];
 
 /**
  * Root layout - wraps all routes. Renders Outlet + global floating components.
@@ -21,6 +22,7 @@ export const RootLayout = () => {
 
   return (
     <CoreAIModalProvider>
+      <SplashScreen />
       <RouteErrorBoundary>
         <Outlet />
       </RouteErrorBoundary>

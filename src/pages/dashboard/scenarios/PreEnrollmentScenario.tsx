@@ -1,9 +1,14 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { PersonaProfile } from "@/mock/personas";
 import { ScenarioShell } from "./ScenarioShell";
+import { PersonalizePlanModal } from "@/components/enrollment/PersonalizePlanModal";
 
 export function PreEnrollmentScenario({ user }: { user: PersonaProfile }) {
   const { t } = useTranslation();
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const firstName = user.name.split(/\s+/)[0] || user.name;
+
   return (
     <ScenarioShell user={user} accentColor="#6366f1">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,11 +45,17 @@ export function PreEnrollmentScenario({ user }: { user: PersonaProfile }) {
         </p>
         <button
           type="button"
+          onClick={() => setIsWizardOpen(true)}
           className="mt-4 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
         >
           {t("demo.startEnrollmentButton")}
         </button>
       </div>
+      <PersonalizePlanModal
+        isOpen={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        userName={firstName}
+      />
     </ScenarioShell>
   );
 }

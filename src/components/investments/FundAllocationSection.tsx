@@ -1,13 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
-import { FundAllocationRow } from "./FundAllocationRow";
-import { AddInvestmentModal } from "./AddInvestmentModal";
+import { motion } from "framer-motion";
 import { useInvestment } from "../../context/InvestmentContext";
-import { getFundById } from "../../data/mockFunds";
-import { getSourceTotal, isSourceValid } from "../../utils/investmentAllocationHelpers";
-
-type SourceKey = "preTax" | "roth" | "afterTax";
+import { useEnrollmentOptional } from "../../enrollment/context/EnrollmentContext";
+import { getSourceTotal, deriveStyleFromRiskScore } from "../../utils/investmentAllocationHelpers";
+import { FundAllocationModal, type SourceKey } from "./FundAllocationModal";
 
 const SOURCE_LABEL_KEYS: Record<SourceKey, string> = {
   preTax: "enrollment.preTax",
@@ -22,206 +19,119 @@ const cardStyle: React.CSSProperties = {
   boxShadow: "var(--enroll-elevation-2)",
 };
 
-function AllocationBadge({ total }: { total: number }) {
-  const isValid = Math.abs(total - 100) < 0.01;
-  const isOver = total > 100;
-
-  return (
-    <span
-      className="text-xs font-bold px-2.5 py-0.5 rounded-full"
-      style={{
-        background: isValid
-          ? "rgb(var(--enroll-accent-rgb) / 0.08)"
-          : isOver
-            ? "rgb(var(--color-danger-rgb) / 0.08)"
-            : "rgb(var(--color-warning-rgb) / 0.08)",
-        color: isValid
-          ? "var(--enroll-accent)"
-          : isOver
-            ? "var(--color-danger)"
-            : "var(--color-warning)",
-      }}
-    >
-      {total.toFixed(1)}%
-    </span>
-  );
-}
-
-interface AllocationSubsectionProps {
+/** Single source row: when custom enabled = clickable + edit icon; when disabled = muted + System Managed badge */
+function SourceRow({
+  source,
+  isCustomEnabled,
+  onOpenModal,
+}: {
   source: SourceKey;
-  defaultExpanded: boolean;
-}
-
-function AllocationSubsection({ source, defaultExpanded }: AllocationSubsectionProps) {
+  isCustomEnabled: boolean;
+  onOpenModal: (s: SourceKey) => void;
+}) {
   const { t } = useTranslation();
-  const {
-    getFundsForSource,
-    updateSourceAllocation,
-    addFundToSource,
-    removeFundFromSource,
-    editAllocationEnabled,
-  } = useInvestment();
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [showFundSearch, setShowFundSearch] = useState(false);
-  const lastAddedFundIdRef = useRef<string | null>(null);
-
+  const { getFundsForSource } = useInvestment();
   const funds = getFundsForSource(source);
   const total = getSourceTotal(funds);
-  const allocatedFundIds = funds.map((f) => f.fundId);
   const sourceLabel = t(SOURCE_LABEL_KEYS[source]);
+  const isValid = Math.abs(total - 100) < 0.01;
 
-  const handleAddComplete = (fundId: string) => {
-    lastAddedFundIdRef.current = fundId;
-  };
-
-  useEffect(() => {
-    const fundId = lastAddedFundIdRef.current;
-    if (!fundId) return;
-    lastAddedFundIdRef.current = null;
-    const input = document.querySelector<HTMLInputElement>(`[name="allocation-${fundId}"]`);
-    if (input) {
-      requestAnimationFrame(() => input.focus());
-    }
-  }, [funds]);
-
-  return (
-    <div>
-      {/* Section trigger */}
-      <button
-        type="button"
-        onClick={() => setIsExpanded((x) => !x)}
-        aria-expanded={isExpanded}
-        className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-xl transition-colors duration-200"
+  if (!isCustomEnabled) {
+    return (
+      <div
+        className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-xl text-left cursor-default"
         style={{
-          background: isExpanded ? "rgb(var(--enroll-brand-rgb) / 0.04)" : "var(--enroll-soft-bg)",
-          border: isExpanded ? "1px solid rgb(var(--enroll-brand-rgb) / 0.1)" : "1px solid transparent",
+          background: "var(--enroll-soft-bg)",
+          border: "1px solid var(--enroll-card-border)",
+          opacity: 0.85,
         }}
       >
         <div className="flex items-center gap-2.5">
-          <span className="text-sm font-bold" style={{ color: "var(--enroll-text-primary)" }}>
+          <span className="text-sm font-bold" style={{ color: "var(--enroll-text-secondary)" }}>
             {sourceLabel}
           </span>
-          <span className="text-xs" style={{ color: "var(--enroll-text-muted)" }}>
-            {funds.length} fund{funds.length !== 1 ? "s" : ""}
-          </span>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <AllocationBadge total={total} />
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="transition-transform duration-200"
+          <span
+            className="text-[11px] px-2 py-0.5 rounded-full"
             style={{
-              transform: isExpanded ? "rotate(180deg)" : "rotate(0)",
+              background: "rgb(var(--enroll-brand-rgb) / 0.06)",
               color: "var(--enroll-text-muted)",
             }}
           >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </div>
-      </button>
-
-      {/* Expandable content */}
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-            className="overflow-hidden"
+            {t("enrollment.fundsCount", { count: funds.length })}
+          </span>
+          <span
+            className="text-[10px] font-semibold px-2 py-0.5 rounded"
+            style={{
+              background: "var(--enroll-card-border)",
+              color: "var(--enroll-text-muted)",
+            }}
           >
-            <div className="pt-4 pb-2 space-y-3">
-              <p className="text-xs px-1" style={{ color: "var(--enroll-text-muted)" }}>
-                {t("enrollment.allocateSourceTotal100", { source: sourceLabel.toLowerCase() })}
-              </p>
+            {t("enrollment.systemManaged")}
+          </span>
+        </div>
+        <span className="text-xs font-semibold" style={{ color: "var(--enroll-text-muted)" }}>
+          {isValid ? t("enrollment.allocated100") : t("enrollment.allocatedBadge", { pct: total.toFixed(1) })}
+        </span>
+      </div>
+    );
+  }
 
-              {editAllocationEnabled && (
-                <button
-                  type="button"
-                  onClick={() => setShowFundSearch(true)}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
-                  style={{
-                    color: "var(--enroll-brand)",
-                    background: "rgb(var(--enroll-brand-rgb) / 0.06)",
-                  }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3v10M3 8h10" strokeLinecap="round" /></svg>
-                  {t("enrollment.addInvestment")}
-                </button>
-              )}
-
-              <div className="space-y-2">
-                {funds.map((fa) => {
-                  const fund = getFundById(fa.fundId);
-                  if (!fund) return null;
-                  return (
-                    <FundAllocationRow
-                      key={fa.fundId}
-                      fund={fund}
-                      allocation={{ fundId: fa.fundId, percentage: fa.allocationPercent }}
-                      disabled={!editAllocationEnabled}
-                      onAllocationChange={(pct) => updateSourceAllocation(source, fa.fundId, pct)}
-                      onRemove={editAllocationEnabled ? () => removeFundFromSource(source, fa.fundId) : undefined}
-                    />
-                  );
-                })}
-              </div>
-
-              {/* Total line */}
-              <div
-                className="flex items-center justify-between px-3 py-2 rounded-lg"
-                style={{
-                  background: isSourceValid(funds) ? "rgb(var(--enroll-accent-rgb) / 0.06)" : "rgb(var(--color-warning-rgb) / 0.06)",
-                  border: isSourceValid(funds) ? "1px solid rgb(var(--enroll-accent-rgb) / 0.15)" : "1px solid rgb(var(--color-warning-rgb) / 0.15)",
-                }}
-              >
-                <span className="text-xs font-semibold" style={{ color: "var(--enroll-text-secondary)" }}>
-                  {t("enrollment.totalAllocation")}
-                </span>
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: isSourceValid(funds) ? "var(--enroll-accent)" : "var(--color-warning)" }}
-                >
-                  {total.toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AddInvestmentModal
-        open={showFundSearch}
-        onClose={() => setShowFundSearch(false)}
-        activeTaxSource={source}
-        existingFundIds={allocatedFundIds}
-        onAdd={(fundId) => addFundToSource(source, fundId)}
-        onAddComplete={handleAddComplete}
-      />
-    </div>
+  return (
+    <button
+      type="button"
+      onClick={() => onOpenModal(source)}
+      className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-xl transition-colors duration-200 text-left hover:opacity-90"
+      style={{
+        background: "var(--enroll-soft-bg)",
+        border: "1px solid var(--enroll-card-border)",
+      }}
+    >
+      <div className="flex items-center gap-2.5">
+        <span className="text-sm font-bold" style={{ color: "var(--enroll-text-primary)" }}>
+          {sourceLabel}
+        </span>
+        <span
+          className="text-[11px] px-2 py-0.5 rounded-full"
+          style={{
+            background: "rgb(var(--enroll-brand-rgb) / 0.08)",
+            color: "var(--enroll-text-secondary)",
+          }}
+        >
+          {t("enrollment.fundsCount", { count: funds.length })}
+        </span>
+      </div>
+      <div className="flex items-center gap-2.5">
+        <span className="text-xs font-semibold" style={{ color: isValid ? "var(--enroll-accent)" : "var(--enroll-text-muted)" }}>
+          {isValid ? t("enrollment.allocated100") : t("enrollment.allocatedBadge", { pct: total.toFixed(1) })}
+        </span>
+        <span style={{ color: "var(--enroll-text-muted)" }} aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </span>
+      </div>
+    </button>
   );
 }
 
 export function FundAllocationSection() {
   const { t } = useTranslation();
+  const enrollment = useEnrollmentOptional();
   const {
     activeSources,
-    editAllocationEnabled,
-    setEditAllocationEnabled,
-    hasPreTaxOrRoth,
-    hasAfterTax,
     getFundsForSource,
     canConfirmAllocation,
+    isCustomAllocationEnabled,
+    setCustomAllocationEnabled,
+    applyModelAllocation,
   } = useInvestment();
+  const [modalSource, setModalSource] = useState<SourceKey | null>(null);
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
 
-  if (!hasPreTaxOrRoth && !hasAfterTax) return null;
+  const profile = enrollment?.state.investmentProfile ?? null;
+  const riskTolerance = profile?.riskTolerance ?? 3;
+  const derivedStyle = deriveStyleFromRiskScore(riskTolerance);
 
   const anyOver = activeSources.some((src) => getSourceTotal(getFundsForSource(src)) > 100.01);
   const globalStatus: "error" | "warning" | "success" = canConfirmAllocation
@@ -229,6 +139,28 @@ export function FundAllocationSection() {
     : anyOver
       ? "error"
       : "warning";
+
+  const handleToggleCustom = useCallback(
+    (enabled: boolean) => {
+      if (enabled) {
+        setCustomAllocationEnabled(true);
+        return;
+      }
+      setShowDisableConfirm(true);
+    },
+    [setCustomAllocationEnabled]
+  );
+
+  const handleConfirmDisable = useCallback(() => {
+    applyModelAllocation(derivedStyle);
+    setCustomAllocationEnabled(false);
+    setModalSource(null);
+    setShowDisableConfirm(false);
+  }, [applyModelAllocation, derivedStyle, setCustomAllocationEnabled]);
+
+  const handleCancelDisable = useCallback(() => {
+    setShowDisableConfirm(false);
+  }, []);
 
   return (
     <motion.section
@@ -245,8 +177,41 @@ export function FundAllocationSection() {
         {t("enrollment.fundAllocation")}
       </h2>
 
+      {/* Toggle: Customize my allocation */}
+      <div
+        className="mb-4 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        style={{ ...cardStyle, background: "var(--enroll-soft-bg)" }}
+      >
+        <div>
+          <p className="text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
+            {t("enrollment.customizeMyAllocation")}
+          </p>
+          <p className="text-[11px] mt-0.5" style={{ color: "var(--enroll-text-muted)" }}>
+            {t("enrollment.customizeMyAllocationDesc")}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isCustomAllocationEnabled}
+          onClick={() => handleToggleCustom(!isCustomAllocationEnabled)}
+          className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--enroll-brand)]"
+          style={{
+            background: isCustomAllocationEnabled ? "var(--enroll-brand)" : "var(--enroll-card-border)",
+          }}
+        >
+          <span
+            className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition"
+            style={{
+              transform: isCustomAllocationEnabled ? "translateX(1.25rem)" : "translateX(0.125rem)",
+              marginTop: 2,
+            }}
+          />
+        </button>
+      </div>
+
       <div className="p-5 space-y-5" style={cardStyle}>
-        {/* Edit allocation — secondary CTA */}
+        {/* "I choose my investments" card */}
         <div
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl"
           style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
@@ -256,33 +221,31 @@ export function FundAllocationSection() {
               className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
               style={{ background: "rgb(var(--enroll-brand-rgb) / 0.1)", color: "var(--enroll-brand)" }}
             >
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <rect x="4" y="8" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="2" />
-                <path d="M6 8V5a4 4 0 118 0v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
             </div>
             <div>
               <p className="text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
-                {t("enrollment.editAllocation")}
+                {t("enrollment.iChooseMyInvestments")}
               </p>
               <p className="text-[11px]" style={{ color: "var(--enroll-text-muted)" }}>
                 {t("enrollment.customizeRecommendedAllocation")}
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setEditAllocationEnabled(!editAllocationEnabled)}
-            className="auto-increase-panel__btn--secondary inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg shrink-0 transition-colors focus:outline-none"
-          >
-            {editAllocationEnabled ? t("enrollment.save") : t("enrollment.edit")}
-          </button>
         </div>
 
-        {/* Source subsections */}
+        {/* Source rows */}
         <div className="space-y-3">
-          {activeSources.map((source, index) => (
-            <AllocationSubsection key={source} source={source} defaultExpanded={index === 0} />
+          {activeSources.map((source) => (
+            <SourceRow
+              key={source}
+              source={source}
+              isCustomEnabled={isCustomAllocationEnabled}
+              onOpenModal={setModalSource}
+            />
           ))}
         </div>
 
@@ -335,6 +298,59 @@ export function FundAllocationSection() {
           </div>
         </div>
       </div>
+
+      {isCustomAllocationEnabled && modalSource && (
+        <FundAllocationModal
+          open={!!modalSource}
+          onClose={() => setModalSource(null)}
+          source={modalSource}
+        />
+      )}
+
+      {/* Confirm dialog: Disabling customization will reset... */}
+      {showDisableConfirm && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="disable-custom-title"
+        >
+          <div
+            className="max-w-sm w-full p-6 rounded-xl shadow-xl"
+            style={{
+              background: "var(--enroll-card-bg)",
+              border: "1px solid var(--enroll-card-border)",
+            }}
+          >
+            <p id="disable-custom-title" className="text-sm mb-4" style={{ color: "var(--enroll-text-primary)" }}>
+              {t("enrollment.disablingCustomizationReset")}
+            </p>
+            <div className="flex gap-3 mt-4">
+              <button
+                type="button"
+                onClick={handleCancelDisable}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+                style={{
+                  background: "var(--enroll-soft-bg)",
+                  color: "var(--enroll-text-primary)",
+                  border: "1px solid var(--enroll-card-border)",
+                }}
+              >
+                {t("enrollment.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDisable}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white"
+                style={{ background: "var(--enroll-brand)" }}
+              >
+                {t("enrollment.continue")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.section>
   );
 }

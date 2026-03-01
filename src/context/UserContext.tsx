@@ -1,3 +1,10 @@
+/**
+ * UserContext: profile + company for the current auth user.
+ * - Profile is fetched from public.profiles (id, name, company_id, location, role).
+ * - Company is fetched from public.companies using profile.company_id (UUID).
+ * - Branding is applied from companies.branding_json, logo_url, primary_color, secondary_color only.
+ * - No company_branding table is used; theme is applied after login and on page refresh.
+ */
 import {
   createContext,
   useContext,
@@ -9,15 +16,11 @@ import type { User } from "@supabase/supabase-js";
 import { useAuth } from "./AuthContext";
 import { useTheme } from "./ThemeContext";
 import { supabase } from "../lib/supabase";
-import { getCompanyBranding } from "../services/companyBrandingService";
-import { generateDarkTheme } from "../theme/utils";
-import type { ThemeColors } from "../theme/utils";
-import type { SerializedBranding } from "../pages/settings/theme-editor/serialization";
 
 export interface Profile {
   id: string;
   name: string;
-  company_id: string;
+  company_id: string | null;
   location: string;
   /** For RLS / permission checks; assume column exists on profiles */
   role?: string;
@@ -42,7 +45,7 @@ interface UserContextValue {
 const UserContext = createContext<UserContextValue | null>(null);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const { user: authUser, loading: authLoading } = useAuth();
+  const { user: authUser, session, loading: authLoading } = useAuth();
   const { setCompanyBranding, setBrandingLoading } = useTheme();
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -52,11 +55,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (authLoading) return;
 
-    if (!authUser) {
+    if (!authUser || !session) {
       setProfile(null);
       setCompany(null);
       setBrandingLoading(false);
       setProfileLoading(false);
+      if (typeof document?.documentElement?.style?.removeProperty === "function") {
+        document.documentElement.style.removeProperty("--color-primary");
+        document.documentElement.style.removeProperty("--color-secondary");
+      }
       return;
     }
 
@@ -69,12 +76,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         .from("profiles")
         .select("id, name, company_id, location, role")
         .eq("id", authUser.id)
-        .single();
+        .maybeSingle();
 
       if (import.meta.env.DEV) console.log("[user-diag] profile result:", { profileData, profileError });
       if (cancelled) return;
 
-      if (profileError || !profileData) {
+      if (profileError) {
         if (import.meta.env.DEV) console.error("[user-diag] profile fetch failed:", profileError);
         setProfile(null);
         setCompany(null);
@@ -83,50 +90,105 @@ export function UserProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setProfile(profileData);
+      let profileDataToUse = profileData;
 
-      // STEP 1: Log profile → company linkage for logo audit
-      if (import.meta.env.DEV) {
-        console.log("[logo-audit] user.id:", authUser.id, "profile.company_id:", profileData.company_id);
+      // Auto-create profile on first login if row does not exist (e.g. after email verification)
+      if (!profileDataToUse) {
+        const meta = authUser.user_metadata as Record<string, unknown> | undefined;
+        const { error: upsertError } = await supabase
+          .from("profiles")
+          .upsert(
+            {
+              id: authUser.id,
+              name: (meta?.name as string) ?? "",
+              company_id: (meta?.company_id as string) ?? null,
+              location: (meta?.location as string) ?? "",
+              role: "user",
+            },
+            { onConflict: "id" }
+          );
+        if (cancelled) return;
+        if (upsertError) {
+          if (import.meta.env.DEV) console.error("[user-diag] profile upsert failed:", upsertError);
+          setProfile(null);
+          setCompany(null);
+          setBrandingLoading(false);
+          setProfileLoading(false);
+          return;
+        }
+        const { data: refetched, error: refetchError } = await supabase
+          .from("profiles")
+          .select("id, name, company_id, location, role")
+          .eq("id", authUser.id)
+          .single();
+        if (cancelled) return;
+        if (refetchError || !refetched) {
+          if (import.meta.env.DEV) console.error("[user-diag] profile refetch after upsert failed:", refetchError);
+          setProfile(null);
+          setCompany(null);
+          setBrandingLoading(false);
+          setProfileLoading(false);
+          return;
+        }
+        profileDataToUse = refetched;
       }
 
-      if (import.meta.env.DEV) console.log("[user-diag] fetching company for", profileData.company_id);
+      setProfile(profileDataToUse);
+
+      if (import.meta.env.DEV) {
+        console.log("[user-diag] profile.company_id:", profileDataToUse.company_id);
+      }
+
+      // Defensive: missing company_id → do not load company theme; use default
+      if (!profileDataToUse.company_id?.trim()) {
+        if (import.meta.env.DEV) {
+          console.warn("[UserContext] profile.company_id is missing; company branding will not be applied. User may need to complete signup or have profile updated.");
+        }
+        setCompany(null);
+        setCompanyBranding("", undefined);
+        setBrandingLoading(false);
+        setProfileLoading(false);
+        return;
+      }
+
       const { data: companyData, error: companyError } = await supabase
         .from("companies")
         .select("id, name, primary_color, secondary_color, branding_json, logo_url")
-        .eq("id", profileData.company_id)
+        .eq("id", profileDataToUse.company_id)
         .single();
 
       if (import.meta.env.DEV) console.log("[user-diag] company result:", { companyData, companyError });
       if (cancelled) return;
 
-      const company = companyData as Company | null;
+      if (companyError || !companyData) {
+        if (import.meta.env.DEV) {
+          console.warn("[UserContext] company fetch failed for company_id:", profileDataToUse.company_id, companyError);
+        }
+        setCompany(null);
+        setCompanyBranding("", undefined);
+        setBrandingLoading(false);
+        setProfileLoading(false);
+        return;
+      }
+
+      const company = companyData as Company;
       setCompany(company);
 
-      // PHASE 3: Temporary DEV logging — user → company → logo
-      if (import.meta.env.DEV) {
-        console.log("[logo-audit] user.id:", authUser?.id);
-        console.log("[logo-audit] profile.company_id:", profileData?.company_id);
-        console.log("[logo-audit] company row:", companyData);
-        console.log("[logo-audit] company.logo_url:", companyData?.logo_url);
-      }
-
-      // setCompanyBranding(company.name, theme, company.logo_url) — logo from Supabase
-      if (company?.name) {
-        const logoUrl = company.logo_url?.trim() || "";
-        const brandingPayload = await getCompanyBranding(company.id);
-        if (cancelled) return;
-        if (brandingPayload && typeof brandingPayload === "object" && brandingPayload.light) {
-          const light: ThemeColors = {
-            ...(brandingPayload as SerializedBranding).light,
-            logo: logoUrl,
-          };
-          const dark = generateDarkTheme(light);
-          setCompanyBranding(company.name, { light, dark }, company.logo_url);
+      // Apply primary_color and secondary_color from companies row
+      if (typeof document?.documentElement?.style?.setProperty === "function") {
+        if (company.primary_color?.trim()) {
+          document.documentElement.style.setProperty("--color-primary", company.primary_color.trim());
+          if (company.secondary_color?.trim()) {
+            document.documentElement.style.setProperty("--color-secondary", company.secondary_color.trim());
+          }
         } else {
-          setCompanyBranding(company.name, company.branding_json, company.logo_url);
+          document.documentElement.style.removeProperty("--color-primary");
+          document.documentElement.style.removeProperty("--color-secondary");
         }
       }
+
+      // Apply theme from companies.branding_json and companies.logo_url
+      setCompanyBranding(company.name, company.branding_json ?? undefined, company.logo_url ?? null);
       setBrandingLoading(false);
       setProfileLoading(false);
     };

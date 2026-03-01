@@ -1,12 +1,15 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { DashboardHeader } from "../../components/dashboard/DashboardHeader";
 import { EnrollmentStepper } from "../../components/enrollment/EnrollmentStepper";
+import { InvestmentProfileWizard } from "../../components/enrollment/InvestmentProfileWizard";
 import { AllocationSummary } from "../../components/investments/AllocationSummary";
 import { InvestmentsFooter } from "../../components/investments/InvestmentsFooter";
+import { InvestmentWizardProvider } from "../../context/InvestmentWizardContext";
+import { useEnrollmentOptional } from "../../enrollment/context/EnrollmentContext";
 
 interface InvestmentsLayoutProps {
   children: ReactNode;
@@ -16,9 +19,12 @@ export default function InvestmentsLayout({ children }: InvestmentsLayoutProps) 
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const isEnrollmentFlow = pathname === "/enrollment/investments" || pathname.startsWith("/enrollment/investments/");
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const enrollment = useEnrollmentOptional();
+  const openWizard = useCallback(() => setIsWizardOpen(true), []);
 
   const content = (
-    <div style={{ background: "var(--enroll-bg)" }} className="w-full min-h-screen pb-28">
+    <div style={{ background: "var(--enroll-bg)" }} className="w-full min-h-screen pb-12">
       {!isEnrollmentFlow && (
         <div className="enrollment-stepper-section investments-layout__stepper">
           <EnrollmentStepper currentStep={3} title={t("enrollment.investmentElectionsTitle")} subtitle={t("enrollment.investmentElectionsSubtitle")} />
@@ -37,28 +43,39 @@ export default function InvestmentsLayout({ children }: InvestmentsLayoutProps) 
             className="text-[28px] md:text-[32px] font-bold leading-tight"
             style={{ color: "var(--enroll-text-primary)" }}
           >
-            {t("enrollment.buildYourStrategy")}
+            {t("enrollment.chooseHowInvested")}
           </h1>
           <p
             className="mt-1.5 text-base"
             style={{ color: "var(--enroll-text-secondary)" }}
           >
-            {t("enrollment.balanceGrowthStability")}
+            {t("enrollment.selectOrCustomizeAllocation")}
           </p>
         </motion.header>
 
         {/* ── Main Grid ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="lg:col-span-2">{children}</div>
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-24">
-              <AllocationSummary variant="enrollment" />
+        <InvestmentWizardProvider openWizard={openWizard}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div className="lg:col-span-2">{children}</div>
+            <div className="lg:col-span-1">
+              <div className="lg:sticky lg:top-24">
+                <AllocationSummary variant="enrollment" />
+              </div>
             </div>
           </div>
-        </div>
+        </InvestmentWizardProvider>
       </div>
 
       <InvestmentsFooter />
+
+      {isEnrollmentFlow && (
+        <InvestmentProfileWizard
+          isOpen={isWizardOpen}
+          onClose={() => setIsWizardOpen(false)}
+          onComplete={() => setIsWizardOpen(false)}
+          initialProfile={enrollment?.state.investmentProfile ?? undefined}
+        />
+      )}
     </div>
   );
 

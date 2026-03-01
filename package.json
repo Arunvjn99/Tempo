@@ -11,7 +11,8 @@
     "build:check": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "playwright:demo": "node scripts/superdesign-demo.js"
+    "playwright:demo": "node scripts/superdesign-demo.js",
+    "stitch:fetch-loan-hub": "node scripts/fetch-stitch-screen.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@superdesign/cli": "^0.2.2",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

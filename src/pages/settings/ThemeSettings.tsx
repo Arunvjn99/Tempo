@@ -12,7 +12,7 @@ import {
 import type { ThemeColors } from "../../theme/utils";
 import { generateDarkTheme } from "../../theme/utils";
 import { serializeBranding } from "./theme-editor/serialization";
-import { upsertCompanyBranding } from "../../services/companyBrandingService";
+import { updateCompanyBranding } from "../../services/companyBrandingService";
 import { BrandColorsSection } from "./theme-editor/BrandColorsSection";
 import { ExperienceControlsSection } from "./theme-editor/ExperienceControlsSection";
 import { TypographySection } from "./theme-editor/TypographySection";
@@ -119,7 +119,7 @@ export const ThemeSettings = () => {
     setSaveStatus("idle");
     setSaveErrorMessage(null);
     setSaving(true);
-    const result = await upsertCompanyBranding(company.id, payload);
+    const result = await updateCompanyBranding(company.id, payload);
     setSaving(false);
     if (result) {
       setLastSavedSnapshot(JSON.stringify(payload));

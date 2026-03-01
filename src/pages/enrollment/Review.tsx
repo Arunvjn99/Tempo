@@ -1,8 +1,8 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import i18n from "i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { AllocationChart } from "../../components/investments/AllocationChart";
 import { useEnrollment } from "../../enrollment/context/EnrollmentContext";
 import { useInvestment } from "../../context/InvestmentContext";
 import { getFundById } from "../../data/mockFunds";
@@ -76,8 +76,15 @@ function useAnimatedValue(target: number, duration = 600): number {
 }
 
 /* ── Helpers ── */
-const formatCurrency = (n: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number.isFinite(n) && n >= 0 ? n : 0);
+const locale = () => i18n.language || "en-US";
+
+function formatCurrency(n: number): string {
+  return new Intl.NumberFormat(locale(), { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Number.isFinite(n) && n >= 0 ? n : 0);
+}
+
+function formatPercent(value: number, decimals = 1): string {
+  return new Intl.NumberFormat(locale(), { style: "percent", minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(Number.isFinite(value) ? value / 100 : 0);
+}
 
 const ASSET_CLASS_KEYS: Record<string, string> = {
   "Large Cap": "enrollment.assetClassLargeCap",
@@ -99,27 +106,6 @@ function getAssetClassKey(ac: string): string {
   return ac;
 }
 
-function getRiskColor(r: number): string {
-  if (r < 3) return "var(--enroll-accent)";
-  if (r < 5) return "var(--enroll-brand)";
-  if (r < 7) return "var(--color-warning, #f59e0b)";
-  return "var(--color-danger, #ef4444)";
-}
-
-function formatRiskLevel(r: number): "Conservative" | "Moderate" | "Moderate-Aggressive" | "Aggressive" {
-  if (r < 3) return "Conservative";
-  if (r < 5) return "Moderate";
-  if (r < 7) return "Moderate-Aggressive";
-  return "Aggressive";
-}
-
-const RISK_LABEL_KEYS: Record<ReturnType<typeof formatRiskLevel>, string> = {
-  Conservative: "enrollment.riskConservative",
-  Moderate: "enrollment.riskModerate",
-  "Moderate-Aggressive": "enrollment.riskModerateAggressive",
-  Aggressive: "enrollment.riskAggressive",
-};
-
 /* ═══════════════════════════════════════════════════════
    REVIEW PAGE
    ═══════════════════════════════════════════════════════ */
@@ -136,8 +122,6 @@ export const Review = () => {
   const [pendingFeedback, setPendingFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [expandedInsight, setExpandedInsight] = useState<number | null>(null);
-
   useEffect(() => {
     if (!pendingFeedback || showSuccessModal) return;
     const timer = setTimeout(() => {
@@ -200,6 +184,12 @@ export const Review = () => {
 
   const yearsToRetirement = (enrollment.state.retirementAge ?? 67) - (enrollment.state.currentAge ?? 40);
   const annualReturn = weightedSummary.expectedReturn ?? 7;
+  const feePercent = weightedSummary.totalFees ?? 0;
+
+  /* Retirement readiness: same projected value; goal derived so we can show % and shortfall (e.g. 50% reached). */
+  const readinessGoal = Math.max(projectedValue * 2, 1);
+  const readinessPercent = Math.min(99, Math.round((projectedValue / readinessGoal) * 100));
+  const shortfallAmount = Math.max(0, readinessGoal - projectedValue);
 
   const canEnroll = prerequisites.allMet && investment.canConfirmAllocation && acknowledgements.termsAccepted;
 
@@ -208,17 +198,17 @@ export const Review = () => {
   /* ── Handlers ── */
   const buildEnrollmentSummary = useCallback(() => {
     const lines: string[] = [
-      "Enrolment Summary",
+      t("enrollment.enrolmentSummary"),
       "==================",
       "",
-      `Plan: ${selectedPlanName || "Traditional 401(k)"}`,
-      `Employer Match: ${enrollment.state.assumptions.employerMatchPercentage}%`,
+      `Plan: ${selectedPlanName || t("enrollment.traditional401k")}`,
+      `${t("enrollment.employerMatchLabel")}: ${enrollment.state.assumptions.employerMatchPercentage}%`,
       `Contribution: ${contributionTotal}% of paycheck`,
       `  Pre-tax: ${preTax > 0 ? ((preTax / 100) * contributionTotal).toFixed(1) + "%" : "—"}`,
       `  Roth: ${roth > 0 ? ((roth / 100) * contributionTotal).toFixed(1) + "%" : "—"}`,
       `  After-tax: ${afterTax > 0 ? ((afterTax / 100) * contributionTotal).toFixed(1) + "%" : "—"}`,
       "",
-      "Investment Elections:",
+      t("enrollment.investmentElectionsHeading") + ":",
       ...fundTableRows.map((r) => `  ${r.fund.ticker} ${r.fund.name}: ${r.percentage.toFixed(1)}%`),
       "",
       `Total Allocation: ${totalAllocation.toFixed(1)}%`,
@@ -226,7 +216,7 @@ export const Review = () => {
       `Estimated Fees: ${(weightedSummary.totalFees ?? 0).toFixed(2)}%`,
     ];
     return lines.join("\n");
-  }, [selectedPlanName, enrollment.state.assumptions.employerMatchPercentage, contributionTotal, preTax, roth, afterTax, fundTableRows, totalAllocation, weightedSummary.expectedReturn, weightedSummary.totalFees]);
+  }, [t, selectedPlanName, enrollment.state.assumptions.employerMatchPercentage, contributionTotal, preTax, roth, afterTax, fundTableRows, totalAllocation, weightedSummary.expectedReturn, weightedSummary.totalFees]);
 
   const handleDownloadPDF = useCallback(() => {
     const summary = buildEnrollmentSummary();
@@ -242,11 +232,11 @@ export const Review = () => {
 
   const handleEmailSummary = useCallback(() => {
     const summary = buildEnrollmentSummary();
-    const subject = encodeURIComponent("My Retirement Enrolment Summary");
+    const subject = encodeURIComponent(t("enrollment.emailSummarySubject"));
     const body = encodeURIComponent(summary);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
     showFeedback(t("enrollment.openingEmail"));
-  }, [buildEnrollmentSummary, showFeedback]);
+  }, [t, buildEnrollmentSummary, showFeedback]);
 
   const handleApplySuggestion = useCallback(
     (suggestion: "contribution" | "investments") => {
@@ -303,556 +293,303 @@ export const Review = () => {
       </AnimatePresence>
 
       <EnrollmentPageContent
-        title={t("enrollment.reviewTitle")}
-        subtitle={t("enrollment.reviewSubtitle")}
-        badge={
-          <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full"
-            style={{ background: "rgb(var(--enroll-brand-rgb) / 0.08)", color: "var(--enroll-brand)" }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-            {t("enrollment.finalReview")}
-          </span>
-        }
+        title={t("enrollment.reviewTitleInstitutional")}
+        subtitle={t("enrollment.reviewSubtitleInstitutional")}
       >
-        {/* ═══ FUTURE SNAPSHOT ═══ */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="p-6 md:p-8 mb-8"
-          style={{
-            ...cardStyle,
-            background: "linear-gradient(135deg, var(--enroll-card-bg) 0%, rgb(var(--enroll-brand-rgb) / 0.03) 100%)",
-          }}
-        >
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "var(--enroll-text-muted)" }}>
-                {t("enrollment.projectedRetirementBalance")}
-              </p>
-              <AnimatedCurrencyDisplay value={projectedValue} />
-              <div className="flex flex-wrap items-center gap-3 mt-3">
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full"
-                  style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", color: "var(--enroll-brand)" }}
-                >
-                  {t("enrollment.yearsToRetirement", { years: yearsToRetirement })}
-                </span>
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full"
-                  style={{ background: "rgb(var(--enroll-accent-rgb) / 0.06)", color: "var(--enroll-accent)" }}
-                >
-                  {t("enrollment.annualReturnAssumed", { percent: annualReturn })}
-                </span>
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full"
-                  style={{ background: "var(--enroll-soft-bg)", color: "var(--enroll-text-muted)" }}
-                >
-                  {t("enrollment.contributionRate", { percent: contributionTotal })}
-                </span>
-              </div>
-              <p className="text-sm mt-3" style={{ color: "var(--enroll-text-secondary)" }}>
-                {t("enrollment.strongPath", { years: yearsToRetirement })}
-              </p>
-            </div>
-
-            {/* Mini progress ring */}
-            <div className="flex flex-col items-center gap-2 shrink-0">
-              <div className="relative w-24 h-24">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--enroll-card-border)" strokeWidth="7" />
-                  <motion.circle
-                    cx="50" cy="50" r="40" fill="none"
-                    stroke="var(--enroll-accent)"
-                    strokeWidth="7"
-                    strokeLinecap="round"
-                    strokeDasharray="251.2"
-                    initial={{ strokeDashoffset: 251.2 }}
-                    animate={{ strokeDashoffset: 251.2 * (1 - Math.min(1, contributionTotal / 20)) }}
-                    transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-                    transform="rotate(-90 50 50)"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-lg font-bold" style={{ color: "var(--enroll-text-primary)" }}>{Math.round(contributionTotal)}%</span>
-                  <span className="text-[9px] font-medium" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.ofPay")}</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAdvisorModal(true)}
-                className="text-[11px] font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer transition-colors"
-                style={{ background: "rgb(var(--enroll-brand-rgb) / 0.08)", color: "var(--enroll-brand)" }}
-              >
-                {t("enrollment.optimizeWithAI")}
-              </button>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* ═══ MAIN GRID ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
-          {/* ── LEFT COLUMN (2 cols) ── */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Plan & Contribution Summary */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.1 }}
-              className="p-6"
-              style={cardStyle}
-            >
-              <SectionHeader title={t("enrollment.planAndContributions")} editLabel={t("enrollment.edit")} onEdit={() => navigate("/enrollment/contribution")} />
-
-              {/* Plan row */}
-              <div
-                className="flex items-center justify-between p-3 rounded-xl mb-3"
-                style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-              >
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.plan")}</p>
-                  <p className="text-sm font-semibold mt-0.5" style={{ color: "var(--enroll-text-primary)" }}>
-                    {enrollment.state.selectedPlan ? t(PLAN_TYPE_KEYS[enrollment.state.selectedPlan]) : t("enrollment.plan401k")} — {selectedPlanName || t("enrollment.traditional401k")}
-                  </p>
-                </div>
-                <span
-                  className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                  style={{ background: "rgb(var(--enroll-accent-rgb) / 0.08)", color: "var(--enroll-accent)" }}
-                >
-                  {t("enrollment.matchPercent", { percent: enrollment.state.assumptions.employerMatchPercentage })}
-                </span>
-              </div>
-
-              {/* Source breakdown */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { labelKey: "enrollment.preTax", value: preTax },
-                  { labelKey: "enrollment.roth", value: roth },
-                  { labelKey: "enrollment.afterTax", value: afterTax },
-                ].map(({ labelKey, value }) => (
-                  <div
-                    key={labelKey}
-                    className="rounded-xl p-3 text-center"
-                    style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t(labelKey)}</p>
-                    <p
-                      className="text-lg font-bold mt-1"
-                      style={{ color: value > 0 ? "var(--enroll-text-primary)" : "var(--enroll-text-muted)" }}
-                    >
-                      {formatContributionPct((value / 100) * contributionTotal)}
-                    </p>
-                    <p className="text-[10px]" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.ofPaycheck")}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Auto Increase */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.15 }}
-              className="p-6"
-              style={cardStyle}
-            >
-              <SectionHeader title={t("enrollment.autoIncrease")} editLabel={t("enrollment.edit")} onEdit={() => navigate("/enrollment/future-contributions")} />
-              {(() => {
-                const ai = enrollment.state.autoIncrease;
-                const hasAny = (ai.preTaxIncrease ?? 0) > 0 || (ai.rothIncrease ?? 0) > 0 || (ai.afterTaxIncrease ?? 0) > 0;
-                if (!ai.enabled || !hasAny) {
-                  return (
-                    <p className="text-sm" style={{ color: "var(--enroll-text-secondary)" }}>
-                      {t("enrollment.autoIncreaseNotConfigured")}
-                    </p>
-                  );
-                }
-                return (
-                  <>
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.cycle")}</span>
-                      <span
-                        className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                        style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", color: "var(--enroll-brand)" }}
-                      >
-                        {t(INCREMENT_CYCLE_KEYS[ai.incrementCycle])}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { labelKey: "enrollment.preTax", value: ai.preTaxIncrease ?? 0 },
-                        { labelKey: "enrollment.roth", value: ai.rothIncrease ?? 0 },
-                        { labelKey: "enrollment.afterTax", value: ai.afterTaxIncrease ?? 0 },
-                      ].map(({ labelKey, value }) => (
-                        <div
-                          key={labelKey}
-                          className="rounded-xl p-3 text-center"
-                          style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                        >
-                          <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t(labelKey)}</p>
-                          <p className="text-lg font-bold mt-1" style={{ color: value > 0 ? "var(--enroll-accent)" : "var(--enroll-text-muted)" }}>
-                            {value > 0 ? `${value}%` : "—"}
-                          </p>
-                          <p className="text-[10px]" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.perYear")}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Auto-Increase Settings: annual %, stop at, minimum floor */}
-                    <div className="mt-4 pt-4 space-y-2" style={{ borderTop: "1px solid var(--enroll-card-border)" }}>
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.annualIncreaseLabel")}</span>
-                        <span style={{ color: "var(--enroll-text-primary)", fontWeight: 600 }}>{ai.percentage}%</span>
-                      </div>
-                      {ai.maxPercentage > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.reviewStopAt")}</span>
-                          <span style={{ color: "var(--enroll-text-primary)", fontWeight: 600 }}>{ai.maxPercentage}%</span>
-                        </div>
-                      )}
-                      {ai.minimumFloor !== undefined && ai.minimumFloor >= 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.reviewMinimumFloor")}</span>
-                          <span style={{ color: "var(--enroll-text-primary)", fontWeight: 600 }}>{ai.minimumFloor}%</span>
-                        </div>
-                      )}
-                    </div>
-                  </>
-                );
-              })()}
-            </motion.div>
-
-            {/* Investment Elections */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.2 }}
-              className="p-6"
-              style={cardStyle}
-            >
-              <SectionHeader
-                title={t("enrollment.investmentElections")}
-                editLabel={!isAllocationValid ? t("enrollment.fixAllocation") : t("enrollment.edit")}
-                onEdit={() => navigate("/enrollment/investments")}
-                warning={!isAllocationValid}
-              />
-
-              {/* Allocation warning */}
-              {!isAllocationValid && (
-                <div
-                  className="flex items-center gap-2 p-3 rounded-xl mb-4"
-                  style={{ background: "rgb(var(--color-danger-rgb) / 0.06)", border: "1px solid rgb(var(--color-danger-rgb) / 0.15)" }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" strokeWidth="2" aria-hidden="true">
-                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <span className="text-xs font-semibold" style={{ color: "var(--color-danger)" }}>
-                    {t("enrollment.allocationMustEqual", { percent: totalAllocation.toFixed(0) })}
-                  </span>
-                </div>
-              )}
-
-              {/* Fund cards */}
-              <div className="space-y-2">
-                {fundTableRows.map(({ fund, percentage }, idx) => (
-                  <motion.div
-                    key={fund.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, delay: 0.05 * idx }}
-                    className="flex items-center gap-3 p-3 rounded-xl"
-                    style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
-                          style={{ background: "rgb(var(--enroll-brand-rgb) / 0.1)", color: "var(--enroll-brand)" }}
-                        >
-                          {fund.ticker}
-                        </span>
-                        <span className="text-xs font-semibold truncate" style={{ color: "var(--enroll-text-primary)" }}>{fund.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px]" style={{ color: "var(--enroll-text-muted)" }}>{t(getAssetClassKey(fund.assetClass))}</span>
-                        <span className="text-[10px]" style={{ color: "var(--enroll-text-muted)" }}>{fund.expenseRatio.toFixed(2)}% ER</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--enroll-card-border)" }}>
-                        <motion.div
-                          className="h-full rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${percentage}%` }}
-                          transition={{ duration: 0.6, delay: 0.1 * idx }}
-                          style={{ background: "var(--enroll-brand)" }}
-                        />
-                      </div>
-                      <span className="text-sm font-bold w-12 text-right" style={{ color: "var(--enroll-text-primary)" }}>
-                        {percentage.toFixed(1)}%
-                      </span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Total */}
-              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid var(--enroll-card-border)" }}>
-                <span className="text-xs" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.fundsSelected", { count: fundTableRows.length })}</span>
-                <span
-                  className="text-sm font-bold"
-                  style={{ color: isAllocationValid ? "var(--enroll-accent)" : "var(--color-danger)" }}
-                >
-                  {t("enrollment.total", { percent: totalAllocation.toFixed(1) })}
-                </span>
-              </div>
-            </motion.div>
-
-            {/* What Happens Next */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.3 }}
-              className="p-6"
-              style={cardStyle}
-            >
-              <p className="text-sm font-bold mb-4" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.whatHappensNext")}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {[
-                  { icon: "📅", titleKey: "enrollment.contributionsStart", descKey: "enrollment.contributionsStartDesc" },
-                  { icon: "🕐", titleKey: "enrollment.processingTime", descKey: "enrollment.processingTimeDesc" },
-                  { icon: "⚙", titleKey: "enrollment.modifyAnytime", descKey: "enrollment.modifyAnytimeDesc" },
-                ].map(({ icon, titleKey, descKey }) => (
-                  <div
-                    key={titleKey}
-                    className="flex gap-3 p-3 rounded-xl"
-                    style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                  >
-                    <span className="text-lg shrink-0">{icon}</span>
-                    <div>
-                      <p className="text-xs font-bold" style={{ color: "var(--enroll-text-primary)" }}>{t(titleKey)}</p>
-                      <p className="text-[11px] mt-0.5" style={{ color: "var(--enroll-text-muted)" }}>{t(descKey)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Download / Email */}
-            <div className="flex flex-wrap gap-3">
-              {[
-                {
-                  labelKey: "enrollment.downloadSummary",
-                  onClick: handleDownloadPDF,
-                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>,
-                },
-                {
-                  labelKey: "enrollment.emailSummary",
-                  onClick: handleEmailSummary,
-                  icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>,
-                },
-              ].map(({ labelKey, onClick, icon }) => (
-                <button
-                  key={labelKey}
-                  type="button"
-                  onClick={onClick}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl border-none cursor-pointer transition-colors"
-                  style={{ background: "var(--enroll-soft-bg)", color: "var(--enroll-text-secondary)", border: "1px solid var(--enroll-card-border)" }}
-                >
-                  {icon}
-                  {t(labelKey)}
-                </button>
-              ))}
-            </div>
-
-            {/* Terms and Conditions — last section */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.3 }}
-              className="p-6 mt-6"
-              style={cardStyle}
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--enroll-text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
-                <p className="text-sm font-bold" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.termsAndConditions")}</p>
-              </div>
-              <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
-                {t("enrollment.termsAndConditionsAgree")}
-              </p>
-              <label
-                className="flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors"
-                style={{
-                  background: acknowledgements.termsAccepted ? "rgb(var(--enroll-accent-rgb) / 0.04)" : "var(--enroll-soft-bg)",
-                  border: acknowledgements.termsAccepted ? "1px solid rgb(var(--enroll-accent-rgb) / 0.2)" : "1px solid var(--enroll-card-border)",
-                }}
-              >
-                <div
-                  className="flex h-5 w-5 items-center justify-center rounded-md shrink-0 mt-0.5 transition-colors"
-                  style={{
-                    background: acknowledgements.termsAccepted ? "var(--enroll-accent)" : "var(--enroll-card-bg)",
-                    border: acknowledgements.termsAccepted ? "none" : "1.5px solid var(--enroll-card-border)",
-                  }}
-                >
-                  {acknowledgements.termsAccepted && (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                  )}
-                </div>
-                <input
-                  type="checkbox"
-                  checked={acknowledgements.termsAccepted}
-                  onChange={(e) => setAcknowledgements((p) => ({ ...p, termsAccepted: e.target.checked }))}
-                  className="sr-only"
-                />
-                <span className="text-sm font-medium" style={{ color: "var(--enroll-text-primary)" }}>
-                  {t("enrollment.acceptTermsCheckbox")}
-                </span>
-              </label>
-            </motion.div>
-          </div>
-
-          {/* ── RIGHT COLUMN (1 col, sticky) ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.15 }}
-            className="lg:col-span-1"
+        {/* Single containment: plan overview → 12-col grid → next steps → terms */}
+        <div className="flex flex-col gap-10" data-figma-node="1184-1779">
+          {/* 1. Plan Overview card (full width) */}
+          <div
+            className="rounded-2xl border p-4 sm:p-6 flex flex-wrap items-center justify-between gap-6 sm:gap-12"
+            style={{
+              borderColor: "var(--enroll-card-border)",
+              background: "var(--enroll-plan-overview-bg)",
+              boxShadow: "var(--enroll-elevation-1)",
+            }}
           >
-            <div className="lg:sticky lg:top-24 space-y-6">
-
-              {/* Allocation Summary */}
-              <div className="p-6" style={cardStyle}>
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: "var(--enroll-text-muted)" }}>
-                  {t("enrollment.allocationSummary")}
-                </p>
-                <AllocationChart
-                  allocations={investment.chartAllocations}
-                  centerLabel={t("enrollment.totalLabel")}
-                  centerValue={totalAllocation.toFixed(0)}
-                  showValidBadge={false}
-                  isValid={isAllocationValid}
-                />
-
-                {/* Risk spectrum */}
-                <div className="mt-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.riskProfile")}</span>
-                    <span className="text-xs font-bold" style={{ color: getRiskColor(weightedSummary.riskLevel ?? 0) }}>
-                      {t(RISK_LABEL_KEYS[formatRiskLevel(weightedSummary.riskLevel ?? 0)])}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "var(--enroll-card-border)" }}>
-                    <motion.div
-                      className="h-full rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.min(100, (weightedSummary.riskLevel ?? 0) * 10)}%` }}
-                      transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                      style={{ background: getRiskColor(weightedSummary.riskLevel ?? 0) }}
-                    />
-                  </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "var(--enroll-text-muted)" }}>
-                    {(weightedSummary.riskLevel ?? 0) < 5
-                      ? t("enrollment.portfolioStability")
-                      : t("enrollment.portfolioGrowth")}
-                  </p>
-                </div>
-
-                {/* Metrics */}
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div className="rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.return")}</p>
-                    <p className="text-base font-bold mt-0.5" style={{ color: "var(--enroll-brand)" }}>{(weightedSummary.expectedReturn ?? 0).toFixed(1)}%</p>
-                  </div>
-                  <div className="rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.fees")}</p>
-                    <p className="text-base font-bold mt-0.5" style={{ color: "var(--enroll-text-primary)" }}>{(weightedSummary.totalFees ?? 0).toFixed(2)}%</p>
-                  </div>
-                </div>
+            <div className="flex items-center gap-4 sm:gap-5">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shrink-0" style={{ background: "var(--enroll-card-bg)", boxShadow: "var(--enroll-elevation-1)" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--enroll-brand)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
               </div>
-
-              {/* AI Insights (expandable) */}
-              <div className="p-5" style={cardStyle}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div
-                    className="flex h-6 w-6 items-center justify-center rounded-full"
-                    style={{ background: "rgb(var(--enroll-brand-rgb) / 0.1)", color: "var(--enroll-brand)" }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.912 5.813a2 2 0 001.275 1.275L21 12l-5.813 1.912a2 2 0 00-1.275 1.275L12 21l-1.912-5.813a2 2 0 00-1.275-1.275L3 12l5.813-1.912a2 2 0 001.275-1.275L12 3z" /></svg>
-                  </div>
-                  <p className="text-xs font-bold" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.aiInsights")}</p>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.plan401kLabel")}</span>
+                  <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full" style={{ background: "var(--enroll-active-badge-bg)", border: "1px solid var(--enroll-active-badge-border)", color: "var(--color-success)" }}>{t("enrollment.activeEnrollment")}</span>
                 </div>
-
-                <div className="space-y-2">
-                  {insights.map((insight, i) => {
-                    const isExpanded = expandedInsight === i;
-                    return (
-                      <div key={i} className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--enroll-card-border)" }}>
-                        <button
-                          type="button"
-                          onClick={() => setExpandedInsight(isExpanded ? null : i)}
-                          className="flex items-center gap-2 w-full p-3 text-left border-none cursor-pointer transition-colors"
-                          style={{ background: isExpanded ? "rgb(var(--enroll-brand-rgb) / 0.04)" : "var(--enroll-soft-bg)" }}
-                        >
-                          <span style={{ color: "var(--enroll-brand)" }}>{insight.icon}</span>
-                          <span className="flex-1 text-xs font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{insight.title}</span>
-                          <svg
-                            width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--enroll-text-muted)" strokeWidth="2"
-                            style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
-                          >
-                            <polyline points="6 9 12 15 18 9" />
-                          </svg>
-                        </button>
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="px-3 pb-3 space-y-2">
-                                <p className="text-[11px] leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>{insight.description}</p>
-                                <div
-                                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
-                                  style={{ background: "rgb(var(--enroll-accent-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-accent-rgb) / 0.12)" }}
-                                >
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--enroll-accent)" strokeWidth="2.5"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-                                  <span className="text-[10px] font-bold" style={{ color: "var(--enroll-accent)" }}>{insight.impact}</span>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={insight.action}
-                                  className="w-full text-xs font-semibold py-2 rounded-lg border-none cursor-pointer transition-colors"
-                                  style={{ background: "var(--enroll-brand)", color: "white" }}
-                                >
-                                  {t("enrollment.applySuggestion")}
-                                </button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="text-[10px] mt-3" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.insightsFromPlanData")}</p>
+                <p className="text-sm mt-0.5" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.standardCorporateRetirement")}</p>
               </div>
-
             </div>
-          </motion.div>
+            <div className="flex flex-wrap gap-6 sm:gap-12">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.contributionStructure")}</p>
+                <p className="text-sm mt-1" style={{ color: "var(--enroll-text-secondary)" }}>
+                  {t("enrollment.preTax")} <span style={{ color: "var(--enroll-brand)" }}>{preTax > 0 ? formatContributionPct((preTax / 100) * contributionTotal) : "0%"}</span>
+                  {" | "}{t("enrollment.roth")} <span style={{ color: "var(--enroll-brand)" }}>{roth > 0 ? formatContributionPct((roth / 100) * contributionTotal) : "0%"}</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.employerMatchLabel")}</p>
+                <p className="text-sm mt-1" style={{ color: "var(--enroll-text-secondary)" }}>
+                  {t("enrollment.employerMatchUpTo", { percent: enrollment.state.assumptions.employerMatchCap ?? 6 })}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Two-column grid: left 8 cols | right 4 cols */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+            <div className="flex flex-col gap-8 xl:col-span-8">
+              {/* Contribution Strategy card */}
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="p-8 rounded-2xl" style={cardStyle}>
+                <div className="flex items-start justify-between mb-8">
+                  <div>
+                    <h2 className="text-xl font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.contributionStrategy")}</h2>
+                    <p className="text-sm mt-1" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.automaticPayrollAllocation")}</p>
+                  </div>
+                  <button type="button" onClick={() => navigate("/enrollment/contribution")} className="text-sm font-semibold flex items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--enroll-brand)]" style={{ color: "var(--enroll-brand)" }} aria-label={t("enrollment.edit")}>{t("enrollment.edit")}</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.totalContribution")}</p>
+                    <p className="text-4xl font-bold mt-2" style={{ color: "var(--enroll-text-primary)" }}>{contributionTotal}%</p>
+                    <p className="text-sm mt-1" style={{ color: "var(--enroll-brand)" }}>{t("enrollment.combined")}</p>
+                    <p className="text-xs mt-2" style={{ color: "var(--enroll-text-muted)" }}>{preTax > 0 && `${formatContributionPct((preTax / 100) * contributionTotal)} ${t("enrollment.preTax")}`}{preTax > 0 && roth > 0 && " / "}{roth > 0 && `${formatContributionPct((roth / 100) * contributionTotal)} ${t("enrollment.roth")}`}{(preTax > 0 || roth > 0) && afterTax > 0 && " "}{afterTax > 0 && `(${t("enrollment.afterTax")})`}</p>
+                  </div>
+                  <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: "var(--enroll-success-tint-bg)", border: "1px solid var(--enroll-success-tint-border)" }}>
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.employerMatchLabel")}</p>
+                    <p className="text-4xl font-bold mt-2" style={{ color: "var(--color-success)" }}>{enrollment.state.assumptions.employerMatchCap ?? 6}%</p>
+                    <p className="text-sm mt-1" style={{ color: "var(--color-success)", opacity: 0.8 }}>{t("enrollment.verified")}</p>
+                    <p className="text-xs mt-2" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.maximizedBenefit")}</p>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Investment Allocation card */}
+              <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }} className="rounded-2xl overflow-hidden" style={{ ...cardStyle, padding: 0 }}>
+                <div className="border-b px-8 pt-6 pb-6 flex flex-wrap items-center justify-between gap-4" style={{ borderColor: "var(--enroll-card-border)" }}>
+                  <div>
+                    <h2 className="text-xl font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.investmentAllocation")}</h2>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-xs" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.riskProfile")}</span>
+                      <span className="text-[11px] font-semibold uppercase px-2.5 py-1 rounded" style={{ background: "var(--enroll-risk-badge-bg)", border: "1px solid var(--enroll-risk-badge-border)", color: "var(--enroll-brand)" }}>{t("enrollment.riskModerateAggressive")}</span>
+                    </div>
+                  </div>
+                  <button type="button" onClick={() => navigate("/enrollment/investments")} className="text-sm font-semibold flex items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--enroll-brand)]" style={{ color: "var(--enroll-brand)" }} aria-label={t("enrollment.manageFunds")}>{t("enrollment.manageFunds")}</button>
+                </div>
+                {!isAllocationValid && (
+                  <div className="flex items-center gap-2 mx-8 mt-4 p-3 rounded-xl" style={{ background: "rgb(var(--color-danger-rgb) / 0.06)", border: "1px solid rgb(var(--color-danger-rgb) / 0.15)" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" strokeWidth="2" aria-hidden="true"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    <span className="text-xs font-semibold" style={{ color: "var(--color-danger)" }}>{t("enrollment.allocationMustEqual", { percent: totalAllocation.toFixed(0) })}</span>
+                  </div>
+                )}
+                <div className="flex flex-col xl:flex-row">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex border-b text-xs font-bold uppercase tracking-wider px-8 py-3 gap-8" style={{ color: "var(--enroll-text-muted)", background: "var(--enroll-table-header-bg)", borderColor: "var(--enroll-card-border)" }}>
+                      <span>{t("enrollment.fundBreakdown")}</span>
+                      <span>{t("enrollment.performanceData")}</span>
+                    </div>
+                    <div className="overflow-x-auto min-w-0 -mx-4 sm:mx-0">
+                      <table className="w-full text-sm" role="grid" aria-label={t("enrollment.fundBreakdown")}>
+                        <thead>
+                          <tr className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>
+                            <th className="text-left px-6 py-5">{t("enrollment.assetDescription")}</th>
+                            <th className="text-left px-4 py-5">{t("enrollment.class")}</th>
+                            <th className="text-left px-4 py-5">{t("enrollment.fees")}</th>
+                            <th className="text-right px-6 py-5">{t("enrollment.totalLabel")}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {fundTableRows.map(({ fund, percentage }) => (
+                            <tr key={fund.id} className="border-t" style={{ borderColor: "var(--enroll-card-border)" }}>
+                              <td className="px-6 py-4">
+                                <p className="font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{fund.name}</p>
+                                <p className="text-[10px] mt-0.5" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.riskScoreLabel", { level: fund.riskLevel })}</p>
+                              </td>
+                              <td className="px-4 py-4">
+                                <span className="text-xs px-2 py-1 rounded" style={{ background: "var(--enroll-soft-bg)", color: "var(--enroll-text-secondary)" }}>{t(getAssetClassKey(fund.assetClass))}</span>
+                              </td>
+                              <td className="px-4 py-4" style={{ color: "var(--enroll-text-secondary)" }}>{(fund.expenseRatio ?? 0).toFixed(2)}%</td>
+                              <td className="px-6 py-4 text-right">
+                                <span className="font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{percentage.toFixed(0)}%</span>
+                                <div className="mt-2 h-1.5 rounded-full w-24 ml-auto" style={{ background: "var(--enroll-soft-bg)" }}>
+                                  <div className="h-full rounded-full" style={{ width: `${percentage}%`, background: "var(--enroll-brand)", maxWidth: "100%" }} />
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex items-center justify-between px-6 py-4" style={{ background: "var(--enroll-table-header-bg)" }}>
+                      <span className="text-sm font-semibold uppercase" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.totalAllocation")}</span>
+                      <span className="text-2xl font-bold" style={{ color: isAllocationValid ? "var(--enroll-text-primary)" : "var(--color-danger)" }}>{totalAllocation.toFixed(0)}%</span>
+                    </div>
+                  </div>
+                  <div className="xl:border-t-0 xl:border-l border-t shrink-0 xl:max-w-[18rem] px-6 sm:px-8 py-6 sm:py-8 flex flex-col gap-6" style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-soft-bg)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-center" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.portfolioSnapshot")}</p>
+                    <div className="flex flex-col items-center" role="img" aria-label={t("enrollment.portfolioSnapshot") + ": " + totalAllocation.toFixed(0) + "% " + t("enrollment.totalLabel")}>
+                      <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "var(--enroll-card-bg)", boxShadow: "var(--enroll-elevation-2)" }} aria-hidden="true">
+                        <span className="text-3xl font-bold" style={{ color: "var(--color-success)" }}>{totalAllocation.toFixed(0)}%</span>
+                        <span className="absolute bottom-2 text-xs font-bold uppercase" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.totalLabel")}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full" style={{ background: "var(--color-success-light)", border: "1px solid var(--color-success)" }}>
+                        <span className="text-[11px] font-bold" style={{ color: "var(--color-success)" }}>{t("enrollment.validAllocation")}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between pb-3" style={{ borderBottom: "1px solid var(--enroll-card-border)" }}>
+                        <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.returnEst")}</span>
+                        <span style={{ color: "var(--color-success)" }}>{formatPercent(weightedSummary.expectedReturn ?? 7)} {t("enrollment.perAnnum")}</span>
+                      </div>
+                      <div className="flex justify-between pb-3" style={{ borderBottom: "1px solid var(--enroll-card-border)" }}>
+                        <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.avgExpense")}</span>
+                        <span style={{ color: "var(--enroll-text-primary)" }}>{formatPercent(weightedSummary.totalFees ?? 0, 2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.rebalance")}</span>
+                        <span style={{ color: "var(--enroll-brand)" }}>{t("enrollment.autoOn")}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--enroll-brand)" }}>{t("enrollment.strategyOptimizedHorizon")}</p>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }} className="xl:col-span-4 xl:sticky xl:top-24 xl:self-start flex flex-col gap-6">
+              {/* Retirement Readiness */}
+              <div className="p-6 rounded-2xl" style={{ ...cardStyle, boxShadow: "var(--enroll-elevation-3)" }}>
+                <h2 className="text-base font-bold mb-1" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.yourRetirementReadiness")}</h2>
+                <p className="text-sm mb-6" style={{ color: "var(--enroll-text-secondary)" }}>{t("enrollment.readinessSubtext", { percent: readinessPercent })}</p>
+                <div className="flex items-center gap-4 sm:gap-6 mb-6 flex-wrap">
+                  <div
+                    className="relative w-20 h-20 sm:w-28 sm:h-28 shrink-0"
+                    role="img"
+                    aria-label={t("enrollment.readinessSubtext", { percent: readinessPercent })}
+                  >
+                    <svg viewBox="0 0 100 100" className="w-full h-full" aria-hidden="true">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="var(--enroll-donut-track)" strokeWidth="8" />
+                      <motion.circle cx="50" cy="50" r="42" fill="none" stroke="var(--enroll-donut-fill)" strokeWidth="8" strokeLinecap="round" strokeDasharray={263.9} initial={{ strokeDashoffset: 263.9 }} animate={{ strokeDashoffset: 263.9 * (1 - readinessPercent / 100) }} transition={{ duration: 0.8 }} transform="rotate(-90 50 50)" />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-xl sm:text-2xl font-bold" style={{ color: "var(--enroll-donut-text)" }}>{readinessPercent}%</span>
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.goalScore")}</p>
+                    <p className="text-xl font-bold" style={{ color: "var(--enroll-text-primary)" }}>{readinessPercent}%</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider mt-3 mb-1" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.projectedValue")}</p>
+                    <p className="text-lg font-bold" style={{ color: "var(--enroll-text-primary)" }}>{formatCurrency(projectedValue)}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider mt-3 mb-1" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.shortfall")}</p>
+                    <p className="text-lg font-bold" style={{ color: "var(--color-danger)" }}>-{formatCurrency(shortfallAmount)}</p>
+                  </div>
+                </div>
+                <button type="button" onClick={() => handleApplySuggestion("contribution")} className="w-full py-2.5 text-sm font-semibold rounded-xl border cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--enroll-brand)] hover:opacity-95" style={{ background: "var(--enroll-brand)", color: "var(--color-text-on-primary, white)", borderColor: "var(--enroll-brand)" }} aria-label={t("enrollment.optimizeStrategy")}>{t("enrollment.optimizeStrategy")}</button>
+              </div>
+
+              {/* Strategic Enhancements (AI insights) */}
+              <div className="p-6 rounded-2xl" style={cardStyle}>
+                <p className="text-sm font-bold mb-4" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.strategicEnhancements")}</p>
+                <div className="space-y-4">
+                  {insights.map((insight, i) => (
+                    <div key={i} className="flex items-start justify-between gap-3 p-4 rounded-xl" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>{insight.title}</p>
+                        <p className="text-xs mt-1" style={{ color: "var(--enroll-text-muted)" }}>{insight.description}</p>
+                      </div>
+                      <button type="button" onClick={insight.action} className="shrink-0 text-xs font-bold uppercase px-3 py-1.5 rounded cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--enroll-brand)] hover:opacity-95" style={{ background: "var(--enroll-brand)", color: "var(--color-text-on-primary, white)" }} aria-label={`${t("enrollment.applySuggestion")}: ${insight.title}`}>{t("enrollment.applySuggestion")}</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Key metrics */}
+              <div className="p-6 rounded-2xl" style={cardStyle}>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.yearsToRetirementShort")}</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: "var(--enroll-text-primary)" }}>{yearsToRetirement}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.avgYield")}</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: "var(--enroll-text-primary)" }}>{annualReturn}%</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.feeCap")}</p>
+                    <p className="text-2xl font-bold mt-1" style={{ color: "var(--enroll-text-primary)" }}>{feePercent.toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* 3. Next Steps Toward Activation */}
+          <div className="rounded-2xl p-6 sm:p-8" style={{ background: "var(--enroll-next-steps-bg)", color: "var(--enroll-next-steps-text)" }}>
+            <h2 className="text-xl font-semibold mb-6" style={{ color: "var(--enroll-next-steps-heading)" }}>{t("enrollment.nextStepsTowardActivation")}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <p className="text-3xl font-bold mb-2" style={{ color: "var(--enroll-brand)" }}>01</p>
+                <p className="font-semibold mb-1" style={{ color: "var(--enroll-next-steps-heading)" }}>{t("enrollment.entityVerification")}</p>
+                <p className="text-sm opacity-90">{t("enrollment.entityVerificationDesc")}</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold mb-2" style={{ color: "var(--enroll-brand)" }}>02</p>
+                <p className="font-semibold mb-1" style={{ color: "var(--enroll-next-steps-heading)" }}>{t("enrollment.payrollIntegration")}</p>
+                <p className="text-sm opacity-90">{t("enrollment.payrollIntegrationDesc")}</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold mb-2" style={{ color: "var(--enroll-brand)" }}>03</p>
+                <p className="font-semibold mb-1" style={{ color: "var(--enroll-next-steps-heading)" }}>{t("enrollment.assetFunding")}</p>
+                <p className="text-sm opacity-90">{t("enrollment.assetFundingDesc")}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Terms confirmation (institutional) */}
+          <div className="rounded-2xl p-6" style={{ ...cardStyle, background: "var(--enroll-soft-bg)" }}>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <div className="flex h-5 w-5 items-center justify-center rounded shrink-0 mt-0.5" style={{ background: acknowledgements.termsAccepted ? "var(--enroll-brand)" : "transparent", border: acknowledgements.termsAccepted ? "none" : "1.5px solid var(--enroll-card-border)" }}>
+                {acknowledgements.termsAccepted && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-on-primary, white)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
+              </div>
+              <input type="checkbox" checked={acknowledgements.termsAccepted} onChange={(e) => setAcknowledgements((p) => ({ ...p, termsAccepted: e.target.checked }))} className="sr-only" />
+              <span className="text-sm leading-relaxed" style={{ color: "var(--enroll-text-primary)" }}>{t("enrollment.confirmReviewInstitutional")}</span>
+            </label>
+          </div>
         </div>
 
         <EnrollmentFooter
           step={4}
-          primaryLabel={t("enrollment.submit")}
+          primaryLabel={t("enrollment.enrollToPlan")}
           primaryDisabled={!canEnroll}
           onPrimary={() => { if (canEnroll) setShowSuccessModal(true); }}
           summaryText={!isAllocationValid ? t("enrollment.allocationMustTotal") : t("enrollment.readyToSubmit")}
           summaryError={!isAllocationValid}
-          getDraftSnapshot={() => ({ investment: investment.getInvestmentSnapshot() })}
+          getDraftSnapshot={() => {
+            const s = enrollment.state;
+            const yearsToRetire = (s.retirementAge ?? 67) - (s.currentAge ?? 40);
+            return {
+              currentAge: s.currentAge ?? 30,
+              retirementAge: s.retirementAge ?? 67,
+              yearsToRetire,
+              annualSalary: s.salary ?? 0,
+              selectedPlanId: s.selectedPlan,
+              selectedPlanDbId: s.selectedPlanDbId ?? null,
+              contributionType: s.contributionType,
+              contributionAmount: s.contributionAmount ?? 0,
+              sourceAllocation: s.sourceAllocation ?? { preTax: 100, roth: 0, afterTax: 0 },
+              autoIncrease: s.autoIncrease?.enabled
+                ? {
+                    enabled: true,
+                    annualIncreasePct: s.autoIncrease.percentage ?? 2,
+                    stopAtPct: s.autoIncrease.maxPercentage ?? 15,
+                    minimumFloorPct: s.autoIncrease.minimumFloor,
+                  }
+                : undefined,
+              investmentProfile: s.investmentProfile ?? undefined,
+              investmentProfileCompleted: s.investmentProfileCompleted ?? false,
+              investment: investment.getInvestmentSnapshot(),
+            };
+          }}
         />
       </EnrollmentPageContent>
 

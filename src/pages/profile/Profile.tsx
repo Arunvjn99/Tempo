@@ -1,174 +1,44 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "../../layouts/DashboardLayout";
 import { DashboardHeader } from "../../components/dashboard/DashboardHeader";
 import { DashboardCard } from "../../components/dashboard/DashboardCard";
 import { MOCK_PROFILE, type ProfileData } from "../../data/mockProfile";
-import { PersonalDetailsSection } from "../../components/profile/PersonalDetailsSection";
-import { ContactInformationSection } from "../../components/profile/ContactInformationSection";
-import { EmploymentInformationSection } from "../../components/profile/EmploymentInformationSection";
-import { EmploymentClassificationSection } from "../../components/profile/EmploymentClassificationSection";
-import { BeneficiariesSection } from "../../components/profile/BeneficiariesSection";
-import { BankDetailsSection } from "../../components/profile/BankDetailsSection";
-import { SecurityVerificationSection } from "../../components/profile/SecurityVerificationSection";
-import { DocumentsConsentsSection } from "../../components/profile/DocumentsConsentsSection";
+import { ProfileHeaderCard } from "../../components/profile/ProfileHeaderCard";
+import { ContactInformationCard } from "../../components/profile/ContactInformationCard";
+import { EmploymentClassificationCard } from "../../components/profile/EmploymentClassificationCard";
+import { BeneficiariesCard } from "../../components/profile/BeneficiariesCard";
+import { DocumentsTableCard } from "../../components/profile/DocumentsTableCard";
+import { NotificationsCard } from "../../components/profile/NotificationsCard";
 
-export type ProfileSection =
-  | "personal-details"
-  | "contact-information"
-  | "employment-information"
+type ProfileSectionId =
+  | "profile-header"
+  | "contact"
   | "employment-classification"
   | "beneficiaries"
-  | "bank-details"
-  | "security-verification"
-  | "documents-consents";
+  | "documents"
+  | "notifications";
 
-const PROFILE_SECTION_KEYS: Record<ProfileSection, string> = {
-  "personal-details": "profile.personalDetails",
-  "contact-information": "profile.contactInformation",
-  "employment-information": "profile.employmentInformation",
-  "employment-classification": "profile.employmentClassification",
-  "beneficiaries": "profile.beneficiaries",
-  "bank-details": "profile.bankDetails",
-  "security-verification": "profile.securityVerification",
-  "documents-consents": "profile.documentsConsents",
-};
-
-const PROFILE_SECTIONS: ProfileSection[] = [
-  "personal-details",
-  "contact-information",
-  "employment-information",
-  "employment-classification",
-  "beneficiaries",
-  "bank-details",
-  "security-verification",
-  "documents-consents",
+const PROFILE_SECTIONS: { id: ProfileSectionId; labelKey: string }[] = [
+  { id: "profile-header", labelKey: "profile.personalDetails" },
+  { id: "contact", labelKey: "profile.contactInformation" },
+  { id: "employment-classification", labelKey: "profile.employmentClassification" },
+  { id: "beneficiaries", labelKey: "profile.beneficiaries" },
+  { id: "documents", labelKey: "profile.documentsConsents" },
+  { id: "notifications", labelKey: "profile.notificationsPreferences" },
 ];
 
 /**
- * Profile - Profile management page with section navigation
- * Supports view and controlled edit modes per section
+ * Profile - Card-based profile page with sidebar navigation (scroll-to-section).
  */
 export const Profile = () => {
   const { t } = useTranslation();
-  const [activeSection, setActiveSection] = useState<ProfileSection>("personal-details");
+  const panelRef = useRef<HTMLDivElement>(null);
   const [profileData, setProfileData] = useState<ProfileData>(MOCK_PROFILE);
-  const [editingSections, setEditingSections] = useState<Set<ProfileSection>>(new Set());
 
-  const handleSectionChange = (section: ProfileSection) => {
-    if (editingSections.size > 0) {
-      const confirmCancel = window.confirm(t("profile.confirmSwitchSection"));
-      if (!confirmCancel) return;
-      setEditingSections(new Set());
-    }
-    setActiveSection(section);
-  };
-
-  const handleEdit = (section: ProfileSection) => {
-    setEditingSections((prev) => new Set(prev).add(section));
-  };
-
-  const handleSave = (section: ProfileSection, updatedData: Partial<ProfileData>) => {
-    setProfileData((prev) => ({
-      ...prev,
-      ...updatedData,
-    }));
-    setEditingSections((prev) => {
-      const next = new Set(prev);
-      next.delete(section);
-      return next;
-    });
-  };
-
-  const handleCancel = (section: ProfileSection) => {
-    setEditingSections((prev) => {
-      const next = new Set(prev);
-      next.delete(section);
-      return next;
-    });
-  };
-
-  const renderSectionContent = () => {
-    const isEditing = editingSections.has(activeSection);
-
-    switch (activeSection) {
-      case "personal-details":
-        return (
-          <PersonalDetailsSection
-            data={profileData.personalDetails}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("personal-details")}
-            onSave={(data) => handleSave("personal-details", { personalDetails: data })}
-            onCancel={() => handleCancel("personal-details")}
-          />
-        );
-      case "contact-information":
-        return (
-          <ContactInformationSection
-            data={profileData.contactInformation}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("contact-information")}
-            onSave={(data) => handleSave("contact-information", { contactInformation: data })}
-            onCancel={() => handleCancel("contact-information")}
-          />
-        );
-      case "employment-information":
-        return (
-          <EmploymentInformationSection
-            data={profileData.employmentInformation}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("employment-information")}
-            onSave={(data) => handleSave("employment-information", { employmentInformation: data })}
-            onCancel={() => handleCancel("employment-information")}
-          />
-        );
-      case "employment-classification":
-        return (
-          <EmploymentClassificationSection
-            data={profileData.employmentClassification}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("employment-classification")}
-            onSave={(data) =>
-              handleSave("employment-classification", { employmentClassification: data })
-            }
-            onCancel={() => handleCancel("employment-classification")}
-          />
-        );
-      case "beneficiaries":
-        return (
-          <BeneficiariesSection
-            data={profileData.beneficiaries}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("beneficiaries")}
-            onSave={(data) => handleSave("beneficiaries", { beneficiaries: data })}
-            onCancel={() => handleCancel("beneficiaries")}
-          />
-        );
-      case "bank-details":
-        return (
-          <BankDetailsSection
-            data={profileData.bankDetails}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("bank-details")}
-            onSave={(data) => handleSave("bank-details", { bankDetails: data })}
-            onCancel={() => handleCancel("bank-details")}
-          />
-        );
-      case "security-verification":
-        return (
-          <SecurityVerificationSection
-            data={profileData.securityVerification}
-            isEditing={isEditing}
-            onEdit={() => handleEdit("security-verification")}
-            onSave={(data) => handleSave("security-verification", { securityVerification: data })}
-            onCancel={() => handleCancel("security-verification")}
-          />
-        );
-      case "documents-consents":
-        return <DocumentsConsentsSection data={profileData.documents} />;
-      default:
-        return null;
-    }
+  const scrollToSection = (id: ProfileSectionId) => {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
@@ -176,9 +46,7 @@ export const Profile = () => {
       <div className="profile-page">
         <div className="profile-page__header">
           <h1 className="profile-page__title">{t("profile.pageTitle")}</h1>
-          <p className="profile-page__description">
-            {t("profile.pageDescription")}
-          </p>
+          <p className="profile-page__description">{t("profile.pageDescription")}</p>
         </div>
 
         <div className="profile-page__content">
@@ -187,22 +55,14 @@ export const Profile = () => {
             <DashboardCard>
               <nav className="profile-navigation" aria-label={t("profile.sectionsAria")}>
                 <ul className="profile-navigation__list">
-                  {PROFILE_SECTIONS.map((sectionId) => (
-                    <li key={sectionId}>
+                  {PROFILE_SECTIONS.map(({ id, labelKey }) => (
+                    <li key={id}>
                       <button
                         type="button"
-                        onClick={() => handleSectionChange(sectionId)}
-                        className={`profile-navigation__item ${
-                          activeSection === sectionId ? "profile-navigation__item--active" : ""
-                        } ${editingSections.has(sectionId) ? "profile-navigation__item--editing" : ""}`}
-                        aria-current={activeSection === sectionId ? "page" : undefined}
+                        onClick={() => scrollToSection(id)}
+                        className="profile-navigation__item"
                       >
-                        <span className="profile-navigation__label">{t(PROFILE_SECTION_KEYS[sectionId])}</span>
-                        {editingSections.has(sectionId) && (
-                          <span className="profile-navigation__indicator" aria-hidden>
-                            •
-                          </span>
-                        )}
+                        <span className="profile-navigation__label">{t(labelKey)}</span>
                       </button>
                     </li>
                   ))}
@@ -211,9 +71,41 @@ export const Profile = () => {
             </DashboardCard>
           </div>
 
-          {/* Right Content Panel */}
-          <div className="profile-page__panel">
-            <DashboardCard>{renderSectionContent()}</DashboardCard>
+          {/* Right Content Panel - scrollable card column */}
+          <div ref={panelRef} className="profile-page__panel">
+            <div
+              className="profile-page__cards"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.5rem",
+                padding: "0 0 2rem 0",
+              }}
+            >
+              <ProfileHeaderCard
+                fullName={profileData.personalDetails.legalName}
+                status={profileData.securityVerification?.identityVerified ? "verified" : "complete"}
+                lastUpdated={profileData.personalDetails.lastUpdated}
+              />
+              <ContactInformationCard
+                data={profileData.contactInformation}
+                onSave={(data) =>
+                  setProfileData((prev) => ({ ...prev, contactInformation: data }))
+                }
+              />
+              <EmploymentClassificationCard
+                data={profileData.employmentClassification}
+                employerName={profileData.employmentInformation.employerName}
+              />
+              <BeneficiariesCard
+                data={profileData.beneficiaries}
+                onSave={(data) =>
+                  setProfileData((prev) => ({ ...prev, beneficiaries: data }))
+                }
+              />
+              <DocumentsTableCard data={profileData.documents} />
+              <NotificationsCard />
+            </div>
           </div>
         </div>
       </div>

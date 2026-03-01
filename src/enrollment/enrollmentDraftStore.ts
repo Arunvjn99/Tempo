@@ -19,6 +19,8 @@ export interface InvestmentDraftSnapshot {
  */
 export interface EnrollmentDraft {
   currentAge: number;
+  /** ISO date (YYYY-MM-DD); when present, currentAge is derived from this */
+  dateOfBirth?: string;
   retirementAge: number;
   yearsToRetire: number;
   annualSalary: number;
@@ -29,6 +31,8 @@ export interface EnrollmentDraft {
   };
   /** Selected plan on plans page - persisted on Save & Exit */
   selectedPlanId?: SelectedPlanId | null;
+  /** When plans from API: UUID of selected plan; saved to enrollments table on Continue */
+  selectedPlanDbId?: string | null;
   /** Contribution settings - persisted on Save & Exit from Contribution step */
   contributionType?: ContributionType;
   contributionAmount?: number;
@@ -39,6 +43,13 @@ export interface EnrollmentDraft {
   investmentProfileCompleted?: boolean;
   /** Investment elections - persisted on Save & Exit from Investments step */
   investment?: InvestmentDraftSnapshot;
+  /** Auto increase - persisted on Continue from Future Contributions step */
+  autoIncrease?: {
+    enabled: boolean;
+    annualIncreasePct: number;
+    stopAtPct: number;
+    minimumFloorPct?: number;
+  };
 }
 
 const STORAGE_KEY = "enrollment-draft";

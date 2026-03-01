@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useLayoutEffect, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import * as Label from "@radix-ui/react-label";
 import {
   AuthLayout,
@@ -23,10 +24,6 @@ interface StateOption {
 
 function normalizeStateOptions(source: unknown): StateOption[] {
   const list = Array.isArray(source) ? source : [];
-  if (list.length > 0) {
-    // eslint-disable-next-line no-console -- temporary log to verify state object structure
-    console.log("[Signup] US_STATES first item structure:", list[0], "keys:", typeof list[0] === "object" && list[0] !== null ? Object.keys(list[0] as object) : "primitive");
-  }
   return list
     .filter((item): item is NonNullable<typeof item> => item != null)
     .map((item): StateOption => {
@@ -55,6 +52,8 @@ interface FormErrors {
   confirmPassword?: string;
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function validate(
   name: string,
   selectedState: string | null,
@@ -62,14 +61,16 @@ function validate(
   email: string,
   password: string,
   confirmPassword: string,
+  t: (key: string) => string,
 ): FormErrors {
   const errors: FormErrors = {};
-  if (!name.trim()) errors.name = "Name is required.";
-  if (!selectedState) errors.location = "Please select a state.";
-  if (!companyId) errors.companyId = "Please select a company.";
-  if (!email.trim()) errors.email = "Email is required.";
-  if (password.length < 6) errors.password = "Password must be at least 6 characters.";
-  if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match.";
+  if (!name.trim()) errors.name = t("auth.signupValidationNameRequired");
+  if (!selectedState) errors.location = t("auth.signupValidationStateRequired");
+  if (!companyId) errors.companyId = t("auth.signupValidationCompanyRequired");
+  if (!email.trim()) errors.email = t("auth.signupValidationEmailRequired");
+  else if (!EMAIL_REGEX.test(email)) errors.email = t("auth.signupValidationEmailInvalid");
+  if (password.length < 6) errors.password = t("auth.signupValidationPasswordMin");
+  if (password !== confirmPassword) errors.confirmPassword = t("auth.signupValidationPasswordsDontMatch");
   return errors;
 }
 
@@ -90,6 +91,7 @@ function getPasswordStrength(password: string): { level: PasswordStrength; score
 }
 
 export const Signup = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const { resetOtp } = useOtp();
@@ -134,22 +136,32 @@ export const Signup = () => {
     let cancelled = false;
 
     const fetchCompanies = async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("id, name");
+      try {
+        const { data, error } = await supabase
+          .from("companies")
+          .select("id, name");
 
-      if (cancelled) return;
-      if (error) {
-        setServerError("Failed to load companies. Please refresh.");
-      } else {
-        setCompanies(data ?? []);
+        if (cancelled) return;
+        if (error) {
+          setServerError(
+            error.code === "PGRST301" || error.message?.includes("permission") || error.message?.includes("row-level security")
+              ? t("auth.signupErrorCompaniesUnavailable")
+              : t("auth.signupErrorLoadCompaniesFailed")
+          );
+        } else {
+          setCompanies(data ?? []);
+        }
+      } catch (e) {
+        if (cancelled) return;
+        setServerError(t("auth.signupErrorConnection"));
+      } finally {
+        if (!cancelled) setCompaniesLoading(false);
       }
-      setCompaniesLoading(false);
     };
 
     fetchCompanies();
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
   useLayoutEffect(() => {
     if (!stateDropdownOpen || !stateInputRef.current) return;
@@ -199,25 +211,69 @@ export const Signup = () => {
     setServerError(null);
     setSuccessMessage(null);
 
-    const fieldErrors = validate(name, selectedState, companyId, email, password, confirmPassword);
+    const fieldErrors = validate(name, selectedState, companyId, email, password, confirmPassword, t);
     setErrors(fieldErrors);
     if (Object.keys(fieldErrors).length > 0) return;
 
     setLoading(true);
     try {
-      await signUp(email, password, {
+      const { user: newUser } = await signUp(email, password, {
         name: name.trim(),
         company_id: companyId,
         location: selectedState ?? "",
       });
+
+      // Application-layer profile write (no DB trigger). Upsert so row exists even if no trigger.
+      const selectedCompanyUUID = (companyId ?? "").trim() || null;
+      if (!newUser?.id) {
+        setServerError(t("auth.signupErrorGeneric"));
+        return;
+      }
+
+      const { error: upsertError } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: newUser.id,
+            name: name.trim(),
+            location: selectedState ?? "",
+            company_id: selectedCompanyUUID,
+            role: "user",
+          },
+          { onConflict: "id" }
+        );
+
+      if (upsertError) {
+        console.error("[Signup] profiles upsert failed:", upsertError);
+        setServerError(t("auth.signupErrorGeneric"));
+        return;
+      }
+
+      const { data: verifyProfile } = await supabase
+        .from("profiles")
+        .select("company_id")
+        .eq("id", newUser.id)
+        .single();
+
+      if (!verifyProfile?.company_id) {
+        console.warn("[Signup] company_id missing after upsert");
+      }
 
       await supabase.auth.signOut();
       resetOtp();
       navigate("/verify?mode=signup", { replace: true });
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Signup failed. Please try again.";
-      setServerError(message);
+        err instanceof Error
+          ? err.message
+          : String(err).replace(/^Error:\s*/, "") || t("auth.signupErrorGeneric");
+      if (message.includes("already registered") || message.includes("already exists")) {
+        setServerError(t("auth.signupErrorAlreadyRegistered"));
+      } else if (message.includes("signup disabled") || message.includes("Sign-up is currently disabled")) {
+        setServerError(t("auth.signupErrorSignupDisabled"));
+      } else {
+        setServerError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -246,22 +302,22 @@ export const Signup = () => {
       )}
 
       <AuthInput
-        label="Name"
+        label={t("auth.signupName")}
         type="text"
         name="name"
         id="signup-name"
-        placeholder="Enter your full name"
+        placeholder={t("auth.signupNamePlaceholder")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         error={errors.name}
       />
 
       <AuthInput
-        label="Email"
+        label={t("auth.signupEmail")}
         type="email"
         name="email"
         id="signup-email"
-        placeholder="Enter your email"
+        placeholder={t("auth.signupEmailPlaceholder")}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={errors.email}
@@ -272,7 +328,7 @@ export const Signup = () => {
           htmlFor="signup-state"
           className="text-sm font-medium text-[var(--color-text)]"
         >
-          State
+          {t("auth.signupState")}
         </Label.Root>
         <div className="relative">
           <input
@@ -292,7 +348,7 @@ export const Signup = () => {
             aria-autocomplete="list"
             aria-invalid={errors.location ? true : undefined}
             aria-describedby={errors.location ? "signup-state-error" : undefined}
-            placeholder="Search or select state"
+            placeholder={t("auth.signupStatePlaceholder")}
             value={stateDropdownOpen ? stateSearchQuery : selectedStateName}
             onChange={(e) => {
               setStateSearchQuery(e.target.value);
@@ -370,7 +426,7 @@ export const Signup = () => {
                     aria-disabled="true"
                     className="px-4 py-3 text-sm text-[var(--color-textSecondary)]"
                   >
-                    No matching state
+                    {t("auth.signupNoMatchingState")}
                   </li>
                 ) : (
                   filteredStates.map((state, index) => (
@@ -412,7 +468,7 @@ export const Signup = () => {
           htmlFor="signup-company"
           className="text-sm font-medium text-[var(--color-text)]"
         >
-          Company
+          {t("auth.signupCompany")}
         </Label.Root>
         <select
           id="signup-company"
@@ -433,8 +489,9 @@ export const Signup = () => {
           }`}
         >
           <option value="">
-            {companiesLoading ? "Loading companies…" : "Select a company"}
+            {companiesLoading ? t("auth.signupCompanyLoading") : t("auth.signupCompanyPlaceholder")}
           </option>
+          {/* Option value is company UUID (c.id); stored as profile.company_id on signup */}
           {companies.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -450,10 +507,10 @@ export const Signup = () => {
 
       <div className="flex w-full flex-col gap-2">
         <AuthPasswordInput
-          label="Password"
+          label={t("auth.signupPassword")}
           name="password"
           id="signup-password"
-          placeholder="Create a password"
+          placeholder={t("auth.signupPasswordPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={errors.password}
@@ -463,10 +520,10 @@ export const Signup = () => {
           const segmentCount = level === "weak" ? 1 : level === "medium" ? 2 : 3;
           const label =
             level === "weak"
-              ? "Weak password"
+              ? t("auth.signupPasswordStrengthWeak")
               : level === "medium"
-                ? "Medium strength"
-                : "Strong password";
+                ? t("auth.signupPasswordStrengthMedium")
+                : t("auth.signupPasswordStrengthStrong");
           const barColor =
             level === "weak"
               ? "var(--color-danger)"
@@ -504,10 +561,10 @@ export const Signup = () => {
       </div>
 
       <AuthPasswordInput
-        label="Confirm Password"
+        label={t("auth.signupConfirmPassword")}
         name="confirmPassword"
         id="signup-confirm-password"
-        placeholder="Re-enter your password"
+        placeholder={t("auth.signupConfirmPasswordPlaceholder")}
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
         error={errors.confirmPassword}
@@ -520,18 +577,18 @@ export const Signup = () => {
           aria-busy={loading}
           className="w-full"
         >
-          {loading ? "Creating account…" : "Sign Up"}
+          {loading ? t("auth.signupSubmitting") : t("auth.signupSubmit")}
         </AuthButton>
       </div>
 
       <div className="md:col-span-2">
         <p className="text-center text-sm text-[var(--color-textSecondary)]">
-          Already have an account?{" "}
+          {t("auth.signupAlreadyHaveAccount")}{" "}
           <Link
             to="/"
             className="text-[var(--color-primary)] no-underline hover:underline"
           >
-            Sign in
+            {t("auth.signupSignIn")}
           </Link>
         </p>
       </div>
@@ -542,8 +599,8 @@ export const Signup = () => {
     <AuthLayout>
       <AuthFormShell
         headerSlot={headerSlot}
-        title="Create Account"
-        description="Sign up to get started with your retirement plan."
+        title={t("auth.signupTitle")}
+        description={t("auth.signupDesc")}
         bodySlot={bodySlot}
       />
     </AuthLayout>

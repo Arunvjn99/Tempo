@@ -1,6 +1,7 @@
 import type { FundAllocation, InvestmentAllocation, ContributionSources } from "../types/investment";
 import type { Allocation } from "../types/investment";
 import { MOCK_FUNDS, getFundById } from "../data/mockFunds";
+import type { RiskTolerance } from "../enrollment/types/investmentProfile";
 
 const DEFAULT_PLAN_ALLOCATIONS: Allocation[] = [
   { fundId: "fund-1", percentage: 40 },
@@ -8,6 +9,46 @@ const DEFAULT_PLAN_ALLOCATIONS: Allocation[] = [
   { fundId: "fund-7", percentage: 30 },
   { fundId: "fund-9", percentage: 10 },
 ];
+
+/** Investment style keys derived from wizard risk tolerance */
+export type InvestmentStyleKey = "conservative" | "balanced" | "growth" | "aggressive";
+
+/** Allocations per style (same as previous personality profiles) */
+const STYLE_ALLOCATIONS: Record<InvestmentStyleKey, Record<string, number>> = {
+  conservative: { "fund-7": 50, "fund-8": 20, "fund-1": 20, "fund-9": 10 },
+  balanced: { "fund-1": 40, "fund-5": 20, "fund-7": 30, "fund-9": 10 },
+  growth: { "fund-1": 45, "fund-3": 20, "fund-5": 25, "fund-7": 10 },
+  aggressive: { "fund-1": 35, "fund-4": 25, "fund-6": 25, "fund-3": 15 },
+};
+
+/** Derive investment style from wizard risk tolerance (1–5) */
+export function deriveStyleFromRiskScore(riskTolerance: RiskTolerance): InvestmentStyleKey {
+  if (riskTolerance <= 1) return "conservative";
+  if (riskTolerance <= 2) return "conservative";
+  if (riskTolerance <= 3) return "balanced";
+  if (riskTolerance <= 4) return "growth";
+  return "aggressive";
+}
+
+/** Build InvestmentAllocation for all active sources using a given style */
+export function buildAllocationFromStyle(
+  styleKey: InvestmentStyleKey,
+  sources: ContributionSources
+): InvestmentAllocation {
+  const allocations = STYLE_ALLOCATIONS[styleKey];
+  const total = Object.values(allocations).reduce((s, p) => s + p, 0);
+  if (total === 0) return buildInitialAllocation(sources);
+  const asAllocations: Allocation[] = Object.entries(allocations).map(([fundId, pct]) => ({
+    fundId,
+    percentage: (pct / total) * 100,
+  }));
+  const funds = asAllocations.map((a) => allocationToFundAllocation(a));
+  const result: InvestmentAllocation = {};
+  if ((sources.preTax ?? 0) > 0) result.preTax = { funds: funds.map((f) => ({ ...f })) };
+  if ((sources.roth ?? 0) > 0) result.roth = { funds: funds.map((f) => ({ ...f })) };
+  if ((sources.afterTax ?? 0) > 0) result.afterTax = { funds: funds.map((f) => ({ ...f })) };
+  return result;
+}
 
 /** Convert Allocation to FundAllocation using fund data */
 export function allocationToFundAllocation(a: Allocation): FundAllocation {

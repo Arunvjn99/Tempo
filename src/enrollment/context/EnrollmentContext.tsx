@@ -8,13 +8,16 @@ import type {
 } from "../logic/types";
 import type { InvestmentProfile } from "../types/investmentProfile";
 import { deriveContribution } from "../logic/contributionCalculator";
+import { loadEnrollmentDraft } from "../enrollmentDraftStore";
 
 // Normalized plan IDs - stable enum values
 export type SelectedPlanId = "traditional_401k" | "roth_401k" | "roth_ira" | null;
 
 interface EnrollmentState {
-  // Plan selection
+  // Plan selection (legacy enum for contribution page display)
   selectedPlan: SelectedPlanId;
+  /** When plans come from API, UUID of selected plan; saved to enrollments table on Continue */
+  selectedPlanDbId: string | null;
   isInitialized: boolean;
   
   // Contribution inputs
@@ -55,6 +58,7 @@ interface EnrollmentContextValue {
   
   // Setters
   setSelectedPlan: (planId: SelectedPlanId) => void;
+  setSelectedPlanDbId: (planId: string | null) => void;
   setSalary: (salary: number) => void;
   setContributionType: (type: ContributionType) => void;
   setContributionAmount: (amount: number) => void;
@@ -80,66 +84,76 @@ const EnrollmentContext = createContext<EnrollmentContextValue | undefined>(unde
 
 interface EnrollmentProviderProps {
   children: ReactNode;
-  initialSalary?: number;
-  initialContributionType?: ContributionType;
-  initialContributionAmount?: number;
-  initialSourceAllocation?: { preTax: number; roth: number; afterTax: number };
-  initialAge?: number;
-  initialRetirementAge?: number;
-  initialBalance?: number;
-  initialSelectedPlan?: SelectedPlanId;
-  initialInvestmentProfile?: InvestmentProfile;
-  initialInvestmentProfileCompleted?: boolean;
 }
 
 const DEFAULT_SOURCE_ALLOCATION = { preTax: 100, roth: 0, afterTax: 0 };
 
-export const EnrollmentProvider = ({
-  children,
-  initialSalary = 0,
-  initialContributionType = "percentage",
-  initialContributionAmount = 0,
-  initialSourceAllocation,
-  initialAge = 30,
-  initialRetirementAge = 65,
-  initialBalance = 0,
-  initialSelectedPlan = null,
-  initialInvestmentProfile,
-  initialInvestmentProfileCompleted = false,
-}: EnrollmentProviderProps) => {
-  const [state, setState] = useState<EnrollmentState>({
-    selectedPlan: initialSelectedPlan,
-    isInitialized: true, // Mark as initialized after first render
-    salary: initialSalary,
-    contributionType: initialContributionType,
-    contributionAmount: initialContributionAmount,
-    contributionSource: ["preTax"],
-    employerMatchEnabled: true,
-    employerMatchIsCustom: false,
-    sourceAllocation: initialSourceAllocation ?? DEFAULT_SOURCE_ALLOCATION,
-    sourcesEditMode: true,
-    sourcesViewMode: "percent",
-    autoIncrease: {
-      enabled: false,
-      percentage: 2,
-      maxPercentage: 15,
-      incrementCycle: "calendar_year",
-      preTaxIncrease: 2,
-      rothIncrease: 2,
-      afterTaxIncrease: 2,
-    },
-    assumptions: {
-      employerMatchPercentage: 100,
-      employerMatchCap: 6,
-      annualReturnRate: 7,
-      inflationRate: 2.5,
-    },
-    currentAge: initialAge,
-    retirementAge: initialRetirementAge,
-    currentBalance: initialBalance,
-    investmentProfile: initialInvestmentProfile ?? null,
-    investmentProfileCompleted: initialInvestmentProfileCompleted,
-  });
+const DEFAULT_STATE: EnrollmentState = {
+  selectedPlan: null,
+  selectedPlanDbId: null,
+  isInitialized: true,
+  salary: 0,
+  contributionType: "percentage",
+  contributionAmount: 0,
+  contributionSource: ["preTax"],
+  employerMatchEnabled: true,
+  employerMatchIsCustom: false,
+  sourceAllocation: DEFAULT_SOURCE_ALLOCATION,
+  sourcesEditMode: true,
+  sourcesViewMode: "percent",
+  autoIncrease: {
+    enabled: false,
+    percentage: 2,
+    maxPercentage: 15,
+    incrementCycle: "calendar_year",
+    preTaxIncrease: 2,
+    rothIncrease: 2,
+    afterTaxIncrease: 2,
+  },
+  assumptions: {
+    employerMatchPercentage: 100,
+    employerMatchCap: 6,
+    annualReturnRate: 7,
+    inflationRate: 2.5,
+  },
+  currentAge: 30,
+  retirementAge: 65,
+  currentBalance: 0,
+  investmentProfile: null,
+  investmentProfileCompleted: false,
+};
+
+/** Build initial state from draft so Provider + Outlet are always in the tree (no null gate). */
+function getInitialEnrollmentState(): EnrollmentState {
+  const draft = loadEnrollmentDraft();
+  if (!draft) return { ...DEFAULT_STATE };
+  return {
+    ...DEFAULT_STATE,
+    selectedPlan: draft.selectedPlanId ?? DEFAULT_STATE.selectedPlan,
+    selectedPlanDbId: draft.selectedPlanDbId ?? DEFAULT_STATE.selectedPlanDbId,
+    salary: draft.annualSalary ?? DEFAULT_STATE.salary,
+    contributionType: draft.contributionType ?? DEFAULT_STATE.contributionType,
+    contributionAmount: draft.contributionAmount ?? DEFAULT_STATE.contributionAmount,
+    sourceAllocation: draft.sourceAllocation ?? DEFAULT_STATE.sourceAllocation,
+    currentAge: draft.currentAge ?? DEFAULT_STATE.currentAge,
+    retirementAge: draft.retirementAge ?? DEFAULT_STATE.retirementAge,
+    currentBalance: draft.otherSavings?.amount ?? DEFAULT_STATE.currentBalance,
+    investmentProfile: draft.investmentProfile ?? DEFAULT_STATE.investmentProfile,
+    investmentProfileCompleted: draft.investmentProfileCompleted ?? DEFAULT_STATE.investmentProfileCompleted,
+    autoIncrease: draft.autoIncrease
+      ? {
+          ...DEFAULT_STATE.autoIncrease,
+          enabled: draft.autoIncrease.enabled,
+          percentage: draft.autoIncrease.annualIncreasePct ?? DEFAULT_STATE.autoIncrease.percentage,
+          maxPercentage: draft.autoIncrease.stopAtPct ?? DEFAULT_STATE.autoIncrease.maxPercentage,
+          minimumFloor: draft.autoIncrease.minimumFloorPct,
+        }
+      : DEFAULT_STATE.autoIncrease,
+  };
+}
+
+export const EnrollmentProvider = ({ children }: EnrollmentProviderProps) => {
+  const [state, setState] = useState<EnrollmentState>(getInitialEnrollmentState);
 
   // Derived values - single source of truth per Figma spec
   const { monthlyContribution, estimatedRetirementBalance, perPaycheck } = useMemo(() => {
@@ -177,6 +191,7 @@ export const EnrollmentProvider = ({
   const value: EnrollmentContextValue = {
     state,
     setSelectedPlan: (planId) => setState((prev) => ({ ...prev, selectedPlan: planId })),
+    setSelectedPlanDbId: (planId) => setState((prev) => ({ ...prev, selectedPlanDbId: planId })),
     setSalary: (salary) => setState((prev) => ({ ...prev, salary })),
     setContributionType: (type) => setState((prev) => ({ ...prev, contributionType: type })),
     setContributionAmount: (amount) => setState((prev) => ({ ...prev, contributionAmount: amount })),
@@ -197,7 +212,11 @@ export const EnrollmentProvider = ({
     perPaycheck,
   };
 
-  return <EnrollmentContext.Provider value={value}>{children}</EnrollmentContext.Provider>;
+  return (
+    <EnrollmentContext.Provider value={value}>
+      {children}
+    </EnrollmentContext.Provider>
+  );
 };
 
 export const useEnrollment = (): EnrollmentContextValue => {
@@ -206,4 +225,9 @@ export const useEnrollment = (): EnrollmentContextValue => {
     throw new Error("useEnrollment must be used within EnrollmentProvider");
   }
   return context;
+};
+
+/** Use enrollment state when inside EnrollmentProvider; returns undefined otherwise (no throw). */
+export const useEnrollmentOptional = (): EnrollmentContextValue | undefined => {
+  return useContext(EnrollmentContext) ?? undefined;
 };

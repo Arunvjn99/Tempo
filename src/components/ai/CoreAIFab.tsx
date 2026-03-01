@@ -17,7 +17,7 @@ export const CoreAIFab = () => {
     <AnimatePresence>
       {!isOpen && (
         <motion.div
-          className="fixed bottom-6 left-1/2 z-[9999] -translate-x-1/2"
+          className="core-ai-fab fixed bottom-6 left-1/2 z-[9999] -translate-x-1/2"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16, transition: { duration: 0.15 } }}

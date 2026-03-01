@@ -1,11 +1,16 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnrollment } from "../../enrollment/context/EnrollmentContext";
-import { EnrollmentFooter } from "../../components/enrollment/EnrollmentFooter";
 import { EnrollmentPageContent } from "../../components/enrollment/EnrollmentPageContent";
-import { InvestmentProfileWizard } from "../../components/enrollment/InvestmentProfileWizard";
+import Button from "../../components/ui/Button";
+import { Modal } from "../../components/ui/Modal";
+import {
+  loadEnrollmentDraft,
+  saveEnrollmentDraft,
+  ENROLLMENT_SAVED_TOAST_KEY,
+} from "../../enrollment/enrollmentDraftStore";
 import {
   PAYCHECKS_PER_YEAR,
   percentageToAnnualAmount,
@@ -16,6 +21,7 @@ import { calculateProjection } from "../../enrollment/logic/projectionCalculator
 import type { ProjectionDataPoint } from "../../enrollment/logic/types";
 import { formatYAxisLabel, getYAxisTicks } from "../../utils/projectionChartAxis";
 import type { IncrementCycle } from "../../enrollment/logic/types";
+import { FinancialSlider } from "../../components/FinancialSlider";
 
 /* ── Shared card style ── */
 const cardStyle: React.CSSProperties = {
@@ -57,6 +63,78 @@ const formatCurrency = (n: number) =>
     maximumFractionDigits: 0,
   }).format(Number.isFinite(n) && n >= 0 ? n : 0);
 
+/* ── Persuasion mode: hero banner only ── */
+function AutoIncreaseBanner({
+  t,
+  delta,
+  withAutoEnd,
+  baselineEnd,
+  onEnable,
+  onSkipClick,
+}: {
+  t: (key: string, opts?: Record<string, string | number>) => string;
+  delta: number;
+  withAutoEnd: number;
+  baselineEnd: number;
+  onEnable: () => void;
+  onSkipClick: () => void;
+}) {
+  return (
+    <section className="auto-increase-hero-region" aria-label={t("enrollment.autoIncreaseBoostLabel")}>
+      <div className="auto-increase-hero-card relative rounded-2xl p-6 md:p-10 overflow-hidden">
+        <div className="auto-increase-hero-gradient absolute inset-0 rounded-2xl" aria-hidden />
+        <div className="relative max-w-3xl">
+          <div className="auto-increase-hero-left">
+            <p className="auto-increase-hero-label">{t("enrollment.autoIncreaseBoostLabel")}</p>
+            <h1 className="auto-increase-hero-title">
+              {t("enrollment.autoIncreaseHeroTitlePersonal", { amount: formatCurrency(delta) })}
+            </h1>
+            <p className="auto-increase-hero-subtext">{t("enrollment.autoIncreaseHeroSubtextPersonal")}</p>
+            <div className="auto-increase-projection-block">
+              <div className="auto-increase-projection-row">
+                <span className="auto-increase-projection-with-auto">{formatCurrency(withAutoEnd)}</span>
+                <span className="auto-increase-projection-with-auto-label">
+                  {t("enrollment.projectedBalanceWithAuto")}
+                </span>
+              </div>
+              <p className="auto-increase-projection-baseline">
+                {t("enrollment.projectedWithoutAuto")}: {formatCurrency(baselineEnd)}
+              </p>
+              {delta > 0 && (
+                <span className="auto-increase-delta-badge inline-flex items-center w-fit" aria-hidden>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                  {t("enrollment.additionalSavingsDelta", { amount: formatCurrency(delta) })}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={onEnable}
+              className="auto-increase-hero-cta-primary h-10 px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--enroll-brand)]"
+            >
+              {t("enrollment.enableAutoIncreaseCta")}
+            </button>
+            <button
+              type="button"
+              onClick={onSkipClick}
+              className="auto-increase-hero-cta-secondary h-10 px-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--enroll-brand)]"
+            >
+              {t("enrollment.skipForNow")}
+            </button>
+          </div>
+          <p className="text-sm mt-3" style={{ color: "var(--enroll-text-muted)" }}>
+            {t("enrollment.autoIncreaseTrustCopy")}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════
    MAIN PAGE COMPONENT
    ═══════════════════════════════════════════════════════════ */
@@ -64,18 +142,30 @@ export const FutureContributions = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { state, setAutoIncrease, setContributionAmount } = useEnrollment();
-  const [increaseViewMode, setIncreaseViewMode] = useState<"percent" | "dollar">("percent");
 
   const salary = state.salary || 75000;
   const currentAge = state.currentAge || 40;
   const retirementAge = state.retirementAge || 67;
   const currentBalance = state.currentBalance || 0;
+
+  /* Contribution from context only — no fallback, no location state */
   const contributionPct =
     state.contributionType === "percentage"
-      ? state.contributionAmount
+      ? Number(state.contributionAmount) ?? 0
       : salary > 0
-        ? annualAmountToPercentage(salary, state.contributionAmount * PAYCHECKS_PER_YEAR)
+        ? annualAmountToPercentage(salary, (state.contributionAmount || 0) * PAYCHECKS_PER_YEAR)
         : 0;
+
+  /* Redirect to contribution step when no valid contribution — no alternate UI */
+  useEffect(() => {
+    if (state.isInitialized && contributionPct <= 0) {
+      navigate("/enrollment/contribution", { replace: true });
+    }
+  }, [state.isInitialized, contributionPct, navigate]);
+
+  if (state.isInitialized && contributionPct <= 0) {
+    return null;
+  }
 
   const contributionDollarPerPaycheck =
     salary > 0 && contributionPct > 0
@@ -135,24 +225,60 @@ export const FutureContributions = () => {
     });
   }, [state.autoIncrease.enabled, state.autoIncrease.percentage, state.autoIncrease.maxPercentage, contributionPct, salary, currentAge, retirementAge, currentBalance, derived.monthlyContribution, derived.employerMatchMonthly, state.employerMatchEnabled, state.assumptions]);
 
+  /** Hypothetical 1% annual increase for decision card and hero when auto increase not yet enabled */
+  const projectionHypotheticalAuto = useMemo(
+    () =>
+      calculateProjection({
+        currentAge,
+        retirementAge,
+        currentBalance,
+        monthlyContribution: derived.monthlyContribution ?? 0,
+        employerMatch: state.employerMatchEnabled ? derived.employerMatchMonthly : 0,
+        annualReturnRate: state.assumptions.annualReturnRate,
+        inflationRate: state.assumptions.inflationRate,
+        autoIncrease: {
+          enabled: true,
+          initialPercentage: contributionPct,
+          increasePercentage: 1,
+          maxPercentage: Math.max(15, Math.ceil(contributionPct)),
+          salary,
+          contributionType: "percentage",
+          assumptions: state.assumptions,
+        },
+      }),
+    [contributionPct, salary, currentAge, retirementAge, currentBalance, derived.monthlyContribution, derived.employerMatchMonthly, state.employerMatchEnabled, state.assumptions]
+  );
+
   const perPaycheck =
     salary > 0 && contributionPct > 0
       ? percentageToAnnualAmount(salary, contributionPct) / PAYCHECKS_PER_YEAR
       : 0;
 
-  const [showInvestmentWizard, setShowInvestmentWizard] = useState(false);
+  const [showSkipModal, setShowSkipModal] = useState(false);
+  const [userSkippedAutoIncrease, setUserSkippedAutoIncrease] = useState(false);
+  const [autoIncreaseEnabled, setAutoIncreaseEnabled] = useState(false);
 
   const handleContinue = useCallback(() => {
-    if (state.investmentProfileCompleted) {
-      navigate("/enrollment/investments");
-    } else {
-      setShowInvestmentWizard(true);
+    const draft = loadEnrollmentDraft();
+    if (!draft?.contributionAmount) {
+      navigate("/enrollment/contribution");
+      return;
     }
-  }, [state.investmentProfileCompleted, navigate]);
-
-  const handleWizardComplete = useCallback(() => {
-    setShowInvestmentWizard(false);
-  }, []);
+    if (draft) {
+      saveEnrollmentDraft({
+        ...draft,
+        autoIncrease: autoIncreaseEnabled
+          ? {
+              enabled: true,
+              annualIncreasePct: state.autoIncrease.percentage,
+              stopAtPct: Math.min(50, state.autoIncrease.maxPercentage),
+              minimumFloorPct: state.autoIncrease.minimumFloor ?? undefined,
+            }
+          : { enabled: false, annualIncreasePct: 0, stopAtPct: 0 },
+      });
+    }
+    navigate("/enrollment/investments");
+  }, [autoIncreaseEnabled, state.autoIncrease.percentage, state.autoIncrease.maxPercentage, state.autoIncrease.minimumFloor, navigate]);
 
   const handleContributionPctChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = parseFloat(e.target.value);
@@ -171,163 +297,371 @@ export const FutureContributions = () => {
     }
   };
 
-  const handleIncreaseChange = (source: "preTax" | "roth" | "afterTax", value: number) => {
-    setAutoIncrease({
-      preTaxIncrease: source === "preTax" ? value : state.autoIncrease.preTaxIncrease,
-      rothIncrease: source === "roth" ? value : state.autoIncrease.rothIncrease,
-      afterTaxIncrease: source === "afterTax" ? value : state.autoIncrease.afterTaxIncrease,
-      percentage: value,
-    });
-  };
-
   const ai = state.autoIncrease;
 
-  /* ── Validation: stop at ≥ current %, floor ≤ current % and ≤ stop at ── */
-  const stopAtInvalid = ai.enabled && ai.maxPercentage > 0 && ai.maxPercentage < contributionPct;
-  const floorAboveCurrent = ai.minimumFloor !== undefined && ai.minimumFloor > contributionPct;
-  const floorAboveStopAt = ai.minimumFloor !== undefined && ai.maxPercentage > 0 && ai.minimumFloor > ai.maxPercentage;
-  const limitsInvalid = stopAtInvalid || floorAboveCurrent || floorAboveStopAt;
+  /* Validation: stopAt > contributionPct, stopAt <= 50; enable Continue only when valid */
+  const isValidAutoIncrease =
+    ai.percentage >= 0 &&
+    ai.maxPercentage > contributionPct &&
+    ai.maxPercentage <= 50;
 
-  /* ── Computed delta ── */
+  /* ── Computed delta: use actual when enabled, hypothetical (1%) when not ── */
   const baselineEnd = projectionBaseline.finalBalance;
-  const autoEnd = projectionWithAuto?.finalBalance ?? baselineEnd;
-  const delta = autoEnd - baselineEnd;
-  const deltaPct = baselineEnd > 0 ? ((delta / baselineEnd) * 100) : 0;
+  const withAutoEnd = state.autoIncrease.enabled
+    ? (projectionWithAuto?.finalBalance ?? baselineEnd)
+    : projectionHypotheticalAuto.finalBalance;
+  const delta = withAutoEnd - baselineEnd;
+  const deltaPct = baselineEnd > 0 ? (delta / baselineEnd) * 100 : 0;
 
-  if (contributionPct <= 0) {
-    return <Navigate to="/enrollment/contribution" replace />;
-  }
+  const handleBack = useCallback(() => {
+    navigate("/enrollment/contribution");
+  }, [navigate]);
+
+  const handleSaveAndExit = useCallback(() => {
+    const draft = loadEnrollmentDraft();
+    if (draft) {
+      saveEnrollmentDraft({
+        ...draft,
+        autoIncrease: autoIncreaseEnabled
+          ? {
+              enabled: true,
+              annualIncreasePct: state.autoIncrease.percentage,
+              stopAtPct: Math.min(50, state.autoIncrease.maxPercentage),
+              minimumFloorPct: state.autoIncrease.minimumFloor ?? undefined,
+            }
+          : { enabled: false, annualIncreasePct: 0, stopAtPct: 0 },
+      });
+      sessionStorage.setItem(ENROLLMENT_SAVED_TOAST_KEY, "1");
+    }
+    navigate("/dashboard");
+  }, [navigate, autoIncreaseEnabled, state.autoIncrease.percentage, state.autoIncrease.maxPercentage, state.autoIncrease.minimumFloor]);
+
+  const comparisonDataForChart = ai.enabled ? projectionWithAuto : projectionHypotheticalAuto;
+
+  const handleEnableAutoIncrease = useCallback(() => {
+    setShowSkipModal(false);
+    setAutoIncrease({
+      enabled: true,
+      percentage: Math.min(5, Math.max(0, ai.percentage || 2)),
+      maxPercentage: Math.min(50, Math.max(15, Math.ceil(contributionPct))),
+    });
+  }, [ai.percentage, ai.maxPercentage, contributionPct, setAutoIncrease]);
+
+  const handleSkipAnyway = useCallback(() => {
+    setShowSkipModal(false);
+    setAutoIncrease({ enabled: false });
+    setUserSkippedAutoIncrease(true);
+  }, [setAutoIncrease]);
 
   return (
     <>
       <EnrollmentPageContent
-        title={t("enrollment.futureContributionsTitle")}
-        subtitle={t("enrollment.futureContributionsSubtitle")}
-        badge={
-          ai.enabled ? (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full"
-              style={{ background: "rgb(var(--enroll-accent-rgb) / 0.08)", color: "var(--enroll-accent)" }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-              {t("enrollment.autoIncreaseActive")}
-            </motion.span>
-          ) : null
-        }
+        title={!autoIncreaseEnabled ? t("enrollment.futureContributionsTitle") : undefined}
+        subtitle={!autoIncreaseEnabled ? t("enrollment.futureContributionsSubtitle") : undefined}
+        headerContent={!autoIncreaseEnabled ? undefined : <header className="mb-4" />}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          {/* ═══ LEFT: Configuration (2 cols) ═══ */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-            className="lg:col-span-2 space-y-6"
-          >
-            {/* Auto increase card — when off: CTA "Start Auto Increase"; when on: pause + settings */}
-            <div className="p-6" style={cardStyle}>
-              {!ai.enabled ? (
-                <h3 className="text-base font-semibold mb-2" style={{ color: "var(--enroll-text-primary)" }}>
-                  {t("enrollment.startAutoIncrease")}
-                </h3>
-              ) : null}
-              <p className="text-sm" style={{ color: "var(--enroll-text-secondary)" }}>
-                {t("enrollment.enableAutoIncreaseDesc")}
-              </p>
-              <div className="mt-4">
-                {ai.enabled ? (
-                  <div className="space-y-1">
-                    <button
-                      type="button"
-                      onClick={() => setAutoIncrease({ enabled: false })}
-                      className="auto-increase-panel__btn--secondary inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg shrink-0 transition-colors focus:outline-none"
-                    >
-                      {t("enrollment.pauseAutoIncrease")}
-                    </button>
-                    <p className="text-xs" style={{ color: "var(--enroll-text-muted)" }}>
-                      {t("enrollment.pauseAutoIncreaseSubtext")}
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAutoIncrease({
-                        enabled: true,
-                        maxPercentage: Math.max(ai.maxPercentage || 15, Math.ceil(contributionPct)),
-                      })
-                    }
-                    className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-lg shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                    style={{
-                      backgroundColor: "var(--enroll-brand)",
-                      color: "var(--color-text-on-primary)",
-                      boxShadow: "var(--enroll-elevation-2)",
-                    }}
-                  >
-                    {t("enrollment.startAutoIncrease")}
-                  </button>
-                )}
-              </div>
-
-              {/* Smart insight — only when enabled */}
-              <AnimatePresence>
-                {ai.enabled && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
-                  >
-                    <div
-                      className="flex items-start gap-3 rounded-xl p-4 mt-4"
-                      style={{
-                        background: "rgb(var(--enroll-accent-rgb) / 0.04)",
-                        border: "1px solid rgb(var(--enroll-accent-rgb) / 0.1)",
-                      }}
-                    >
-                      <div
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
-                        style={{ background: "rgb(var(--enroll-accent-rgb) / 0.15)", color: "var(--enroll-accent)" }}
+        <div className="enrollment-container">
+        {/* ═══ STATE 1: Persuasion (banner) | STATE 2: Configuration (increment + chart side-by-side) ═══ */}
+        <div className="auto-increase-state-transition">
+          {!autoIncreaseEnabled && !userSkippedAutoIncrease && (
+            <AutoIncreaseBanner
+              t={t}
+              delta={delta}
+              withAutoEnd={withAutoEnd}
+              baselineEnd={baselineEnd}
+              onEnable={() => {
+                setAutoIncreaseEnabled(true);
+                handleEnableAutoIncrease();
+              }}
+              onSkipClick={() => setShowSkipModal(true)}
+            />
+          )}
+          {autoIncreaseEnabled && (
+            <div className="auto-increase-container">
+              {/* Single unified banner: .auto-increase-confirmation (65/35 two-col, all info inside) */}
+              <section className="auto-increase-confirmation" aria-labelledby="auto-increase-banner-heading">
+                <div className="auto-increase-confirmation__inner rounded-2xl" style={{ ...cardStyle, boxShadow: "var(--enroll-elevation-2)" }}>
+                  <div className="auto-increase-confirmation__grid">
+                    <div className="auto-increase-confirmation__left">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider rounded-full mb-3" style={{ background: "rgb(var(--enroll-accent-rgb) / 0.12)", color: "var(--enroll-accent)" }}>
+                        {t("enrollment.autoIncreaseActive")}
+                      </span>
+                      <h2 id="auto-increase-banner-heading" className="text-lg font-semibold leading-snug mb-1.5" style={{ color: "var(--enroll-text-primary)" }}>
+                        Your contributions will now grow automatically.
+                      </h2>
+                      <p className="text-sm leading-relaxed mb-4" style={{ color: "var(--enroll-text-secondary)" }}>
+                        Your contribution will increase by 1% each year, so your savings grow without you having to remember.
+                      </p>
+                      <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--enroll-text-secondary)" }}>
+                        Your contribution will increase slightly once per year. You can change this anytime.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { setAutoIncreaseEnabled(false); setAutoIncrease({ enabled: false }); }}
+                        className="auto-increase-panel__btn--secondary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg shrink-0 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--enroll-brand)]"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" /><line x1="9" y1="21" x2="15" y2="21" /></svg>
+                        Pause Auto-Increase
+                      </button>
+                      <p className="text-sm mt-2 mb-4" style={{ color: "var(--enroll-text-muted)" }}>
+                        You can resume anytime.
+                      </p>
+                      <div className="auto-increase-highlight-box">
+                        <p className="text-sm leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
+                          With a {ai.percentage}% annual increase, you could accumulate{" "}
+                          <strong style={{ color: "var(--enroll-accent)" }}>{Math.round(deltaPct)}% more</strong> by age {retirementAge}. That&apos;s an additional{" "}
+                          <strong style={{ color: "var(--enroll-accent)" }}>{formatCurrency(delta)}</strong> toward your retirement.
+                        </p>
                       </div>
+                      {ai.maxPercentage > 0 && (
+                        <p className="text-sm mt-4" style={{ color: "var(--enroll-text-secondary)" }}>
+                          Your contributions will gradually increase to {ai.maxPercentage}% and stop there.
+                        </p>
+                      )}
+                    </div>
+                    <div className="auto-increase-confirmation__right" aria-hidden="true" />
+                  </div>
+                </div>
+              </section>
+
+              {/* Main content grid: same 65/35 so left/right align with banner */}
+              <div className="auto-increase-two-col">
+                <div className="auto-increase-two-col__left">
+                  {/* Single card: Auto Increase Settings */}
+                  <div className="auto-increase-settings-card rounded-2xl p-6" style={cardStyle}>
+                    <h3 className="text-base font-semibold mb-4" style={{ color: "var(--enroll-text-primary)" }}>
+                      Auto Increase Settings
+                    </h3>
+
+                    {/* Increase Frequency */}
+                    <div className="mb-6">
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--enroll-text-muted)" }}>
+                        Increase Frequency
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {(["calendar_year", "plan_enroll_date", "plan_year"] as IncrementCycle[]).map((cycle) => {
+                          const isActive = ai.incrementCycle === cycle;
+                          const labelKey = cycle === "calendar_year" ? "enrollment.calendarYear" : cycle === "plan_enroll_date" ? "enrollment.planEnrollDate" : "enrollment.planYear";
+                          return (
+                            <button
+                              key={cycle}
+                              type="button"
+                              onClick={() => setAutoIncrease({ incrementCycle: cycle })}
+                              className="px-4 py-2 text-xs font-semibold rounded-full transition-all"
+                              style={{
+                                background: isActive ? "rgb(var(--enroll-brand-rgb) / 0.08)" : "var(--enroll-soft-bg)",
+                                color: isActive ? "var(--enroll-brand)" : "var(--enroll-text-secondary)",
+                                border: isActive ? "1px solid rgb(var(--enroll-brand-rgb) / 0.2)" : "1px solid var(--enroll-card-border)",
+                              }}
+                            >
+                              {t(labelKey)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Increase Amount: Slider + Input (0–5%, step 0.5) — applies to total contribution */}
+                    <div className="mb-6">
+                      <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--enroll-text-muted)" }}>
+                        Increase Amount (annual %)
+                      </p>
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex-1 min-w-[120px]">
+                          <FinancialSlider
+                            min={0}
+                            max={5}
+                            step={0.5}
+                            value={Math.min(5, Math.max(0, ai.percentage))}
+                            fillPercent={(Math.min(5, Math.max(0, ai.percentage)) / 5) * 100}
+                            minLabel="0%"
+                            maxLabel="5%"
+                            aria-label="Annual increase percentage"
+                            onChange={(e) => setAutoIncrease({ percentage: Math.min(5, Math.max(0, parseFloat(e.target.value) || 0)) })}
+                          />
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <input
+                            type="number"
+                            min={0}
+                            max={5}
+                            step={0.5}
+                            value={ai.percentage}
+                            onChange={(e) => {
+                              const v = parseFloat(e.target.value);
+                              setAutoIncrease({ percentage: e.target.value === "" ? 0 : Math.min(5, Math.max(0, Number.isNaN(v) ? 0 : v)) });
+                            }}
+                            className="w-14 text-right text-sm font-semibold py-1.5 px-2 rounded-lg border outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)", color: "var(--enroll-text-primary)" }}
+                            aria-label="Annual increase percent"
+                          />
+                          <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stop Increasing At (default 15%, max 50%, must be > current contribution) */}
+                    <div className="mb-6">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--enroll-text-muted)" }}>
+                        Stop Increasing At
+                      </label>
+                      <div className="flex items-baseline gap-1 rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
+                        <input
+                          type="number"
+                          min={contributionPct}
+                          max={50}
+                          step={0.5}
+                          value={ai.maxPercentage > 0 ? ai.maxPercentage : ""}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const num = raw === "" ? 0 : parseFloat(raw);
+                            setAutoIncrease({ maxPercentage: Number.isNaN(num) ? 0 : Math.min(50, Math.max(contributionPct, num)) });
+                          }}
+                          className="w-16 text-lg font-bold bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          style={{ color: "var(--enroll-text-primary)" }}
+                          aria-label="Stop increasing at percent"
+                        />
+                        <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
+                      </div>
+                      <p className="text-[10px] mt-1" style={{ color: "var(--enroll-text-muted)" }}>
+                        Auto-increase will stop once your contribution reaches this percentage. Must be &gt; {Math.round(contributionPct)}% and ≤ 50%.
+                      </p>
+                      {ai.maxPercentage > 0 && ai.maxPercentage <= contributionPct && (
+                        <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-danger)" }}>
+                          Must be greater than your current contribution ({Math.round(contributionPct)}%).
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Minimum Floor (optional) */}
+                    <div className="mb-6">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--enroll-text-muted)" }}>
+                        Minimum Floor (optional)
+                      </label>
+                      <div className="flex items-baseline gap-1 rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
+                        <input
+                          type="number"
+                          min={0}
+                          max={ai.maxPercentage || 50}
+                          step={0.5}
+                          value={ai.minimumFloor !== undefined && ai.minimumFloor > 0 ? ai.minimumFloor : ""}
+                          onChange={(e) => {
+                            const raw = e.target.value;
+                            const num = raw === "" ? undefined : parseFloat(raw);
+                            setAutoIncrease({ minimumFloor: raw === "" ? undefined : Number.isNaN(num) ? undefined : Math.min(100, Math.max(0, num)) });
+                          }}
+                          placeholder="Leave blank"
+                          className="w-16 text-lg font-bold bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          style={{ color: "var(--enroll-text-primary)" }}
+                          aria-label="Minimum floor percent"
+                        />
+                        <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
+                      </div>
+                    </div>
+
+                    {/* Real-time Impact Summary */}
+                    <div className="auto-increase-highlight-box">
                       <p className="text-sm leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
-                        {t("enrollment.withAnnualIncrease", { percent: ai.percentage })}{" "}
-                        <strong style={{ color: "var(--enroll-accent)" }}>{deltaPct > 0 ? `${Math.round(deltaPct)}%` : "—"} {t("enrollment.moreLabel")}</strong>{" "}
-                        {t("enrollment.moreByAge", { age: retirementAge })}{" "}
-                        <strong style={{ color: "var(--enroll-accent)" }}>{formatCurrency(delta)}</strong> {t("enrollment.additionalTowardRetirement")}
+                        With a {ai.percentage}% annual increase, you could accumulate{" "}
+                        <strong style={{ color: "var(--enroll-accent)" }}>{Math.round(deltaPct)}% more</strong> by age {retirementAge}. That&apos;s an additional{" "}
+                        <strong style={{ color: "var(--enroll-accent)" }}>{formatCurrency(delta)}</strong> toward your retirement.
                       </p>
                     </div>
-                    {/* Dynamic insight: stop at and minimum floor */}
-                    <div className="space-y-2 mt-3">
-                      {ai.maxPercentage > 0 && ai.maxPercentage >= contributionPct && (
-                        <p className="text-xs leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
-                          {t("enrollment.contributionsIncreaseToAndStop", { percent: ai.maxPercentage })}
-                        </p>
-                      )}
-                      {ai.minimumFloor !== undefined && ai.minimumFloor >= 0 && (
-                        <p className="text-xs leading-relaxed" style={{ color: "var(--enroll-text-secondary)" }}>
-                          {t("enrollment.contributionNeverDropBelow", { percent: ai.minimumFloor })}
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  </div>
+                </div>
 
-            {/* Contribution inputs */}
-            <div className="p-6" style={cardStyle}>
+              {/* RIGHT COLUMN (~40%) */}
+              <div className="auto-increase-two-col__right">
+                {/* PROJECTED AT AGE 65 card */}
+                <div className="auto-increase-card rounded-2xl p-6" style={cardStyle}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "var(--enroll-text-muted)" }}>
+                    PROJECTED AT AGE {retirementAge}
+                  </p>
+                  <div className="text-2xl font-bold mb-2" style={{ color: "var(--enroll-text-primary)" }}>
+                    <AnimatedCurrencyValue value={withAutoEnd} />
+                  </div>
+                  <p className="text-sm mb-4" style={{ color: "var(--enroll-accent)" }}>
+                    ↑ +{formatCurrency(delta)} more with auto-increase
+                  </p>
+                  <div className="auto-increase-chart-wrap">
+                    <ProjectionChart
+                      baseline={projectionBaseline.dataPoints}
+                      withAutoIncrease={comparisonDataForChart?.dataPoints ?? null}
+                    />
+                  </div>
+                  <div className="flex items-center gap-6 mt-3">
+                    <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                      <span className="w-3 h-0.5 rounded-full" style={{ background: "var(--enroll-brand)" }} />
+                      Without
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                      <span className="w-3 h-0.5 rounded-full" style={{ background: "var(--enroll-accent)" }} />
+                      With auto-increase
+                    </span>
+                  </div>
+                  <p className="text-xs mt-2" style={{ color: "var(--enroll-text-muted)" }}>
+                    Assumes {state.assumptions.annualReturnRate}% annual return. Actual results may vary.
+                  </p>
+                </div>
+
+                {/* PAYCHECK IMPACT card */}
+                <div className="auto-increase-card rounded-2xl p-6 mt-8" style={cardStyle}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "var(--enroll-text-muted)" }}>
+                    PAYCHECK IMPACT
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-xl p-3 text-center" style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-brand-rgb) / 0.12)" }}>
+                      <p className="text-[10px] font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--enroll-text-muted)" }}>RATE</p>
+                      <p className="text-lg font-bold" style={{ color: "var(--enroll-brand)" }}>{Math.round(contributionPct)}%</p>
+                    </div>
+                    <div className="rounded-xl p-3 text-center" style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-brand-rgb) / 0.12)" }}>
+                      <p className="text-[10px] font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--enroll-text-muted)" }}>PER CHECK</p>
+                      <p className="text-lg font-bold" style={{ color: "var(--enroll-brand)" }}>{formatCurrency(perPaycheck)}</p>
+                    </div>
+                  </div>
+                  <p className="flex items-center gap-1.5 text-[10px] mt-3" style={{ color: "var(--enroll-text-muted)" }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+                    Based on {formatCurrency(salary)} annual salary.
+                  </p>
+                </div>
+              </div>
+
+              {/* CTA row — matches Contribution / EnrollmentFooter structure */}
+              <div className="enrollment-footer enrollment-footer--in-content" role="contentinfo">
+                <div className="enrollment-footer__inner">
+                  <div className="enrollment-footer__left">
+                    <Button type="button" onClick={handleBack} className="enrollment-footer__back transition-opacity hover:opacity-90">
+                      {t("enrollment.footerBack")}
+                    </Button>
+                  </div>
+                  <div className="enrollment-footer__right">
+                    <Button type="button" onClick={handleSaveAndExit} className="enrollment-footer__save-exit transition-opacity hover:opacity-90">
+                      {t("enrollment.footerSaveAndExit")}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleContinue}
+                      disabled={!isValidAutoIncrease}
+                      className="enrollment-footer__primary transition-opacity hover:opacity-95 disabled:opacity-50"
+                    >
+                      {t("enrollment.continueToInvestmentElection")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          )}
+        </div>
+
+        {/* When auto-increase NOT enabled: banner + contribution inputs + chart only (no mini cards, no paycheck card, no boxed balance) */}
+        {!autoIncreaseEnabled && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="p-6 rounded-2xl" style={cardStyle}>
               <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "var(--enroll-text-muted)" }}>
                 {t("enrollment.currentContribution")}
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <div
-                  className="rounded-xl p-3"
-                  style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                >
+                <div className="rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
                   <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.percentage")}</p>
                   <div className="flex items-baseline gap-1 mt-1">
                     <input
@@ -343,10 +677,7 @@ export const FutureContributions = () => {
                     <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
                   </div>
                 </div>
-                <div
-                  className="rounded-xl p-3"
-                  style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                >
+                <div className="rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
                   <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.perPaycheck")}</p>
                   <div className="flex items-baseline gap-1 mt-1">
                     <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>$</span>
@@ -363,326 +694,90 @@ export const FutureContributions = () => {
                 </div>
               </div>
             </div>
-
-            {/* Increment cycle + source rows */}
-            <AnimatePresence>
-              {ai.enabled && (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.3 }}
-                  className="p-6 space-y-5"
-                  style={cardStyle}
-                >
-                  {/* Increment cycle */}
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--enroll-text-muted)" }}>
-                      {t("enrollment.incrementCycle")}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {(["calendar_year", "plan_enroll_date", "plan_year"] as IncrementCycle[]).map((cycle) => {
-                        const isActive = ai.incrementCycle === cycle;
-                        const labelKey = cycle === "calendar_year" ? "enrollment.calendarYear" : cycle === "plan_enroll_date" ? "enrollment.planEnrollDate" : "enrollment.planYear";
-                        const label = t(labelKey);
-                        return (
-                          <button
-                            key={cycle}
-                            type="button"
-                            onClick={() => setAutoIncrease({ incrementCycle: cycle })}
-                            className="px-4 py-2 text-xs font-semibold rounded-full transition-all duration-200"
-                            style={{
-                              background: isActive ? "rgb(var(--enroll-brand-rgb) / 0.08)" : "var(--enroll-soft-bg)",
-                              color: isActive ? "var(--enroll-brand)" : "var(--enroll-text-secondary)",
-                              border: isActive ? "1px solid rgb(var(--enroll-brand-rgb) / 0.2)" : "1px solid var(--enroll-card-border)",
-                            }}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* View mode toggle + source rows */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--enroll-text-muted)" }}>
-                        {t("enrollment.annualIncreasePerSource")}
-                      </p>
-                      <div
-                        className="inline-flex rounded-lg overflow-hidden"
-                        style={{ border: "1px solid var(--enroll-card-border)" }}
-                      >
-                        {(["percent", "dollar"] as const).map((mode) => (
-                          <button
-                            key={mode}
-                            type="button"
-                            onClick={() => setIncreaseViewMode(mode)}
-                            className="px-3 py-1 text-xs font-semibold transition-colors"
-                            style={{
-                              background: increaseViewMode === mode ? "var(--enroll-brand)" : "var(--enroll-card-bg)",
-                              color: increaseViewMode === mode ? "white" : "var(--enroll-text-secondary)",
-                            }}
-                          >
-                            {mode === "percent" ? "%" : "$"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      {[
-                        { key: "preTax" as const, labelKey: "enrollment.preTax", value: ai.preTaxIncrease ?? 0 },
-                        { key: "roth" as const, labelKey: "enrollment.roth", value: ai.rothIncrease ?? 0 },
-                        { key: "afterTax" as const, labelKey: "enrollment.afterTax", value: ai.afterTaxIncrease ?? 0 },
-                      ].map(({ key, labelKey, value }) => {
-                        const label = t(labelKey);
-                        const dollarPerPaycheck =
-                          increaseViewMode === "dollar" && salary > 0 && value > 0
-                            ? (salary * (value / 100)) / PAYCHECKS_PER_YEAR
-                            : 0;
-                        const displayValue =
-                          increaseViewMode === "percent"
-                            ? value > 0 ? value : ""
-                            : value > 0 ? Math.round(dollarPerPaycheck) : "";
-                        return (
-                          <div
-                            key={key}
-                            className="flex items-center justify-between gap-3 p-3 rounded-xl"
-                            style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                          >
-                            <span className="text-sm font-medium" style={{ color: "var(--enroll-text-primary)" }}>{label}</span>
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="number"
-                                value={displayValue}
-                                onChange={(e) => {
-                                  const raw = e.target.value;
-                                  const num = raw === "" ? 0 : parseFloat(raw);
-                                  if (increaseViewMode === "percent") {
-                                    handleIncreaseChange(key, Number.isNaN(num) ? 0 : Math.min(100, Math.max(0, num)));
-                                  } else if (salary > 0 && !Number.isNaN(num) && num >= 0) {
-                                    const paycheckTotalVal = salary / PAYCHECKS_PER_YEAR;
-                                    const pct = paycheckTotalVal > 0 ? (num / paycheckTotalVal) * 100 : 0;
-                                    handleIncreaseChange(key, Math.min(100, Math.max(0, pct)));
-                                  } else if (raw === "") {
-                                    handleIncreaseChange(key, 0);
-                                  }
-                                }}
-                                min="0"
-                                max={increaseViewMode === "percent" ? "100" : undefined}
-                                step={increaseViewMode === "percent" ? "0.5" : "1"}
-                                className="w-16 text-right text-sm font-semibold py-1.5 px-2 rounded-lg outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                style={{
-                                  background: "var(--enroll-card-bg)",
-                                  border: "1px solid var(--enroll-card-border)",
-                                  color: "var(--enroll-text-primary)",
-                                }}
-                                aria-label={`${label} increase ${increaseViewMode === "percent" ? t("enrollment.increasePercentage") : t("enrollment.increaseDollarAmount")}`}
-                              />
-                              <span className="text-xs font-semibold" style={{ color: "var(--enroll-text-muted)" }}>
-                                {increaseViewMode === "percent" ? "%" : "$"}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Contribution Limits — Stop at % and Minimum floor */}
-                  <div className="space-y-4 pt-2" style={{ borderTop: "1px solid var(--enroll-card-border)" }}>
-                    <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--enroll-text-muted)" }}>
-                      {t("enrollment.contributionLimits")}
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--enroll-text-muted)" }}>
-                          {t("enrollment.stopIncreasingAt")}
-                        </label>
-                        <div
-                          className="rounded-xl p-3 flex items-baseline gap-1"
-                          style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                        >
-                          <input
-                            type="number"
-                            value={ai.maxPercentage > 0 ? ai.maxPercentage : ""}
-                            onChange={(e) => {
-                              const raw = e.target.value;
-                              const num = raw === "" ? 0 : parseFloat(raw);
-                              setAutoIncrease({ maxPercentage: Number.isNaN(num) ? 0 : Math.min(100, Math.max(0, num)) });
-                            }}
-                            min={Math.ceil(contributionPct)}
-                            max="100"
-                            step="0.5"
-                            className="w-16 text-lg font-bold bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            style={{ color: "var(--enroll-text-primary)" }}
-                            aria-label={t("enrollment.stopIncreasingAt")}
-                          />
-                          <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
-                        </div>
-                        <p className="text-[10px] mt-1 leading-relaxed" style={{ color: "var(--enroll-text-muted)" }}>
-                          {t("enrollment.stopIncreasingAtHelper")}
-                        </p>
-                        {ai.maxPercentage > 0 && ai.maxPercentage < contributionPct && (
-                          <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-danger)" }}>
-                            {t("enrollment.validationStopAtMin", { percent: Math.round(contributionPct) })}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--enroll-text-muted)" }}>
-                          {t("enrollment.doNotDropBelow")}
-                        </label>
-                        <div
-                          className="rounded-xl p-3 flex items-baseline gap-1"
-                          style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}
-                        >
-                          <input
-                            type="number"
-                            value={ai.minimumFloor !== undefined && ai.minimumFloor > 0 ? ai.minimumFloor : ""}
-                            onChange={(e) => {
-                              const raw = e.target.value;
-                              const num = raw === "" ? undefined : parseFloat(raw);
-                              setAutoIncrease({
-                                minimumFloor: raw === "" ? undefined : Number.isNaN(num) ? 0 : Math.min(100, Math.max(0, num)),
-                              });
-                            }}
-                            min="0"
-                            max={Math.min(contributionPct, ai.maxPercentage || 100)}
-                            step="0.5"
-                            className="w-16 text-lg font-bold bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                            style={{ color: "var(--enroll-text-primary)" }}
-                            aria-label={t("enrollment.doNotDropBelow")}
-                          />
-                          <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
-                        </div>
-                        <p className="text-[10px] mt-1 leading-relaxed" style={{ color: "var(--enroll-text-muted)" }}>
-                          {t("enrollment.doNotDropBelowHelper")}
-                        </p>
-                        {ai.minimumFloor !== undefined && ai.minimumFloor > contributionPct && (
-                          <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-danger)" }}>
-                            {t("enrollment.validationFloorMax")}
-                          </p>
-                        )}
-                        {ai.minimumFloor !== undefined && ai.maxPercentage > 0 && ai.minimumFloor > ai.maxPercentage && (
-                          <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-danger)" }}>
-                            {t("enrollment.validationFloorStopAt")}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-
-          {/* ═══ RIGHT: Projection & Impact (1 col) ═══ */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.1 }}
-            className="lg:col-span-1"
-          >
-            <div className="lg:sticky lg:top-24 space-y-6">
-              {/* Before vs After projection */}
-              <div className="p-6" style={cardStyle}>
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "var(--enroll-text-muted)" }}>
-                  {t("enrollment.projectedAtAge", { age: retirementAge })}
-                </p>
-
-                <div className="flex items-end gap-2 mb-1">
-                  <AnimatedCurrencyValue value={autoEnd} />
-                </div>
-
-                <AnimatePresence>
-                  {ai.enabled && delta > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold mb-4"
-                      style={{ background: "rgb(var(--enroll-accent-rgb) / 0.08)", color: "var(--enroll-accent)" }}
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
-                      {t("enrollment.moreWithAutoIncrease", { amount: formatCurrency(delta) })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Chart */}
-                <div className="mt-2">
-                  <ProjectionChart
-                    baseline={projectionBaseline.dataPoints}
-                    withAutoIncrease={projectionWithAuto?.dataPoints ?? null}
-                  />
-                </div>
-
-                {/* Legend */}
-                <div className="flex items-center gap-4 mt-3">
-                  <span className="flex items-center gap-1.5 text-[11px]" style={{ color: "var(--enroll-text-muted)" }}>
-                    <span className="w-2.5 h-0.5 rounded-full" style={{ background: "var(--enroll-brand)" }} />
-                    {t("enrollment.without")}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-[11px]" style={{ color: "var(--enroll-text-muted)" }}>
-                    <span className="w-2.5 h-0.5 rounded-full" style={{ background: "var(--enroll-accent)" }} />
-                    {t("enrollment.withAutoIncrease")}
-                  </span>
-                </div>
-
-                <p className="text-[10px] mt-2" style={{ color: "var(--enroll-text-muted)" }}>
-                  {t("enrollment.assumesReturn", { rate: state.assumptions.annualReturnRate })}
-                </p>
-              </div>
-
-              {/* Paycheck impact */}
-              <div className="p-5" style={cardStyle}>
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "var(--enroll-text-muted)" }}>
-                  {t("enrollment.paycheckImpact")}
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div
-                    className="rounded-xl p-3 text-center"
-                    style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-brand-rgb) / 0.12)" }}
-                  >
-                    <p className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.rate")}</p>
-                    <p className="text-lg font-bold mt-0.5" style={{ color: "var(--enroll-brand)" }}>{Math.round(contributionPct)}%</p>
-                  </div>
-                  <div
-                    className="rounded-xl p-3 text-center"
-                    style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-brand-rgb) / 0.12)" }}
-                  >
-                    <p className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.perCheck")}</p>
-                    <p className="text-lg font-bold mt-0.5" style={{ color: "var(--enroll-brand)" }}>{formatCurrency(perPaycheck)}</p>
-                  </div>
-                </div>
-                <p className="flex items-center gap-1.5 text-[10px] mt-3" style={{ color: "var(--enroll-text-muted)" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
-                  {t("enrollment.basedOnSalary", { amount: formatCurrency(salary) })}
-                </p>
+            <div className="auto-increase-impact-chart">
+              <ProjectionChart
+                baseline={projectionBaseline.dataPoints}
+                withAutoIncrease={comparisonDataForChart?.dataPoints ?? null}
+              />
+              <div className="flex items-center gap-6 mt-3">
+                <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                  <span className="w-3 h-0.5 rounded-full" style={{ background: "var(--enroll-brand)" }} />
+                  {t("enrollment.without")}
+                </span>
+                <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                  <span className="w-3 h-0.5 rounded-full" style={{ background: "var(--enroll-accent)" }} />
+                  {t("enrollment.withAutoIncrease")}
+                </span>
               </div>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        )}
 
-        <EnrollmentFooter
-          step={2}
-          primaryLabel={t("enrollment.continueToInvestmentElection")}
-          primaryDisabled={limitsInvalid}
-          onPrimary={handleContinue}
-          summaryText={t("enrollment.summaryProjected", { age: retirementAge, amount: formatCurrency(autoEnd) })}
-        />
+        {!autoIncreaseEnabled && (
+          <>
+            <div className="auto-increase-reinforcement mb-8">
+              Most participants increase their contributions by 1% annually.
+            </div>
+            <div className="enrollment-footer enrollment-footer--in-content" role="contentinfo">
+              <div className="enrollment-footer__inner">
+                <div className="enrollment-footer__left">
+                  <Button type="button" onClick={handleBack} className="enrollment-footer__back transition-opacity hover:opacity-90">
+                    {t("enrollment.footerBack")}
+                  </Button>
+                </div>
+                <div className="enrollment-footer__right">
+                  <Button type="button" onClick={handleSaveAndExit} className="enrollment-footer__save-exit transition-opacity hover:opacity-90">
+                    {t("enrollment.footerSaveAndExit")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleContinue}
+                    disabled={!autoIncreaseEnabled && !userSkippedAutoIncrease}
+                    className="enrollment-footer__primary transition-opacity hover:opacity-95 disabled:opacity-50"
+                  >
+                    {t("enrollment.continueToInvestmentElection")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        </div>
       </EnrollmentPageContent>
 
-      {showInvestmentWizard && (
-        <InvestmentProfileWizard
-          isOpen={showInvestmentWizard}
-          onClose={() => setShowInvestmentWizard(false)}
-          onComplete={handleWizardComplete}
-        />
-      )}
+      {/* Skip confirmation modal — uses shared Modal, enrollment tokens */}
+      <Modal
+        isOpen={showSkipModal}
+        onClose={() => setShowSkipModal(false)}
+        closeOnOverlayClick={false}
+        dialogClassName="enrollment-modal max-w-md"
+      >
+        <div className="p-6">
+          <h2 id="skip-modal-title" className="enrollment-modal__title text-xl font-bold mb-2">
+            {t("enrollment.skipModalTitle")}
+          </h2>
+          <p id="skip-modal-desc" className="enrollment-modal__body text-sm mb-6 leading-relaxed">
+            {t("enrollment.skipModalBody", { amount: formatCurrency(delta) })}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <button
+              type="button"
+              onClick={handleEnableAutoIncrease}
+              className="enrollment-modal__primary order-2 sm:order-1 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-xl border-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--enroll-brand)]"
+            >
+              {t("enrollment.enableAutoIncreaseCta")}
+            </button>
+            <button
+              type="button"
+              onClick={handleSkipAnyway}
+              className="enrollment-modal__secondary order-1 sm:order-2 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--enroll-brand)]"
+            >
+              {t("enrollment.skipAnyway")}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </>
   );
 };

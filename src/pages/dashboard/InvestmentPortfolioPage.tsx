@@ -127,9 +127,8 @@ export const InvestmentPortfolioPage = () => {
 
           <PortfolioActionZone />
 
-          <footer className="investment-portfolio-footer">
-            <p className="mb-2">{t("investmentPortfolio.footerDisclaimer")}</p>
-            <p>{t("investmentPortfolio.footerCopyright", { year: new Date().getFullYear() })}</p>
+          <footer className="investment-portfolio-footer" aria-label="Investment portfolio disclaimer">
+            <p className="mb-0">{t("investmentPortfolio.footerDisclaimer")}</p>
           </footer>
         </div>
       </div>

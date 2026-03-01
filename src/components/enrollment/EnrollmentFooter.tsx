@@ -21,7 +21,7 @@ interface EnrollmentFooterProps {
 }
 
 /**
- * EnrollmentFooter - Reusable sticky footer for all enrollment steps.
+ * EnrollmentFooter - Inline CTA section for enrollment steps (scrolls with content).
  * Left: Back (disabled on step 0)
  * Center: Optional contextual summary
  * Right: Save & Exit + Primary CTA
