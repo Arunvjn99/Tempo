@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Button from "../ui/Button";
 import {
@@ -6,10 +6,12 @@ import {
   saveEnrollmentDraft,
   ENROLLMENT_SAVED_TOAST_KEY,
 } from "../../enrollment/enrollmentDraftStore";
+import { pathToStep, isEnrollmentStepPath, ENROLLMENT_STEP_PATHS } from "../../enrollment/enrollmentStepPaths";
 
 export type EnrollmentStep = 0 | 1 | 2 | 3 | 4;
 
 interface EnrollmentFooterProps {
+  /** Step index (0–4). When on an enrollment step path, this is overridden by pathname so Back stays in sync with URL. */
   step: EnrollmentStep;
   primaryLabel: string;
   primaryDisabled?: boolean;
@@ -29,7 +31,7 @@ interface EnrollmentFooterProps {
  * Right: Save & Exit + Primary CTA
  */
 export const EnrollmentFooter = ({
-  step,
+  step: stepProp,
   primaryLabel,
   primaryDisabled = false,
   onPrimary,
@@ -40,24 +42,15 @@ export const EnrollmentFooter = ({
 }: EnrollmentFooterProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const pathDerivedStep = pathToStep(pathname);
+  const onStepPath = isEnrollmentStepPath(pathname);
+  const step = onStepPath ? pathDerivedStep : stepProp;
 
   const handleBack = () => {
-    switch (step) {
-      case 0:
-        return; // disabled
-      case 1:
-        navigate("/enrollment/choose-plan");
-        break;
-      case 2:
-        navigate("/enrollment/contribution");
-        break;
-      case 3:
-        navigate("/enrollment/future-contributions");
-        break;
-      case 4:
-        navigate("/enrollment/investments");
-        break;
-    }
+    if (step <= 0) return;
+    const prevPath = ENROLLMENT_STEP_PATHS[step - 1];
+    if (prevPath) navigate(prevPath);
   };
 
   const handleSaveAndExit = () => {

@@ -3,6 +3,7 @@ import { DashboardLayout } from "./DashboardLayout";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { EnrollmentHeaderWithStepper } from "../components/enrollment/EnrollmentHeaderWithStepper";
 import { EnrollmentProvider } from "../enrollment/context/EnrollmentContext";
+import { pathToStep, isEnrollmentStepPath } from "../enrollment/enrollmentStepPaths";
 import { ChoosePlan } from "../pages/enrollment/ChoosePlan";
 import { Contribution } from "../pages/enrollment/Contribution";
 import { FutureContributions } from "../pages/enrollment/FutureContributions";
@@ -10,24 +11,9 @@ import { EnrollmentInvestmentsGuard } from "../components/enrollment/EnrollmentI
 import { EnrollmentInvestmentsContent } from "../components/enrollment/EnrollmentInvestmentsContent";
 import { EnrollmentReviewContent } from "../components/enrollment/EnrollmentReviewContent";
 
-const ENROLLMENT_STEP_PATHS = [
-  "/enrollment/choose-plan",
-  "/enrollment/contribution",
-  "/enrollment/future-contributions",
-  "/enrollment/investments",
-  "/enrollment/review",
-] as const;
-
-function pathToStep(pathname: string): number {
-  const normalized = pathname.replace(/\/$/, "") || "/";
-  const i = ENROLLMENT_STEP_PATHS.indexOf(normalized as (typeof ENROLLMENT_STEP_PATHS)[number]);
-  return i >= 0 ? i : 0;
-}
-
 function useIsEnrollmentStepPath(): boolean {
   const { pathname } = useLocation();
-  const normalized = pathname.replace(/\/$/, "") || "/";
-  return ENROLLMENT_STEP_PATHS.some((p) => normalized === p || normalized.startsWith(p + "/"));
+  return isEnrollmentStepPath(pathname);
 }
 
 /** Render the correct enrollment step by pathname so navigation always shows the right page (works around Outlet not updating in some cases). */
