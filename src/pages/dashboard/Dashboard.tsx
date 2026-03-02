@@ -26,11 +26,13 @@ export const Dashboard = () => {
       <div>
       <div className="relative" data-hero-section>
         <HeroEnrollmentCard
-          greeting={t("dashboard.greeting", { name: profile?.name || "there" })}
+          greetingTitle={t("dashboard.greetingTitle")}
+          userName={profile?.name || "there"}
           headline={t("dashboard.heroTitle")}
           description={t("dashboard.heroSubtitle")}
           enrollmentBadge={t("dashboard.enrollmentOpen")}
           primaryCtaLabel={t("dashboard.startEnrollment")}
+          ctaChip={t("dashboard.takesMinutes")}
         />
         <ScrollIndicator />
       </div>

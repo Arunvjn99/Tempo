@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useCallback } from "react";
+import { type ReactNode, useState, useCallback, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
@@ -22,6 +22,25 @@ export default function InvestmentsLayout({ children }: InvestmentsLayoutProps) 
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const enrollment = useEnrollmentOptional();
   const openWizard = useCallback(() => setIsWizardOpen(true), []);
+
+  /* Auto-open Investment Profile wizard when entering investments step.
+   * Use session flag so we open after "Skip for now" → Continue even when draft has stale investmentProfileCompleted.
+   * Future Contributions page clears the flag on mount so coming from there always allows opening. */
+  const WIZARD_SESSION_KEY = "enrollment-investment-wizard-completed-session";
+  useEffect(() => {
+    if (!isEnrollmentFlow || !enrollment) return;
+    const completedThisSession = typeof sessionStorage !== "undefined" && sessionStorage.getItem(WIZARD_SESSION_KEY);
+    const { investmentProfileCompleted } = enrollment.state;
+    const shouldOpen = !completedThisSession || !investmentProfileCompleted;
+    if (!shouldOpen) return;
+    const id = setTimeout(() => setIsWizardOpen(true), 0);
+    return () => clearTimeout(id);
+  }, [isEnrollmentFlow, enrollment?.state.investmentProfileCompleted]);
+
+  const handleWizardClose = useCallback(() => {
+    setIsWizardOpen(false);
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(WIZARD_SESSION_KEY, "1");
+  }, []);
 
   const content = (
     <div style={{ background: "var(--enroll-bg)" }} className="w-full min-h-screen pb-12">
@@ -66,13 +85,16 @@ export default function InvestmentsLayout({ children }: InvestmentsLayoutProps) 
         </InvestmentWizardProvider>
       </div>
 
-      <InvestmentsFooter />
+      {/* Footer in same width container so button row fills horizontally (matches Contribution / Future Contributions) */}
+      <div className="w-full max-w-[1200px] mx-auto px-4 md:px-6">
+        <InvestmentsFooter />
+      </div>
 
       {isEnrollmentFlow && (
         <InvestmentProfileWizard
           isOpen={isWizardOpen}
-          onClose={() => setIsWizardOpen(false)}
-          onComplete={() => setIsWizardOpen(false)}
+          onClose={handleWizardClose}
+          onComplete={handleWizardClose}
           initialProfile={enrollment?.state.investmentProfile ?? undefined}
         />
       )}

@@ -7,7 +7,12 @@ import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { useCanHover } from "../../hooks/useCanHover";
 
 interface HeroEnrollmentCardProps {
+  /** Single-line greeting (legacy). If greetingTitle + userName are set, they are shown on two lines instead. */
   greeting?: string;
+  /** Greeting phrase for first line (e.g. "Good Morning"). Shown with userName on second line when both set. */
+  greetingTitle?: string;
+  /** User name on second line when greetingTitle is set. */
+  userName?: string;
   headline?: string;
   description?: string;
   /** Hero illustration image. Uses placeholder if not provided. */
@@ -16,6 +21,8 @@ interface HeroEnrollmentCardProps {
   enrollmentBadge?: string;
   /** Primary CTA button label (e.g. "Start My Enrollment"). */
   primaryCtaLabel?: string;
+  /** Chip text below CTA (e.g. "It only takes 4 minutes"). Hidden if empty. */
+  ctaChip?: string;
   /** Floating insight card: plan name */
   insightPlanName?: string;
   /** Floating insight card: balance label */
@@ -28,11 +35,14 @@ const DEFAULT_HERO_IMAGE = "/image/hero-illustration.png";
 
 export const HeroEnrollmentCard = ({
   greeting = "Welcome back",
+  greetingTitle,
+  userName,
   headline = "Get started with your 401(k)",
   description = "Enroll in your retirement plan today and start building your financial future. The process is simple and takes just a few minutes.",
   heroImageSrc = DEFAULT_HERO_IMAGE,
   enrollmentBadge = "+ ENROLMENT OPEN",
   primaryCtaLabel,
+  ctaChip,
   insightPlanName = "Plan: Roth 401(k)",
   insightBalanceLabel = "Current Balance",
   insightBalanceValue = "$12,500",
@@ -64,7 +74,15 @@ export const HeroEnrollmentCard = ({
               </span>
             )}
             <p className="text-sm font-medium text-[var(--color-textSecondary)]">
-              {greeting}
+              {greetingTitle != null && userName != null ? (
+                <>
+                  {greetingTitle}
+                  <br />
+                  <span className="font-semibold text-[var(--color-text)]">{userName}</span>
+                </>
+              ) : (
+                greeting
+              )}
             </p>
             <h1 className="text-2xl font-bold leading-tight text-[var(--color-text)] md:text-3xl">
               {headline}
@@ -78,6 +96,11 @@ export const HeroEnrollmentCard = ({
             >
               {primaryCtaLabel ?? "Enroll Now"}
             </Button>
+            {ctaChip && (
+              <span className="inline-flex w-fit items-center rounded-full border border-[var(--color-border)] bg-[var(--color-background-secondary)] px-4 py-1.5 text-sm font-medium text-[var(--color-textSecondary)]">
+                {ctaChip}
+              </span>
+            )}
           </motion.div>
 
           {/* Right: illustration - stagger second */}

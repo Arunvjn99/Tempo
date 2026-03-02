@@ -217,10 +217,8 @@ export const Contribution = () => {
   );
 
   const allocationValid = Math.abs(sourceTotal - 100) < 0.01;
-  const canContinue = contributionPct > 0 && contributionPct <= 100 && allocationValid;
 
-  const handleNext = useCallback(() => {
-    if (!canContinue) return;
+  const saveDraftForNextStep = useCallback(() => {
     try {
       const draft = loadEnrollmentDraft();
       if (draft) {
@@ -232,10 +230,14 @@ export const Contribution = () => {
         });
       }
     } catch (_) {
-      // persist failed; still navigate so user can continue
+      // ignore
     }
+  }, [contributionPct, state.sourceAllocation]);
+
+  const handleNext = useCallback(() => {
+    saveDraftForNextStep();
     navigate("/enrollment/future-contributions");
-  }, [canContinue, contributionPct, state.sourceAllocation, navigate]);
+  }, [navigate, saveDraftForNextStep]);
 
   const handleBack = () => navigate("/enrollment/choose-plan");
   const handleSaveAndExit = () => {
@@ -756,8 +758,7 @@ export const Contribution = () => {
             <Button
               type="button"
               onClick={handleNext}
-              disabled={!canContinue}
-              className="enrollment-footer__primary transition-opacity hover:opacity-95 disabled:opacity-50"
+              className="enrollment-footer__primary transition-opacity hover:opacity-95"
             >
               {t("enrollment.continueToAutoIncrease")}
             </Button>

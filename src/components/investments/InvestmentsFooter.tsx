@@ -43,6 +43,7 @@ export const InvestmentsFooter = () => {
       onPrimary={handleContinue}
       summaryText={summaryText}
       getDraftSnapshot={() => ({ investment: getInvestmentSnapshot() })}
+      inContent
     />
   );
 };

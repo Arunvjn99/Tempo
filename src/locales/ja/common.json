@@ -1,11 +1,13 @@
 {
   "dashboard": {
     "greeting": "おはようございます、{{name}}",
+    "greetingTitle": "おはようございます",
     "heroTitle": "一緒に、あなたの未来を築きましょう。",
     "heroTitlePart1": "一緒に、",
     "heroTitlePart2": "あなたの未来を築きましょう。",
     "heroSubtitle": "401(k)の有効化まであと一歩です。大切なことに集中できるよう、すべてをシンプルにしました。",
     "startEnrollment": "登録を開始",
+    "takesMinutes": "たった4分で完了",
     "exploreOptions": "オプションを探す",
     "enrollmentOpen": "登録期間中",
     "projectedFutureValue": "予想将来価値",

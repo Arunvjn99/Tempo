@@ -1,11 +1,13 @@
 {
   "dashboard": {
     "greeting": "Guten Morgen, {{name}}",
+    "greetingTitle": "Guten Morgen",
     "heroTitle": "Lassen Sie uns gemeinsam Ihre Zukunft gestalten.",
     "heroTitlePart1": "Lassen Sie uns",
     "heroTitlePart2": "Ihre Zukunft gemeinsam gestalten.",
     "heroSubtitle": "Sie sind einen Schritt von der Aktivierung Ihres 401(k) entfernt. Wir haben alles vereinfacht, damit Sie sich auf das Wesentliche konzentrieren können.",
     "startEnrollment": "Anmeldung starten",
+    "takesMinutes": "Dauert nur 4 Minuten",
     "exploreOptions": "Optionen erkunden",
     "enrollmentOpen": "Anmeldezeitraum geöffnet",
     "projectedFutureValue": "Prognostizierter zukünftiger Wert",

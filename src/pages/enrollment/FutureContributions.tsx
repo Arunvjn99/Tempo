@@ -141,14 +141,14 @@ function AutoIncreaseBanner({
 export const FutureContributions = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { state, setAutoIncrease, setContributionAmount } = useEnrollment();
+  const { state, setAutoIncrease, setContributionAmount, setContributionType } = useEnrollment();
 
   const salary = state.salary || 75000;
   const currentAge = state.currentAge || 40;
   const retirementAge = state.retirementAge || 67;
   const currentBalance = state.currentBalance || 0;
 
-  /* Contribution from context only — no fallback, no location state */
+  /* Contribution from context; when 0, allow hydrate from draft so we don't redirect after Contribution → Continue */
   const contributionPct =
     state.contributionType === "percentage"
       ? Number(state.contributionAmount) ?? 0
@@ -156,27 +156,40 @@ export const FutureContributions = () => {
         ? annualAmountToPercentage(salary, (state.contributionAmount || 0) * PAYCHECKS_PER_YEAR)
         : 0;
 
-  /* Redirect to contribution step when no valid contribution — no alternate UI */
-  useEffect(() => {
-    if (state.isInitialized && contributionPct <= 0) {
-      navigate("/enrollment/contribution", { replace: true });
-    }
-  }, [state.isInitialized, contributionPct, navigate]);
+  /* POC: No redirect to contribution — allow staying on Auto Increase and navigating Back to Contribution without validation */
 
-  if (state.isInitialized && contributionPct <= 0) {
-    return null;
-  }
+  /* Clear investment-wizard session flag so that after "Skip for now" → Continue we show the wizard on investments page */
+  useEffect(() => {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("enrollment-investment-wizard-completed-session");
+    }
+  }, []);
+
+  const effectivePct =
+    contributionPct > 0
+      ? contributionPct
+      : (() => {
+          const draft = loadEnrollmentDraft();
+          if (!draft || (draft.contributionAmount ?? 0) <= 0) return 0;
+          return draft.contributionType === "percentage"
+            ? Number(draft.contributionAmount) ?? 0
+            : salary > 0
+              ? annualAmountToPercentage(salary, (draft.contributionAmount ?? 0) * PAYCHECKS_PER_YEAR)
+              : 0;
+        })();
+
+  /* POC: always show page (no return null); Back to Contribution works without validation */
 
   const contributionDollarPerPaycheck =
-    salary > 0 && contributionPct > 0
-      ? percentageToAnnualAmount(salary, contributionPct) / PAYCHECKS_PER_YEAR
+    salary > 0 && effectivePct > 0
+      ? percentageToAnnualAmount(salary, effectivePct) / PAYCHECKS_PER_YEAR
       : 0;
 
   const derived = useMemo(
     () =>
       deriveContribution({
         contributionType: "percentage",
-        contributionValue: contributionPct,
+        contributionValue: effectivePct,
         annualSalary: salary,
         paychecksPerYear: PAYCHECKS_PER_YEAR,
         employerMatchEnabled: state.employerMatchEnabled,
@@ -185,7 +198,7 @@ export const FutureContributions = () => {
         currentAge,
         retirementAge,
       }),
-    [contributionPct, salary, state.employerMatchEnabled, state.assumptions.employerMatchCap, state.assumptions.employerMatchPercentage, currentAge, retirementAge]
+    [effectivePct, salary, state.employerMatchEnabled, state.assumptions.employerMatchCap, state.assumptions.employerMatchPercentage, currentAge, retirementAge]
   );
 
   const projectionBaseline = useMemo(
@@ -215,7 +228,7 @@ export const FutureContributions = () => {
       inflationRate: state.assumptions.inflationRate,
       autoIncrease: {
         enabled: true,
-        initialPercentage: contributionPct,
+        initialPercentage: effectivePct,
         increasePercentage: pct,
         maxPercentage: state.autoIncrease.maxPercentage,
         salary,
@@ -223,7 +236,7 @@ export const FutureContributions = () => {
         assumptions: state.assumptions,
       },
     });
-  }, [state.autoIncrease.enabled, state.autoIncrease.percentage, state.autoIncrease.maxPercentage, contributionPct, salary, currentAge, retirementAge, currentBalance, derived.monthlyContribution, derived.employerMatchMonthly, state.employerMatchEnabled, state.assumptions]);
+  }, [state.autoIncrease.enabled, state.autoIncrease.percentage, state.autoIncrease.maxPercentage, effectivePct, salary, currentAge, retirementAge, currentBalance, derived.monthlyContribution, derived.employerMatchMonthly, state.employerMatchEnabled, state.assumptions]);
 
   /** Hypothetical 1% annual increase for decision card and hero when auto increase not yet enabled */
   const projectionHypotheticalAuto = useMemo(
@@ -238,20 +251,20 @@ export const FutureContributions = () => {
         inflationRate: state.assumptions.inflationRate,
         autoIncrease: {
           enabled: true,
-          initialPercentage: contributionPct,
+          initialPercentage: effectivePct,
           increasePercentage: 1,
-          maxPercentage: Math.max(15, Math.ceil(contributionPct)),
+          maxPercentage: Math.max(15, Math.ceil(effectivePct)),
           salary,
           contributionType: "percentage",
           assumptions: state.assumptions,
         },
       }),
-    [contributionPct, salary, currentAge, retirementAge, currentBalance, derived.monthlyContribution, derived.employerMatchMonthly, state.employerMatchEnabled, state.assumptions]
+    [effectivePct, salary, currentAge, retirementAge, currentBalance, derived.monthlyContribution, derived.employerMatchMonthly, state.employerMatchEnabled, state.assumptions]
   );
 
   const perPaycheck =
-    salary > 0 && contributionPct > 0
-      ? percentageToAnnualAmount(salary, contributionPct) / PAYCHECKS_PER_YEAR
+    salary > 0 && effectivePct > 0
+      ? percentageToAnnualAmount(salary, effectivePct) / PAYCHECKS_PER_YEAR
       : 0;
 
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -260,10 +273,7 @@ export const FutureContributions = () => {
 
   const handleContinue = useCallback(() => {
     const draft = loadEnrollmentDraft();
-    if (!draft?.contributionAmount) {
-      navigate("/enrollment/contribution");
-      return;
-    }
+    /* POC: no validation — allow continuing to investments without contribution check */
     if (draft) {
       saveEnrollmentDraft({
         ...draft,
@@ -299,10 +309,10 @@ export const FutureContributions = () => {
 
   const ai = state.autoIncrease;
 
-  /* Validation: stopAt > contributionPct, stopAt <= 50; enable Continue only when valid */
+  /* Validation: stopAt > effectivePct, stopAt <= 50; enable Continue only when valid */
   const isValidAutoIncrease =
     ai.percentage >= 0 &&
-    ai.maxPercentage > contributionPct &&
+    ai.maxPercentage > effectivePct &&
     ai.maxPercentage <= 50;
 
   /* ── Computed delta: use actual when enabled, hypothetical (1%) when not ── */
@@ -343,9 +353,9 @@ export const FutureContributions = () => {
     setAutoIncrease({
       enabled: true,
       percentage: Math.min(5, Math.max(0, ai.percentage || 2)),
-      maxPercentage: Math.min(50, Math.max(15, Math.ceil(contributionPct))),
+      maxPercentage: Math.min(50, Math.max(15, Math.ceil(effectivePct))),
     });
-  }, [ai.percentage, ai.maxPercentage, contributionPct, setAutoIncrease]);
+  }, [ai.percentage, ai.maxPercentage, effectivePct, setAutoIncrease]);
 
   const handleSkipAnyway = useCallback(() => {
     setShowSkipModal(false);
@@ -507,14 +517,14 @@ export const FutureContributions = () => {
                       <div className="flex items-baseline gap-1 rounded-xl p-3" style={{ background: "var(--enroll-soft-bg)", border: "1px solid var(--enroll-card-border)" }}>
                         <input
                           type="number"
-                          min={contributionPct}
+                          min={effectivePct}
                           max={50}
                           step={0.5}
                           value={ai.maxPercentage > 0 ? ai.maxPercentage : ""}
                           onChange={(e) => {
                             const raw = e.target.value;
                             const num = raw === "" ? 0 : parseFloat(raw);
-                            setAutoIncrease({ maxPercentage: Number.isNaN(num) ? 0 : Math.min(50, Math.max(contributionPct, num)) });
+                            setAutoIncrease({ maxPercentage: Number.isNaN(num) ? 0 : Math.min(50, Math.max(effectivePct, num)) });
                           }}
                           className="w-16 text-lg font-bold bg-transparent border-none outline-none p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           style={{ color: "var(--enroll-text-primary)" }}
@@ -523,11 +533,11 @@ export const FutureContributions = () => {
                         <span className="text-sm font-semibold" style={{ color: "var(--enroll-text-muted)" }}>%</span>
                       </div>
                       <p className="text-[10px] mt-1" style={{ color: "var(--enroll-text-muted)" }}>
-                        Auto-increase will stop once your contribution reaches this percentage. Must be &gt; {Math.round(contributionPct)}% and ≤ 50%.
+                        Auto-increase will stop once your contribution reaches this percentage. Must be &gt; {Math.round(effectivePct)}% and ≤ 50%.
                       </p>
-                      {ai.maxPercentage > 0 && ai.maxPercentage <= contributionPct && (
+                      {ai.maxPercentage > 0 && ai.maxPercentage <= effectivePct && (
                         <p className="text-xs mt-1 font-medium" style={{ color: "var(--color-danger)" }}>
-                          Must be greater than your current contribution ({Math.round(contributionPct)}%).
+                          Must be greater than your current contribution ({Math.round(effectivePct)}%).
                         </p>
                       )}
                     </div>
@@ -611,7 +621,7 @@ export const FutureContributions = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="rounded-xl p-3 text-center" style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-brand-rgb) / 0.12)" }}>
                       <p className="text-[10px] font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--enroll-text-muted)" }}>RATE</p>
-                      <p className="text-lg font-bold" style={{ color: "var(--enroll-brand)" }}>{Math.round(contributionPct)}%</p>
+                      <p className="text-lg font-bold" style={{ color: "var(--enroll-brand)" }}>{Math.round(effectivePct)}%</p>
                     </div>
                     <div className="rounded-xl p-3 text-center" style={{ background: "rgb(var(--enroll-brand-rgb) / 0.06)", border: "1px solid rgb(var(--enroll-brand-rgb) / 0.12)" }}>
                       <p className="text-[10px] font-medium uppercase tracking-wider mb-0.5" style={{ color: "var(--enroll-text-muted)" }}>PER CHECK</p>
@@ -666,7 +676,7 @@ export const FutureContributions = () => {
                   <div className="flex items-baseline gap-1 mt-1">
                     <input
                       type="number"
-                      value={contributionPct > 0 ? Math.round(contributionPct) : ""}
+                      value={effectivePct > 0 ? Math.round(effectivePct) : ""}
                       onChange={handleContributionPctChange}
                       min="0"
                       max="100"

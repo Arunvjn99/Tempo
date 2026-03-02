@@ -23,7 +23,7 @@ export const AuthFooter = () => {
           <img
             src={core.src}
             alt={core.label}
-            className="max-h-6 w-auto object-contain"
+            className="max-h-6 w-auto object-contain dark:[filter:brightness(0)_invert(1)]"
           />
         </div>
       </div>

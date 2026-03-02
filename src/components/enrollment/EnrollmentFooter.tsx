@@ -18,6 +18,8 @@ interface EnrollmentFooterProps {
   /** When true, summary text uses error styling */
   summaryError?: boolean;
   getDraftSnapshot?: () => Record<string, unknown>;
+  /** When true, use in-content styling (border-top, spacing) for use inside step content */
+  inContent?: boolean;
 }
 
 /**
@@ -34,6 +36,7 @@ export const EnrollmentFooter = ({
   summaryText,
   summaryError = false,
   getDraftSnapshot,
+  inContent = false,
 }: EnrollmentFooterProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -71,7 +74,7 @@ export const EnrollmentFooter = ({
 
   return (
     <footer
-      className="enrollment-footer"
+      className={`enrollment-footer${inContent ? " enrollment-footer--in-content" : ""}`}
       role="contentinfo"
       aria-label={t("enrollment.footerAria")}
     >

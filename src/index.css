@@ -5294,6 +5294,7 @@ button {
 /* Enrollment Footer - inline CTA section (scrolls with content), no fixed/sticky */
 .enrollment-footer {
   position: relative;
+  width: 100%;
   margin-top: 48px;
   padding-top: 24px;
   padding-bottom: var(--spacing-4);
@@ -5323,6 +5324,7 @@ button {
 }
 
 .enrollment-footer__inner {
+  width: 100%;
   max-width: 1440px;
   margin: 0 auto;
   display: flex;

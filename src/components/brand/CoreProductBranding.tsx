@@ -19,7 +19,7 @@ export const CoreProductBranding = ({
     <img
       src="/image/core-logo.png"
       alt="CORE"
-      className={imgClassName}
+      className={`${imgClassName} dark:[filter:brightness(0)_invert(1)]`.trim()}
     />
     <p className="text-sm text-[var(--color-text-secondary)]">
       Retirement Intelligence Platform

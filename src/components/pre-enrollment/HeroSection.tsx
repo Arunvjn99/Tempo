@@ -56,7 +56,8 @@ export const HeroSection = () => {
             variants={fadeUp}
             className="text-xl md:text-2xl font-medium text-[var(--color-textSecondary)] mb-3"
           >
-            {t("dashboard.greeting", { name: displayName })}
+            <span className="block">{t("dashboard.greetingTitle")}</span>
+            <span className="block font-semibold text-[var(--color-text)]">{displayName}</span>
           </motion.h2>
 
           <motion.h1
@@ -103,6 +104,12 @@ export const HeroSection = () => {
               {t("dashboard.exploreOptions")}
             </motion.button>
           </motion.div>
+          <motion.span
+            variants={fadeUp}
+            className="inline-flex w-fit items-center rounded-full border border-[var(--color-border)] bg-[var(--color-background-secondary)] px-4 py-1.5 text-sm font-medium text-[var(--color-textSecondary)]"
+          >
+            {t("dashboard.takesMinutes")}
+          </motion.span>
         </motion.div>
 
         {/* Right: floating cards (desktop) / fallback card (mobile/tablet) */}
