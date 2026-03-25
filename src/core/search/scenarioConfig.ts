@@ -486,7 +486,7 @@ export const SEARCH_SCENARIOS: SearchScenario[] = [
     queries: ["Check my balance", "View account balance"],
     subtitle: "Dashboard",
     type: "navigation",
-    route: "/dashboard",
+    route: "/dashboard/pre-enrollment",
   },
   {
     id: "vested_balance",

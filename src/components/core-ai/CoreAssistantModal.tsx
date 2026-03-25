@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { getRoutingVersion, withVersionIfEnrollment } from "@/core/version";
 import { buildActionHandlers } from "@/core/search/actionHandlers";
 import { handleLocalAI } from "@/core/ai/handleLocalAI";
 import { formatStructuredUserLine, type CoreAIStructuredPayload } from "@/core/ai/interactive/types";
+import { assistantMessage } from "@/core/ai/messageUtils";
 import { CORE_AI_LOAN_APPLY_ROUTE } from "@/core/ai/types";
 import type { LocalFlowState } from "@/core/ai/types";
 import { useLoanStore } from "@/stores/loanStore";
@@ -31,6 +32,9 @@ export interface CoreAssistantModalProps {
   /** When modal is already open, send this message immediately (e.g. second hero search submit). */
   externalSend?: { id: number; text: string } | null;
   onExternalSendConsumed?: () => void;
+  /** After open, dispatch structured action once (e.g. `START_LOAN_REVIEW`). */
+  pendingStructured?: { id: number; payload: CoreAIStructuredPayload } | null;
+  onPendingStructuredConsumed?: () => void;
 }
 
 /* ── Helpers ── */
@@ -65,6 +69,8 @@ export function CoreAssistantModal({
   composerFocusSignal = 0,
   externalSend = null,
   onExternalSendConsumed,
+  pendingStructured = null,
+  onPendingStructuredConsumed,
 }: CoreAssistantModalProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -76,6 +82,8 @@ export function CoreAssistantModal({
   const prevOpenRef = useRef(false);
   const initialPromptSentRef = useRef(false);
   const lastExternalSendIdRef = useRef<number | null>(null);
+  const lastPendingStructuredIdRef = useRef<number | null>(null);
+  const handleInteractiveActionRef = useRef<(payload: CoreAIStructuredPayload) => void>(() => {});
 
   /* ── Core message handler (defined early so speech hook can reference it) ── */
   const handleSendRef = useRef<(text: string) => void>(() => {});
@@ -89,8 +97,8 @@ export function CoreAssistantModal({
     },
   });
 
-  /* ── Reset when modal opens (detect false→true transition) ── */
-  useEffect(() => {
+  /* ── Reset when modal opens (layout effect = welcome in state before paint, avoids empty first frame) ── */
+  useLayoutEffect(() => {
     const wasOpen = prevOpenRef.current;
     prevOpenRef.current = isOpen;
 
@@ -102,6 +110,7 @@ export function CoreAssistantModal({
       setIsLoading(false);
       isLoadingRef.current = false;
       flowStateRef.current = null;
+      lastPendingStructuredIdRef.current = null;
       tts.stop();
     } else if (!isOpen && wasOpen) {
       /* Closing — stop any active audio/recording */
@@ -167,6 +176,10 @@ export function CoreAssistantModal({
       if (isLoadingRef.current) return;
       if (!structured && !trimmed) return;
 
+      if (import.meta.env.DEV && structured) {
+        console.log("DISPATCHING ACTION", structured);
+      }
+
       const userContent = structured ? formatStructuredUserLine(structured) : trimmed;
 
       const userMsg: ChatMessage = {
@@ -198,7 +211,30 @@ export function CoreAssistantModal({
         useLoanStore.getState().setStep(3);
       }
 
-      setMessages((prev) => [...prev, ...local.messages]);
+      let toAppend = local.messages;
+      if (toAppend.length === 0 && !local.navigate && !local.action && (structured || trimmed)) {
+        toAppend = [
+          assistantMessage(
+            "I couldn’t show that step in chat. Say **apply loan** to continue here, or open **Transactions** → **Loan**.",
+            { suggestions: ["Apply for a loan"] },
+          ),
+        ];
+      }
+      if (import.meta.env.DEV) {
+        console.log("UPDATED MESSAGES", toAppend.length, toAppend.map((m) => ({ id: m.id, role: m.role, contentLen: m.content?.length ?? 0 })));
+      }
+      setMessages((prev) => [...prev, ...toAppend]);
+
+      if (import.meta.env.DEV && local.messages.length > 0) {
+        console.debug(
+          "[CoreAI] response messages",
+          local.messages.map((m) => ({
+            id: m.id,
+            interactiveType: m.interactiveType,
+            contentLen: m.content?.length ?? 0,
+          })),
+        );
+      }
 
       const handlers = buildActionHandlers(navigate, routeVersion);
       if (local.navigate) {
@@ -228,6 +264,32 @@ export function CoreAssistantModal({
     },
     [runTurn],
   );
+
+  useEffect(() => {
+    handleInteractiveActionRef.current = handleInteractiveAction;
+  }, [handleInteractiveAction]);
+
+  /* Provider queues structured action after modal opens — delay lets welcome message commit first (avoids empty/race). */
+  useEffect(() => {
+    if (!isOpen || !pendingStructured) return;
+    if (import.meta.env.DEV) {
+      console.log("MODAL RECEIVED", pendingStructured.payload);
+    }
+    const myId = pendingStructured.id;
+    if (lastPendingStructuredIdRef.current === myId) return;
+    lastPendingStructuredIdRef.current = myId;
+    const payload = pendingStructured.payload;
+    let done = false;
+    const tid = window.setTimeout(() => {
+      handleInteractiveActionRef.current(payload);
+      done = true;
+      onPendingStructuredConsumed?.();
+    }, 100);
+    return () => {
+      window.clearTimeout(tid);
+      if (!done) lastPendingStructuredIdRef.current = null;
+    };
+  }, [isOpen, pendingStructured, onPendingStructuredConsumed]);
 
   /* Keep refs in sync so the speech hook always calls the latest handlers */
   useEffect(() => {

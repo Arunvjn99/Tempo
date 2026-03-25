@@ -1,32 +1,60 @@
+import { getFAQMatch } from "@/core/ai/faqAnswers";
+import { classifyQuery } from "./classifyQuery";
+import { matchShortAnswer } from "./shortAnswers";
 import { SEARCH_SCENARIOS } from "./scenarioConfig";
 
 export type QuickAnswerResult = {
-  scenarioId: string;
+  /** Present when answer comes from `SEARCH_SCENARIOS` (scripted follow-up). */
+  scenarioId?: string;
   question: string;
   answer: string;
+  source: "library" | "scenario" | "faq";
+  /** Set when `source === "faq"` — used for Core AI `FAQ_DETAIL`. */
+  faqId?: string;
 };
 
 /**
- * Inline quick answer: first scenario whose canned query prefix appears in the user string
- * and that defines `quickAnswer`.
+ * Inline quick answer: FAQ library (targeted questions), then scenario `quickAnswer`, then short-answer topics.
+ * Skips entirely when `classifyQuery` is `action` (navigation / flows).
  */
 export function getQuickAnswer(input: string): QuickAnswerResult | null {
   const q = input.toLowerCase().trim();
-
   if (!q) return null;
 
-  const match = SEARCH_SCENARIOS.find((scenario) =>
+  if (classifyQuery(input) === "action") return null;
+
+  const faq = getFAQMatch(input);
+  if (faq) {
+    return {
+      question: faq.question,
+      answer: faq.shortAnswer,
+      source: "faq",
+      faqId: faq.id,
+    };
+  }
+
+  const scenarioHit = SEARCH_SCENARIOS.find((scenario) =>
     scenario.queries.some((query) => {
       const needle = query.toLowerCase().slice(0, 12);
       return needle.length > 0 && q.includes(needle);
     }),
   );
 
-  if (match?.quickAnswer) {
+  if (scenarioHit?.quickAnswer) {
     return {
-      scenarioId: match.id,
-      question: match.queries[0] ?? q,
-      answer: match.quickAnswer,
+      scenarioId: scenarioHit.id,
+      question: scenarioHit.queries[0] ?? q,
+      answer: scenarioHit.quickAnswer,
+      source: "scenario",
+    };
+  }
+
+  const lib = matchShortAnswer(input);
+  if (lib) {
+    return {
+      question: lib.title,
+      answer: lib.answer,
+      source: "library",
     };
   }
 

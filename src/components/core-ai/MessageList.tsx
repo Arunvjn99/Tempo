@@ -38,6 +38,12 @@ export function MessageList({
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("RENDERING MESSAGES", messages);
+    }
+  }, [messages]);
+
   return (
     <div
       ref={containerRef}

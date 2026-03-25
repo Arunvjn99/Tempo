@@ -27,7 +27,7 @@ export const VerifyCode = () => {
       setShowSuccessModal(true);
     } else {
       setOtpVerified(true);
-      navigate(withVersion(version, "/dashboard"), { replace: true });
+      navigate("/dashboard/pre-enrollment", { replace: true });
     }
   };
 

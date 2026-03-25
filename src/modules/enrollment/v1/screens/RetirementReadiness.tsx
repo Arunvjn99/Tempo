@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, AlertTriangle, ArrowUp, Bot, Info, Sparkles, Target, Zap } from "lucide-react";
+import { ArrowRight, Award, DollarSign, Info, Sparkles } from "lucide-react";
 import { useEnrollmentStore, type EnrollmentV1Store } from "../store/useEnrollmentStore";
 import { computeMockRetirementProjection } from "../flow/projection";
 import {
@@ -13,6 +13,9 @@ import {
   type ReadinessApplyPatch,
 } from "../flow/readinessRecommendations";
 import { cn } from "@/lib/utils";
+
+/** Participant benchmark shown in UI (Figma reference). */
+const READINESS_BENCHMARK = 85;
 
 const RING_R = 58;
 const RING_C = 2 * Math.PI * RING_R;
@@ -71,54 +74,6 @@ function AnimatedScoreRing({
   );
 }
 
-function ReadinessScoreCard({
-  score,
-  onTrack,
-  strokeClass,
-  displayClass,
-}: {
-  score: number;
-  onTrack: boolean;
-  strokeClass: string;
-  displayClass: string;
-}) {
-  return (
-    <div className="card readiness-score-shell">
-      <h2 className="text-lg font-medium text-foreground">Readiness Score</h2>
-      <div className="readiness-score-visual">
-        <div className="readiness-score-glow" aria-hidden />
-        <div className="readiness-score-deco" aria-hidden>
-          <svg viewBox="0 0 160 160" fill="none">
-            <circle
-              cx="80"
-              cy="80"
-              r="74"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeDasharray="4 10"
-              opacity="0.85"
-            />
-          </svg>
-        </div>
-        <AnimatedScoreRing value={score} strokeClass={strokeClass} displayClass={displayClass} />
-      </div>
-      <span
-        className={cn(
-          "chip chip-static text-xs uppercase tracking-wide",
-          onTrack ? "chip--status-success" : "chip--status-warning",
-        )}
-      >
-        {onTrack ? "On Track" : "Needs Attention"}
-      </span>
-      <p className="max-w-sm text-center text-sm text-muted-foreground">
-        {onTrack
-          ? "You are progressing toward a solid retirement outcome with your current selections."
-          : "Small adjustments to contributions or strategy can materially improve your outlook."}
-      </p>
-    </div>
-  );
-}
-
 function applyEnrollmentPatch(patch: ReadinessApplyPatch, updateField: EnrollmentV1Store["updateField"]) {
   switch (patch.kind) {
     case "contribution":
@@ -134,6 +89,13 @@ function applyEnrollmentPatch(patch: ReadinessApplyPatch, updateField: Enrollmen
     default:
       break;
   }
+}
+
+function statusMessage(score: number): string {
+  if (score >= 80) return "You're on a great track!";
+  if (score >= 60) return "You're building a solid foundation.";
+  if (score >= 40) return "You're getting started — keep going!";
+  return "Every step counts toward your goal.";
 }
 
 export function RetirementReadiness() {
@@ -174,6 +136,9 @@ export function RetirementReadiness() {
     return `$${Math.round(val).toLocaleString()}`;
   };
 
+  const formatCurrencyDetailed = (val: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+
   const recommendations = useMemo(
     () =>
       generateRecommendations(data, appliedIds, {
@@ -184,10 +149,18 @@ export function RetirementReadiness() {
     [appliedIds, data, projectedBalance, score, yearsToRetirement],
   );
 
-  const potentialScore = Math.min(
-    100,
-    score + recommendations.reduce((s, r) => s + Math.max(0, r.scoreDelta), 0),
+  const actionableRecs = useMemo(
+    () => recommendations.filter((r) => r.patch.kind !== "none"),
+    [recommendations],
   );
+
+  const bestNewScore = useMemo(
+    () => actionableRecs.reduce((m, r) => Math.max(m, r.newScore), score),
+    [actionableRecs, score],
+  );
+
+  const boostPoints = Math.max(0, bestNewScore - score);
+  const showRecommendedPanel = actionableRecs.length > 0 && boostPoints > 0;
 
   useEffect(() => {
     const p = computeMockRetirementProjection(data.contribution, data.riskLevel);
@@ -197,15 +170,13 @@ export function RetirementReadiness() {
   }, [data.contribution, data.riskLevel, updateField]);
 
   const applyRec = (rec: GeneratedRecommendation) => {
+    if (rec.patch.kind === "none") return;
     if (!window.confirm("Apply this recommendation to your enrollment selections?")) return;
     applyEnrollmentPatch(rec.patch, updateField);
     setAppliedIds((prev) => (prev.includes(rec.id) ? prev : [...prev, rec.id]));
   };
 
-  const showAlertCard = score <= 70;
   const alertIsCritical = score < 40;
-  const onTrack = score > 70;
-
   const strokeClass = alertIsCritical
     ? "stroke-[var(--color-danger)]"
     : score <= 70
@@ -217,228 +188,224 @@ export function RetirementReadiness() {
       ? "text-[var(--color-warning)]"
       : "text-[var(--color-success)]";
 
-  const understandingCopy = onTrack
-    ? `Your score of ${score} reflects your contributions, timeline, and growth assumptions. You are close to or above the typical participant target.`
-    : `Your score of ${score} is based on contributions, timeline, and projected growth — there is room to improve before you finalize.`;
+  const understandingCopy = `Your score of ${score} is based on contributions, timeline, and projected growth — there is room to improve.`;
 
-  const AlertIcon = alertIsCritical ? AlertCircle : AlertTriangle;
+  const targetBarPct = Math.min(100, Math.round((score / READINESS_BENCHMARK) * 100));
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <header className="mb-6 text-center lg:text-left">
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">AI-Powered Analysis</p>
-        <h1 className="mt-2 text-2xl font-semibold text-foreground">Your Retirement Readiness Score</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Your personalized score based on contributions, timeline, and projected market performance.
+    <div className="mx-auto max-w-5xl">
+      <header className="mb-5">
+        <h1 className="text-2xl font-semibold text-foreground">Your Retirement Readiness</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">
+          Here&apos;s how your choices add up before you finalize.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:grid-rows-2 lg:gap-6">
-        <div className="order-1 lg:col-start-1 lg:row-start-1">
-          <ReadinessScoreCard
-            score={score}
-            onTrack={onTrack}
-            strokeClass={strokeClass}
-            displayClass={displayClass}
-          />
-        </div>
+      <div className="grid items-start gap-6 md:grid-cols-[1fr_min(22rem,100%)] lg:grid-cols-[1fr_24rem]">
+        {/* ── Left: score hero + understanding + funding (Figma) ── */}
+        <div className="min-w-0 space-y-5">
+          <div className="card p-6">
+            <div className="flex flex-col items-center">
+              <div className="readiness-score-visual relative">
+                <div className="readiness-score-glow" aria-hidden />
+                <div className="readiness-score-deco" aria-hidden>
+                  <svg viewBox="0 0 160 160" fill="none">
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="74"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeDasharray="4 10"
+                      className="text-border opacity-80"
+                    />
+                  </svg>
+                </div>
+                <AnimatedScoreRing value={score} strokeClass={strokeClass} displayClass={displayClass} />
+              </div>
 
-        {showAlertCard ? (
-          <div
-            className={cn(
-              "order-2 flex flex-col gap-4 sm:flex-row sm:items-start lg:col-start-2 lg:row-start-1",
-              "card card-alert",
-              !alertIsCritical && "card-alert--caution",
-            )}
-          >
-            <div
-              className={cn(
-                "icon-box-soft flex h-14 w-14 shrink-0 rounded-2xl sm:h-16 sm:w-16",
-                alertIsCritical ? "text-danger-token" : "text-warning-token",
-              )}
-            >
-              <AlertIcon className="h-7 w-7 sm:h-8 sm:w-8" aria-hidden />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-lg font-medium text-foreground">
-                  {alertIsCritical ? "You're Not Ready Yet" : "Room to Improve"}
-                </h3>
-                <span
-                  className={cn(
-                    "chip chip-static text-xs",
-                    alertIsCritical ? "chip--impact-high" : "chip--impact-medium",
-                  )}
-                >
-                  {alertIsCritical ? "Action Required" : "Review Recommended"}
+              <p className="mt-4 text-center text-base font-semibold text-foreground">{statusMessage(score)}</p>
+              <p className="mt-1 text-center text-sm text-muted-foreground">
+                You are <span className="font-semibold text-foreground">{score}%</span> on track for your retirement
+                goal.
+              </p>
+              <p className="mt-1 max-w-sm text-center text-xs text-muted-foreground">
+                Most participants your age aim for a readiness score of {READINESS_BENCHMARK} or higher.
+              </p>
+
+              <div className="readiness-target-bar w-full max-w-xs">
+                <div className="readiness-target-bar__track flex-1">
+                  <div className="readiness-target-bar__fill" style={{ width: `${targetBarPct}%` }} />
+                </div>
+                <span className="readiness-target-bar__label">
+                  Target: <span className="font-semibold text-foreground">{READINESS_BENCHMARK}</span>
                 </span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {alertIsCritical
-                  ? "You're not on track for your desired retirement income at this pace. Small changes now can make a large difference."
-                  : "You're trending in the right direction, but tightening contributions or turning on auto-increase could lift your trajectory."}
-              </p>
-              <div className="card-alert__metrics mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Current Gap</p>
-                  <p
-                    className={cn(
-                      "text-xl font-bold tabular-nums sm:text-2xl",
-                      alertIsCritical ? "text-danger-token" : "text-warning-token",
-                    )}
-                  >
-                    {formatCurrency(annualSavingsGap)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">per year short</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Time Left</p>
-                  <p className="text-xl font-bold tabular-nums text-foreground sm:text-2xl">{yearsToRetirement}</p>
-                  <p className="text-xs text-muted-foreground">years to retire</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Readiness %</p>
-                  <p
-                    className={cn(
-                      "text-xl font-bold tabular-nums sm:text-2xl",
-                      alertIsCritical ? "text-warning-token" : "text-foreground",
-                    )}
-                  >
-                    {score}%
-                  </p>
-                  <p className="text-xs text-muted-foreground">of target goal</p>
-                </div>
-              </div>
-              <div className="card-alert__cta">
-                <Zap className="mt-0.5 h-4 w-4 shrink-0 text-warning-token" aria-hidden />
-                <p className="card-alert__cta-text">
-                  <strong>Act now:</strong> Follow the recommendations below to close your gap.
-                </p>
-              </div>
             </div>
-          </div>
-        ) : null}
 
-        <div className="order-3 flex flex-col gap-4 lg:col-start-2 lg:row-start-2">
-          <div className="card flex flex-col overflow-hidden p-0">
-            <div className="border-b border-border px-5 py-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                  <h2 className="text-lg font-medium text-foreground">AI Recommendations</h2>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {recommendations.length} action{recommendations.length === 1 ? "" : "s"} surfaced
-                </span>
+            <div className="my-5 border-t border-border" />
+
+            <div className="text-center">
+              <div className="mb-1 flex items-center justify-center gap-2">
+                <DollarSign className="h-4 w-4 text-primary" aria-hidden />
+                <p className="text-xs font-medium text-muted-foreground">Projected retirement balance</p>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Applying all listed actions could lift your score toward{" "}
-                <span className="font-semibold text-primary">{potentialScore}</span>.
+              <p className="text-3xl font-bold tabular-nums text-foreground sm:text-[1.8rem]">
+                {formatCurrency(projectedBalance)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                In {yearsToRetirement} years with your current contribution and investment strategy.
               </p>
             </div>
-            <div className="flex flex-col gap-3 p-4 sm:p-5">
-              {recommendations.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  All surfaced actions are applied. Adjust contributions or strategy above to refresh this list.
-                </p>
-              ) : null}
-              {recommendations.map((rec) => {
-                const Icon = rec.Icon;
-                const high = rec.impact === "High";
-                return (
-                  <div key={rec.id} className="card card--pad-sm flex flex-col gap-3 sm:flex-row sm:items-start">
-                    <div className="icon-box-soft flex h-11 w-11 shrink-0 rounded-full sm:h-12 sm:w-12">
-                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-medium text-foreground sm:text-lg">{rec.title}</h3>
-                        <span className="chip chip-static flex items-center gap-1 py-1 text-xs">
-                          <Sparkles className="h-3 w-3" aria-hidden />
-                          AI
-                        </span>
-                        <span
-                          className={cn(
-                            "chip chip-static py-1 text-xs",
-                            high ? "chip--impact-high" : "chip--impact-medium",
-                          )}
-                        >
-                          {rec.impact} impact
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm text-muted-foreground">{rec.description}</p>
-                      <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-                        <span className="text-success-token inline-flex items-center gap-1 font-medium">
-                          <ArrowUp className="h-4 w-4" aria-hidden />
-                          {rec.projectedGain} projected
-                        </span>
-                        <span className="inline-flex items-center gap-1 font-medium text-primary">
-                          <Target className="h-4 w-4" aria-hidden />
-                          {rec.scoreImpact}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => applyRec(rec)}
-                      className="btn btn-primary btn-sm w-full shrink-0 sm:mt-0 sm:w-auto"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
           </div>
-        </div>
 
-        <div className="order-4 flex flex-col gap-4 lg:col-start-1 lg:row-start-2">
-          <div className="card-soft space-y-2">
+          <div className="readiness-understanding-card">
             <div className="flex items-start gap-2">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <h3 className="text-lg font-medium text-foreground">Understanding Your Score</h3>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">Understanding Your Score</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{understandingCopy}</p>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">{understandingCopy}</p>
           </div>
 
-          <div className="card-soft space-y-3">
-            <h3 className="text-lg font-medium text-foreground">Annual Funding Summary</h3>
+          <div className="readiness-funding-card">
+            <h3 className="readiness-funding-card__title">Annual Funding Summary</h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="metric-dot-tertiary h-3 w-3 shrink-0 rounded-full" />
-                  <span className="text-muted-foreground">Retirement goal (est. annual income)</span>
+                  <span className="text-muted-foreground">Retirement Income Goal</span>
                 </div>
                 <span className="shrink-0 font-semibold tabular-nums text-foreground">
-                  {formatCurrency(retirementIncomeGoalAnnual)}
+                  {formatCurrencyDetailed(retirementIncomeGoalAnnual)}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="h-3 w-3 shrink-0 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Current contributions (you + employer)</span>
+                  <span className="text-muted-foreground">Current Annual Contributions</span>
                 </div>
                 <span className="shrink-0 font-semibold tabular-nums text-primary">
-                  {formatCurrency(totalAnnualContributions)}
+                  {formatCurrencyDetailed(totalAnnualContributions)}
                 </span>
               </div>
               <div className="border-t border-border" />
               <div className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="metric-dot-danger h-3 w-3 shrink-0 rounded-full" />
-                  <span className="text-muted-foreground">Gap</span>
+                  <span className="text-muted-foreground">Annual Savings Gap</span>
                 </div>
                 <span className="text-danger-token shrink-0 font-semibold tabular-nums">
-                  {formatCurrency(annualSavingsGap)}
+                  {formatCurrencyDetailed(annualSavingsGap)}
                 </span>
               </div>
             </div>
-            <p className="border-t border-border pt-3 text-xs text-muted-foreground">
-              This compares an estimated sustainable annual income from your projected balance to what you and your
-              employer save each year. Close the gap by increasing contributions, enabling auto-increase, or
-              revisiting your investment strategy.
+            <p className="readiness-funding-card__footer">
+              This shows the gap between your retirement income goal and current annual contributions. Close this gap by
+              increasing contributions or adjusting your retirement timeline.
             </p>
           </div>
+        </div>
+
+        {/* ── Right: reference section (Recommended + optional improvements) ── */}
+        <div className="min-w-0 space-y-4">
+          {showRecommendedPanel ? (
+            <div className="readiness-recommended-panel">
+              <div className="readiness-recommended-panel__title-row">
+                <p className="readiness-recommended-panel__title">
+                  <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                  Recommended for You
+                </p>
+                <span className="readiness-recommended-panel__score-pill">Score: {bestNewScore}</span>
+              </div>
+              <p className="readiness-recommended-panel__body">
+                You can reach a score of <span className="font-semibold text-primary">{bestNewScore}</span> — apply the
+                recommendations below to boost your readiness by{" "}
+                <span className="font-semibold text-foreground">+{boostPoints} points</span>.
+              </p>
+            </div>
+          ) : null}
+
+          {actionableRecs.length > 0 ? (
+            <div>
+              <div className="readiness-rec-list-header mb-3">
+                <p className="readiness-rec-list-header__title">Optional ways to improve your readiness</p>
+                <p className="readiness-rec-list-header__sub">
+                  You can apply one of these improvements to increase your retirement readiness score.
+                </p>
+              </div>
+              <div className="space-y-2.5">
+                {actionableRecs.map((rec, index) => {
+                  const Icon = rec.Icon;
+                  const isFeatured = index === 0;
+                  return (
+                    <div
+                      key={rec.id}
+                      className={cn("readiness-rec-card", isFeatured && "readiness-rec-card--featured")}
+                    >
+                      <div className="readiness-rec-card__inner">
+                        {isFeatured ? (
+                          <div className="readiness-rec-badge">
+                            <Award className="h-3 w-3" aria-hidden />
+                            Recommended
+                          </div>
+                        ) : null}
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={cn(
+                              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                              isFeatured ? "bg-[color-mix(in_srgb,var(--primary)_10%,var(--muted))]" : "bg-muted",
+                            )}
+                          >
+                            <Icon className={cn("h-4 w-4", isFeatured ? "text-primary" : "text-muted-foreground")} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground">{rec.title}</p>
+                            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{rec.description}</p>
+                            <div className="readiness-rec-metrics">
+                              <div>
+                                <p className="readiness-rec-metrics__label">Score</p>
+                                <div className="readiness-rec-metrics__value-row">
+                                  <span className="tabular-nums text-sm font-semibold text-muted-foreground">{score}</span>
+                                  <ArrowRight className="h-3 w-3 text-border" aria-hidden />
+                                  <span className="tabular-nums text-sm font-bold text-[var(--color-success)]">
+                                    {rec.newScore}
+                                  </span>
+                                </div>
+                              </div>
+                              <div>
+                                <p className="readiness-rec-metrics__label">Savings</p>
+                                <p className="readiness-rec-metrics__value-row text-sm font-bold text-primary">
+                                  +${rec.additionalAnnualSavings.toLocaleString()}/yr
+                                </p>
+                              </div>
+                              <div>
+                                <p className="readiness-rec-metrics__label">Balance</p>
+                                <p className="readiness-rec-metrics__value-row text-sm font-bold tabular-nums text-foreground">
+                                  {formatCurrency(rec.projectedBalanceAfter)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <button type="button" className="readiness-rec-apply" onClick={() => applyRec(rec)}>
+                          Apply Recommendation
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="card card--pad-sm">
+              <p className="text-sm text-muted-foreground">
+                {recommendations[0]?.description ??
+                  "Walk through contributions and investment strategy with your goals in mind before you enroll."}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

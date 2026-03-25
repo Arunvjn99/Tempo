@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   BarChart2,
@@ -20,6 +20,7 @@ import { ENROLLMENT_STEP_COUNT, ENROLLMENT_STEPS } from "../flow/steps";
 import { ENROLLMENT_V1_STEPPER_LABEL_KEYS } from "../flow/v1StepperLabels";
 import {
   pathForWizardStep,
+  V1_ENROLLMENT_AUTO_INCREASE_DECISION_PATH,
   wizardStepIndexFromSegment,
 } from "../flow/v1WizardPaths";
 import { AutoIncrease } from "../screens/AutoIncrease";
@@ -31,9 +32,11 @@ import { RetirementReadiness } from "../screens/RetirementReadiness";
 import { Review } from "../screens/Review";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { SuccessEnrollmentModal } from "@/components/enrollment/SuccessEnrollmentModal";
+import { useUser } from "@/context/UserContext";
+import { markEnrollmentCompleted } from "@/services/enrollmentService";
 import { EnrollmentContainer } from "./EnrollmentContainer";
 
-const POST_ENROLLMENT_DASHBOARD_PATH = "/dashboard/overview";
+const POST_ENROLLMENT_DASHBOARD_PATH = "/dashboard/post-enrollment";
 
 const V1_STEP_ICONS = [
   Target,
@@ -63,14 +66,24 @@ export function EnrollmentV1Layout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const { refreshEnrollment } = useUser();
   const state = useEnrollmentStore();
   const goToStep = useEnrollmentStore((s) => s.goToStep);
   const nextStep = useEnrollmentStore((s) => s.nextStep);
   const prevStep = useEnrollmentStore((s) => s.prevStep);
 
-  const segment = pathname.replace(/^\/v1\/enrollment\/?/, "").split("/")[0];
-  const pathStepIndex = wizardStepIndexFromSegment(segment);
+  const wizardRest = pathname.replace(/^\/v1\/enrollment\/?/, "").replace(/\/$/, "");
+  const pathStepIndex = wizardStepIndexFromSegment(wizardRest);
   const stepIndex = pathStepIndex ?? 0;
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("[Enrollment] modules EnrollmentV1Layout (v1 wizard steps — not pages/Versioned*)", {
+        pathname,
+        stepIndex,
+      });
+    }
+  }, [pathname, stepIndex]);
 
   useLayoutEffect(() => {
     if (pathStepIndex == null) {
@@ -96,8 +109,11 @@ export function EnrollmentV1Layout() {
     ENROLLMENT_STEP_COUNT - 1,
   );
 
-  const finishEnrollment = () => {
+  const finishEnrollment = async () => {
     setShowSuccessModal(false);
+    const { ok, error } = await markEnrollmentCompleted();
+    if (import.meta.env.DEV && !ok) console.warn("[enrollment] markEnrollmentCompleted:", error);
+    await refreshEnrollment();
     navigate(POST_ENROLLMENT_DASHBOARD_PATH);
   };
 
@@ -113,6 +129,14 @@ export function EnrollmentV1Layout() {
   };
 
   const handleBack = () => {
+    if (wizardRest === "auto-increase/skip") {
+      navigate(V1_ENROLLMENT_AUTO_INCREASE_DECISION_PATH);
+      return;
+    }
+    if (wizardRest === "auto-increase/config") {
+      navigate(V1_ENROLLMENT_AUTO_INCREASE_DECISION_PATH);
+      return;
+    }
     if (isFirst) return;
     prevStep();
     navigate(pathForWizardStep(useEnrollmentStore.getState().currentStep));
@@ -150,7 +174,7 @@ export function EnrollmentV1Layout() {
         <EnrollmentContainer stepper={stepper} footer={stepFooter} className="min-h-0 flex-1">
           <AnimatePresence mode="wait">
             <motion.div
-              key={ENROLLMENT_STEPS[stepIndex] ?? stepIndex}
+              key={pathname}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}

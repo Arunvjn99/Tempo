@@ -13,7 +13,7 @@ const HERO_IMAGE_CLASS =
 
 /** Larger caps for hero video so it matches the visual weight of the prior PNG illustration (+3px on rem caps). */
 const HERO_VIDEO_CLASS =
-  "mx-auto h-auto w-full max-h-[min(60vh,calc(28rem+3px))] object-contain object-center sm:max-h-[min(62vh,calc(30rem+3px))] md:mx-0 md:max-h-[min(66vh,calc(35rem+3px))] md:object-right lg:max-h-[min(68vh,calc(39rem+3px))] xl:max-h-[min(70vh,calc(43rem+3px))] 2xl:max-h-[min(72vh,calc(47rem+3px))]";
+  "mx-auto h-auto w-full max-h-[min(60vh,calc(28rem+3px))] object-contain object-center sm:max-h-[min(62vh,calc(30rem+3px))] md:mx-0 md:max-h-[min(66vh,calc(35rem+3px))] md:object-left lg:max-h-[min(68vh,calc(39rem+3px))] xl:max-h-[min(70vh,calc(43rem+3px))] 2xl:max-h-[min(72vh,calc(47rem+3px))]";
 
 const HERO_IMAGE_WRAP =
   "w-full max-w-[16rem] sm:max-w-[18rem] md:max-w-[22rem] lg:max-w-[26rem] xl:max-w-[30rem] 2xl:max-w-[32rem]";
@@ -35,8 +35,8 @@ export function HeroIllustration({ imageSrc, alt = "" }: HeroIllustrationProps) 
   return (
     <div
       className={cn(
-        "relative z-10 flex min-w-0 w-full justify-center md:justify-end",
-        isVideo && "md:-translate-x-4 lg:-translate-x-6 xl:-translate-x-7",
+        "relative z-10 flex min-w-0 w-full justify-center",
+        isVideo ? "md:justify-start md:-translate-x-1 lg:-translate-x-2" : "md:justify-end",
       )}
     >
       <div className={wrapClass}>

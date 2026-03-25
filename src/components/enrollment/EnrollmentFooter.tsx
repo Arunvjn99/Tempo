@@ -69,7 +69,7 @@ export const EnrollmentFooter = ({
       saveEnrollmentDraft(snapshot ? { ...draft, ...snapshot } : draft);
       sessionStorage.setItem(ENROLLMENT_SAVED_TOAST_KEY, "1");
     }
-    navigate(withVersion(version, "/dashboard"));
+    navigate("/dashboard/pre-enrollment");
   };
 
   const isFirstStep = currentStepIndex === 0 && prevPath === undefined;

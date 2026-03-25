@@ -128,7 +128,7 @@ export function TransactionCenterRetirementWidget({
       <div
         style={{
           background: "var(--card-bg)",
-          borderRadius: 16,
+          borderRadius: 12,
           border: "1px solid var(--border)",
           overflow: "hidden",
           position: "relative",
@@ -145,11 +145,11 @@ export function TransactionCenterRetirementWidget({
               showImpact && impactAmount! < 0
                 ? "linear-gradient(90deg, var(--color-danger), var(--color-warning))"
                 : "linear-gradient(90deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 72%, var(--foreground)))",
-            borderRadius: "16px 16px 0 0",
+            borderRadius: "12px 12px 0 0",
           }}
         />
 
-        <div style={{ padding: compact ? "14px 18px" : "16px 20px" }}>
+        <div style={{ padding: compact ? "12px 16px" : "16px" }}>
           <div style={{ marginBottom: 10 }}>
             <div
               style={{

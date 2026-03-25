@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
-import { suggestionsToPaletteRows } from "@/core/search/suggestionEngine";
+import { groupPaletteRows, suggestionsToPaletteRows } from "@/core/search/suggestionEngine";
 import { useSearch } from "@/hooks/useSearch";
+import { openKnowMoreForQuickAnswer } from "@/core/search/knowMoreFromQuickAnswer";
 import { SearchOverlay } from "./SearchOverlay";
 import { SearchInput } from "./SearchInput";
-import { SearchResults } from "./SearchResults";
+import { SearchResultsGrouped } from "./SearchResultsGrouped";
 import { EmptyState } from "./EmptyState";
 import { AiFallbackCard } from "./AiFallbackCard";
+import { InlineAnswerCard } from "./InlineAnswerCard";
+import { SearchDiscoveryPanel } from "./SearchDiscoveryPanel";
+import { SearchAITrustStrip } from "./SearchAITrustStrip";
+import { SearchSmartInsight } from "./SearchSmartInsight";
 
 export type CommandSearchProps = {
   onClose: () => void;
@@ -31,7 +36,7 @@ function useDebouncedTyping(query: string, ms: number) {
  * Global command palette: scripted scenarios + Core AI fallback (same engine as hero search).
  */
 export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps) {
-  const { query, setQuery, suggestions, answer, handleSelect, submitWithIndex, submitFreeform } = useSearch({
+  const { query, setQuery, suggestions, answer, handleSelect, submitWithSuggestionRows, submitFreeform } = useSearch({
     initialQuery,
   });
   const [inputFocused, setInputFocused] = useState(true);
@@ -42,10 +47,26 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
   const listId = useId();
   const emptyHeadingId = useId();
 
-  const matches = useMemo(() => suggestionsToPaletteRows(suggestions), [suggestions]);
+  const safeSuggestions = Array.isArray(suggestions) ? suggestions : [];
+  const paletteRows = useMemo(() => suggestionsToPaletteRows(safeSuggestions), [safeSuggestions]);
+  const trimmed = query.trim();
+  const hasQuery = trimmed.length > 0;
+  const { ordered: matches, groups } = useMemo(
+    () => groupPaletteRows(paletteRows, hasQuery),
+    [paletteRows, hasQuery],
+  );
+
+  /** Same order as grouped list rows — required for `submitWithSuggestionRows` / Enter submit. */
+  const suggestionRows = useMemo(
+    () =>
+      (Array.isArray(matches) ? matches : []).map((m) => ({
+        scenarioId: m.scenarioId,
+        label: m.title,
+      })),
+    [matches],
+  );
 
   const isTyping = useDebouncedTyping(query, 240);
-  const trimmed = query.trim();
 
   const showQuickAnswer = Boolean(answer && trimmed.length > 0);
   const noLocalMatches = trimmed.length > 0 && matches.length === 0;
@@ -96,9 +117,9 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
 
   const runSubmit = useCallback(() => {
     if (activeIndex < 0 && !query.trim()) return;
-    submitWithIndex(activeIndex);
+    submitWithSuggestionRows(activeIndex, suggestionRows);
     onClose();
-  }, [query, activeIndex, submitWithIndex, onClose]);
+  }, [query, activeIndex, suggestionRows, submitWithSuggestionRows, onClose]);
 
   const activateItem = useCallback(
     (item: (typeof matches)[number]) => {
@@ -147,7 +168,7 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
     [showNoResults, matches, activeIndex, activateItem, scrollActiveIntoView],
   );
 
-  const sectionLabel = trimmed ? "Matching commands" : "Suggested commands";
+  const showDiscovery = !hasQuery && !showTypingDots && matches.length > 0 && !showNoResults;
 
   const overlay = (
     <SearchOverlay onClose={onClose} labelId={titleId}>
@@ -192,6 +213,10 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
             onBlur={() => setInputFocused(false)}
           />
 
+          <SearchAITrustStrip />
+
+          {hasQuery && !showTypingDots ? <SearchSmartInsight query={query} /> : null}
+
           {showTypingDots ? (
             <div className="ai-command-typing" aria-hidden>
               <span className="ai-command-typing__dot" />
@@ -202,24 +227,34 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
             <div className="ai-command-typing ai-command-typing--placeholder" aria-hidden />
           )}
 
-          {showQuickAnswer && answer ? (
-            <div className="search-palette-quick-answer" role="region" aria-label="Quick answer">
-              <p className="answer-question">{answer.question}</p>
-              <p className="answer-text">{answer.answer}</p>
-              <button
-                type="button"
-                className="answer-cta"
-                onClick={() => {
-                  handleSelect(answer.scenarioId, trimmed || answer.question);
+          <div className="ai-command-panel ai-command-panel--discovery">
+            {showQuickAnswer && answer ? (
+              <InlineAnswerCard
+                question={answer.question}
+                shortAnswer={answer.answer}
+                containerClassName="search-palette-quick-answer search-palette-quick-answer--in-panel"
+                onKnowMore={() => {
+                  openKnowMoreForQuickAnswer(answer, trimmed);
                   onClose();
                 }}
-              >
-                View more →
-              </button>
-            </div>
-          ) : null}
+              />
+            ) : null}
 
-          <div className="ai-command-panel">
+            {showDiscovery ? (
+              <SearchDiscoveryPanel
+                className="search-discovery-panel--in-panel"
+                onFillSearch={(text) => {
+                  setQuery(text);
+                  setActiveIndex(-1);
+                  requestAnimationFrame(() => inputRef.current?.focus());
+                }}
+                onRunScenario={(scenarioId, label) => {
+                  handleSelect(scenarioId, label);
+                  onClose();
+                }}
+              />
+            ) : null}
+
             {showNoResults ? (
               <>
                 <EmptyState query={query} listLabelId={emptyHeadingId} />
@@ -230,16 +265,15 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
                   }}
                 />
               </>
-            ) : (
-              <SearchResults
+            ) : matches.length > 0 ? (
+              <SearchResultsGrouped
                 ref={listRef}
-                items={matches}
+                groups={groups}
                 listId={listId}
                 activeDescendantId={activeDescendantId}
                 onSelect={activateItem}
-                sectionLabel={sectionLabel}
               />
-            )}
+            ) : null}
           </div>
         </form>
       </div>

@@ -7,6 +7,7 @@ import type {
   LoanSimulatorCardPayload,
   ReviewCardPayload,
   SelectionCardPayload,
+  SuccessCardPayload,
 } from "../interactive/types";
 import {
   LOAN_AI_STATE_KEY,
@@ -16,8 +17,16 @@ import {
   type LoanAIState,
 } from "../state/loanAIState";
 import type { LocalAIResult, LocalFlowState } from "../types";
-import { calculateEMI, LOAN_AI_ANNUAL_RATE_PERCENT, LOAN_AI_TENURE_MONTHS } from "../utils/emiCalculator";
+import { generateSchedule, LOAN_AI_ANNUAL_RATE_PERCENT, LOAN_AI_TENURE_MONTHS } from "../utils/emiCalculator";
 import { purposeToLoanTypeId, type LoanFlowPurpose } from "../utils/parseLoanInput";
+
+const DEBUG_LOAN_FLOW = import.meta.env.DEV;
+
+function logLoanFlow(phase: string, detail?: unknown) {
+  if (DEBUG_LOAN_FLOW) {
+    console.debug("[CoreAI loan flow]", phase, detail ?? "");
+  }
+}
 
 function money(n: number): string {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -114,6 +123,7 @@ function selectionCardMessage(): ReturnType<typeof assistantMessage> {
       { label: "Bank transfer (ACH)", value: "eft" },
       { label: "Check (mailed)", value: "check" },
     ],
+    insight: "Bank transfer is fastest. Check takes 5–7 business days.",
   };
   return assistantMessage("Choose how you’d like to receive the funds.", {
     interactiveType: "selection_card",
@@ -156,8 +166,7 @@ function buildReviewCardPayload(loanAI: LoanAIState): ReviewCardPayload {
   const amt = loanAI.data.amount ?? 0;
   const tenureMonths = loanAI.data.tenureMonths ?? LOAN_AI_TENURE_MONTHS;
   const method = (loanAI.data.paymentMethod === "check" ? "check" : "eft") as "eft" | "check";
-  const monthlyPayment =
-    Math.round(calculateEMI(amt, LOAN_AI_ANNUAL_RATE_PERCENT, tenureMonths) * 100) / 100;
+  const { emi: monthlyPayment, rows } = generateSchedule(amt, LOAN_AI_ANNUAL_RATE_PERCENT, tenureMonths, 3);
   return {
     title: "Review & submit",
     amount: amt,
@@ -166,13 +175,31 @@ function buildReviewCardPayload(loanAI: LoanAIState): ReviewCardPayload {
     monthlyPayment,
     annualRatePercent: LOAN_AI_ANNUAL_RATE_PERCENT,
     disbursementLabel: disbursementLabel(method),
+    schedulePreview: rows,
   };
 }
 
 function reviewCardMessage(loanAI: LoanAIState) {
   return assistantMessage("One last look — submit when you’re ready.", {
-    interactiveType: "review_card",
+    interactiveType: "loan_review_card",
     interactivePayload: buildReviewCardPayload(loanAI),
+  });
+}
+
+function buildSuccessCardPayload(): SuccessCardPayload {
+  return {
+    title: "Loan request submitted",
+    description: "Your application has been received.",
+    processingTime: "1–2 business days",
+    reassuranceMessage: "We'll send a confirmation email shortly. You can track status in the loan center.",
+    actionLabel: "Go to loan center",
+  };
+}
+
+function successCardMessage() {
+  return assistantMessage("Your loan request is in. Here's what to expect.", {
+    interactiveType: "loan_success_card",
+    interactivePayload: buildSuccessCardPayload(),
   });
 }
 
@@ -182,6 +209,8 @@ function processGuidedStructured(
   structured: CoreAIStructuredPayload,
 ): LocalAIResult {
   const maxLoan = financials.maxLoan;
+
+  logLoanFlow("structured action", { step: loanAI.step, action: structured.action });
 
   if (loanAI.step === "simulation" && structured.action === "loan_simulator_continue") {
     const p = buildSimulatorPayload(loanAI, maxLoan);
@@ -224,23 +253,41 @@ function processGuidedStructured(
 
   if (loanAI.step === "documents" && structured.action === "document_upload_card_continue") {
     const nextLoan: LoanAIState = { ...loanAI, step: "review" };
+    const reviewMsg = reviewCardMessage(nextLoan);
+    logLoanFlow("documents → review", { interactiveType: reviewMsg.interactiveType });
     return {
-      messages: [reviewCardMessage(nextLoan)],
+      messages: [reviewMsg],
       nextState: guidedNextState(nextLoan, { maxLoan }),
       loanApplyPayload: loanPayloadFromState(nextLoan),
     };
   }
 
-  if (loanAI.step === "review" && structured.action === "review_card_submit") {
+  if (
+    loanAI.step === "review" &&
+    (structured.action === "review_card_submit" || structured.action === "SUBMIT_LOAN")
+  ) {
+    const nextLoan: LoanAIState = { ...loanAI, step: "success" };
+    const successMsg = successCardMessage();
+    logLoanFlow("review → success", { interactiveType: successMsg.interactiveType });
     return {
-      messages: [assistantMessage("Opening **loan configuration** — you’re almost there.")],
+      messages: [successMsg],
+      nextState: guidedNextState(nextLoan, { maxLoan }),
+      loanApplyPayload: loanPayloadFromState(loanAI),
+    };
+  }
+
+  if (loanAI.step === "success" && structured.action === "success_card_dismiss") {
+    logLoanFlow("success dismiss → navigate", { to: "/transactions/loan/review" });
+    return {
+      messages: [],
       nextState: null,
       loanApplyPayload: loanPayloadFromState(loanAI),
-      navigate: "/transactions/loan/configuration",
+      navigate: "/transactions/loan/review",
     };
   }
 
   const wrong = wrongStructuredReprompt(loanAI, financials);
+  logLoanFlow("structured → reprompt", { step: loanAI.step, action: structured.action, repromptType: wrong.interactiveType });
   return {
     messages: [wrong],
     nextState: guidedNextState(loanAI, { maxLoan }),
@@ -273,6 +320,7 @@ function wrongStructuredReprompt(
           { label: "Bank transfer (ACH)", value: "eft" },
           { label: "Check (mailed)", value: "check" },
         ],
+        insight: "Bank transfer is fastest. Check takes 5–7 business days.",
       };
       return assistantMessage("That control doesn’t match this step — pick disbursement below.", {
         interactiveType: "selection_card",
@@ -306,8 +354,13 @@ function wrongStructuredReprompt(
     }
     case "review":
       return assistantMessage("That control doesn’t match this step — use **Submit loan** below.", {
-        interactiveType: "review_card",
+        interactiveType: "loan_review_card",
         interactivePayload: buildReviewCardPayload(loanAI),
+      });
+    case "success":
+      return assistantMessage("Tap **Go to loan center** to continue.", {
+        interactiveType: "loan_success_card",
+        interactivePayload: buildSuccessCardPayload(),
       });
     default:
       return assistantMessage("Continue from the conversation above, or say **apply loan** to restart.");
@@ -350,6 +403,7 @@ export function runGuidedLoanFlow(
   const trimmed = input.trim();
   const ctx = state.context;
   const loanAI = ctx[LOAN_AI_STATE_KEY] as LoanAIState;
+  logLoanFlow("runGuidedLoanFlow", { step: loanAI.step, hasStructured: Boolean(structured), text: trimmed.slice(0, 80) });
   const financials = getUserFinancials();
   const maxLoan = financials.maxLoan;
   const amount = loanAI.data.amount ?? 0;
@@ -419,6 +473,7 @@ export function runGuidedLoanFlow(
                 { label: "Bank transfer (ACH)", value: "eft" },
                 { label: "Check (mailed)", value: "check" },
               ],
+              insight: "Bank transfer is fastest. Check takes 5–7 business days.",
             } satisfies SelectionCardPayload,
           }),
         ],
@@ -509,17 +564,17 @@ export function runGuidedLoanFlow(
       };
     }
     if (isAffirmative(trimmed) || /^submit\b/i.test(trimmed)) {
+      const nextLoan: LoanAIState = { ...loanAI, step: "success" };
       return {
-        messages: [assistantMessage("Opening **loan configuration** — you’re almost there.")],
-        nextState: null,
+        messages: [successCardMessage()],
+        nextState: guidedNextState(nextLoan, { maxLoan }),
         loanApplyPayload: loanPayloadFromState(loanAI),
-        navigate: "/transactions/loan/configuration",
       };
     }
     return {
       messages: [
         assistantMessage("Tap **Submit loan** on the review card or reply **yes**.", {
-          interactiveType: "review_card",
+          interactiveType: "loan_review_card",
           interactivePayload: buildReviewCardPayload(loanAI),
         }),
       ],
@@ -528,9 +583,53 @@ export function runGuidedLoanFlow(
     };
   }
 
+  if (loanAI.step === "success") {
+    if (isAffirmative(trimmed) || /\b(go|continue|ok|done)\b/i.test(trimmed)) {
+      return {
+        messages: [],
+        nextState: null,
+        loanApplyPayload: loanPayloadFromState(loanAI),
+        navigate: "/transactions/loan/review",
+      };
+    }
+    return {
+      messages: [
+        assistantMessage("Tap **Go to loan center** below, or say **ok** to continue.", {
+          interactiveType: "loan_success_card",
+          interactivePayload: buildSuccessCardPayload(),
+        }),
+      ],
+      nextState: guidedNextState(loanAI, { maxLoan }),
+    };
+  }
+
   return { messages: [assistantMessage("Something went off track — try **apply loan** again.")], nextState: null };
 }
 
 export function isGuidedLoanContext(ctx: Record<string, unknown>): boolean {
   return ctx.guided === true && ctx[LOAN_AI_STATE_KEY] != null;
+}
+
+/**
+ * Bootstraps the guided loan flow directly at the **review** card (Core AI modal).
+ * Used when chat session state was lost or user taps **Review** with amount/term.
+ */
+export function bootstrapLoanReviewResponse(
+  amount: number,
+  tenureMonths: number,
+  options?: { paymentMethod?: "eft" | "check"; purpose?: string },
+): LocalAIResult {
+  const financials = getUserFinancials();
+  const maxLoan = financials.maxLoan;
+  const paymentMethod = options?.paymentMethod ?? "eft";
+  const purpose = options?.purpose ?? "general";
+  const loanAI: LoanAIState = {
+    step: "review",
+    data: { amount, tenureMonths, paymentMethod, purpose },
+  };
+  return {
+    messages: [reviewCardMessage(loanAI)],
+    nextState: guidedNextState(loanAI, { maxLoan }),
+    loanApplyPayload: loanPayloadFromState(loanAI),
+  };
 }

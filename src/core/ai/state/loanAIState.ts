@@ -4,7 +4,8 @@ export type LoanAIStep =
   | "configuration"
   | "fees"
   | "documents"
-  | "review";
+  | "review"
+  | "success";
 
 export type LoanAIState = {
   step: LoanAIStep;

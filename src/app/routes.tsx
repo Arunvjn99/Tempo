@@ -1,11 +1,10 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { TransactionsToV1Redirect } from "./TransactionsToV1Redirect";
 import { Login } from "../pages/auth/Login";
 import { VerifyCode } from "../pages/auth/VerifyCode";
 import { ForgotPassword } from "../pages/auth/ForgotPassword";
 import { ResetPassword } from "../pages/auth/ResetPassword";
 import { HelpCenter } from "@/pages/auth/HelpCenter";
-import { Dashboard } from "../pages/dashboard/Dashboard";
 import { ChoosePlan } from "../pages/enrollment/ChoosePlan";
 import { Contribution } from "../pages/enrollment/Contribution";
 import { EnrollmentLayout } from "../layouts/EnrollmentLayout";
@@ -23,7 +22,7 @@ export const AppRoutes = () => {
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/reset" element={<ResetPassword />} />
       <Route path="/help" element={<HelpCenter />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard" element={<Navigate to="/dashboard/pre-enrollment" replace />} />
       {V1_WIZARD_SEGMENTS.map((slug) => (
         <Route
           key={slug}
@@ -31,6 +30,8 @@ export const AppRoutes = () => {
           element={<EnrollmentV1Layout />}
         />
       ))}
+      <Route path="/v1/enrollment/auto-increase/config" element={<EnrollmentV1Layout />} />
+      <Route path="/v1/enrollment/auto-increase/skip" element={<EnrollmentV1Layout />} />
       <Route
         path="/enrollment"
         element={<EnrollmentLayout />}

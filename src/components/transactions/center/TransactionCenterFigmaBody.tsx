@@ -3,7 +3,6 @@ import {
   DollarSign,
   HandCoins,
   ArrowLeftRight,
-  PieChart,
   RefreshCcw,
   Sparkles,
   FilePen,
@@ -13,7 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { TransactionCenterSectionHeader } from "./TransactionCenterSectionHeader";
 import { TransactionCenterPlanOverview } from "./TransactionCenterPlanOverview";
-import { TransactionCenterQuickActionButton } from "./TransactionCenterQuickActionButton";
+import { QuickActionsAdvanced, type QuickActionAdvancedItem } from "./QuickActionsAdvanced";
 import {
   TransactionCenterAttentionTimeline,
   type AttentionTimelineItem,
@@ -38,6 +37,10 @@ export type TransactionCenterFigmaBodyProps = {
   recentRows?: RecentListRow[];
   onRecentRowClick?: (id: string) => void;
   attentionItems?: AttentionTimelineItem[];
+  /** Show “Recommended” on loan card when user is eligible (default true for demo). */
+  loanQuickActionRecommended?: boolean;
+  /** Show “Most used” on withdraw card (default true for demo). */
+  withdrawQuickActionMostUsed?: boolean;
 };
 
 /**
@@ -51,14 +54,63 @@ export function TransactionCenterFigmaBody({
   onQuickLoan,
   onQuickWithdraw,
   onQuickTransfer,
-  onQuickRebalance,
+  onQuickRebalance: _onQuickRebalance,
   onQuickRollover,
   onResumeDraft,
   onResolveAttention,
   recentRows,
   onRecentRowClick,
   attentionItems,
+  loanQuickActionRecommended = true,
+  withdrawQuickActionMostUsed = true,
 }: TransactionCenterFigmaBodyProps) {
+  const quickActionItems = useMemo<QuickActionAdvancedItem[]>(
+    () => [
+      {
+        id: "loan",
+        icon: <HandCoins className="h-5 w-5" strokeWidth={2} aria-hidden />,
+        title: "Take a Loan",
+        keyValue: "Borrow up to $10,000",
+        supporting: "Typical approval: 1–3 days",
+        onClick: onQuickLoan,
+        badge: loanQuickActionRecommended ? "recommended" : undefined,
+      },
+      {
+        id: "withdraw",
+        icon: <DollarSign className="h-5 w-5" strokeWidth={2} aria-hidden />,
+        title: "Withdraw Money",
+        keyValue: "Available: $5,000",
+        supporting: "Tax impact: 10–20%",
+        onClick: onQuickWithdraw,
+        badge: withdrawQuickActionMostUsed ? "most_used" : undefined,
+      },
+      {
+        id: "transfer",
+        icon: <ArrowLeftRight className="h-5 w-5" strokeWidth={2} aria-hidden />,
+        title: "Transfer Funds",
+        keyValue: "Reallocate balance",
+        supporting: "No fees or penalties",
+        onClick: onQuickTransfer,
+      },
+      {
+        id: "rollover",
+        icon: <RefreshCcw className="h-5 w-5" strokeWidth={2} aria-hidden />,
+        title: "Roll Over",
+        keyValue: "Consolidate savings",
+        supporting: "No tax penalty",
+        onClick: onQuickRollover,
+      },
+    ],
+    [
+      onQuickLoan,
+      onQuickWithdraw,
+      onQuickTransfer,
+      onQuickRollover,
+      loanQuickActionRecommended,
+      withdrawQuickActionMostUsed,
+    ],
+  );
+
   const attention = useMemo(() => {
     if (attentionItems) return attentionItems;
     const base: AttentionTimelineItem[] = [
@@ -103,7 +155,7 @@ export function TransactionCenterFigmaBody({
   return (
     <div className="tx-center-figma-root">
       <div
-        className="mx-auto w-full max-w-[75rem] px-[var(--ds-spacing-xl,1.5rem)] sm:px-12 pt-8 pb-24"
+        className="mx-auto w-full max-w-6xl px-4 sm:px-6 pt-6 pb-12"
         style={{ boxSizing: "border-box" }}
       >
         <TransactionCenterPlanOverview
@@ -117,53 +169,17 @@ export function TransactionCenterFigmaBody({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.08 }}
-          className="mb-5 sm:mb-6"
+          className="mb-4 sm:mb-5"
         >
           <TransactionCenterSectionHeader
             icon={<Sparkles className="w-4 h-4" />}
             title="Quick Actions"
             subtitle="Start a new transaction"
           />
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1.5 sm:gap-2">
-            <TransactionCenterQuickActionButton
-              icon={<HandCoins className="w-4 h-4" />}
-              title="Take a Loan"
-              contextInfo="Borrow up to $10,000"
-              additionalInfo="Typical approval: 1–3 days"
-              onClick={onQuickLoan}
-            />
-            <TransactionCenterQuickActionButton
-              icon={<DollarSign className="w-4 h-4" />}
-              title="Withdraw Money"
-              contextInfo="Available: $5,000"
-              additionalInfo="Tax impact: 10–20%"
-              onClick={onQuickWithdraw}
-            />
-            <TransactionCenterQuickActionButton
-              icon={<ArrowLeftRight className="w-4 h-4" />}
-              title="Transfer Funds"
-              contextInfo="Reallocate balance"
-              additionalInfo="No fees or penalties"
-              onClick={onQuickTransfer}
-            />
-            <TransactionCenterQuickActionButton
-              icon={<PieChart className="w-4 h-4" />}
-              title="Rebalance"
-              contextInfo="Current: Moderate risk"
-              additionalInfo="Last: 6 months ago"
-              onClick={onQuickRebalance}
-            />
-            <TransactionCenterQuickActionButton
-              icon={<RefreshCcw className="w-4 h-4" />}
-              title="Roll Over"
-              contextInfo="Consolidate savings"
-              additionalInfo="No tax penalty"
-              onClick={onQuickRollover}
-            />
-          </div>
+          <QuickActionsAdvanced items={quickActionItems} />
         </motion.div>
 
-        <div className="flex flex-col md:flex-row gap-5 sm:gap-6 mb-5 sm:mb-6">
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 mb-4 sm:mb-5">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -199,9 +215,9 @@ export function TransactionCenterFigmaBody({
             <div
               style={{
                 background: "var(--card-bg)",
-                borderRadius: 16,
+                borderRadius: 12,
                 border: "1px solid var(--border)",
-                padding: "20px 24px",
+                padding: "16px",
               }}
             >
               <TransactionCenterDraftList onResume={onResumeDraft} />
@@ -209,7 +225,7 @@ export function TransactionCenterFigmaBody({
           </motion.div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-5 sm:gap-6 mb-5 sm:mb-6">
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 mb-4 sm:mb-5">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -224,9 +240,9 @@ export function TransactionCenterFigmaBody({
             <div
               style={{
                 background: "var(--card-bg)",
-                borderRadius: 16,
+                borderRadius: 12,
                 border: "1px solid var(--border)",
-                padding: "24px 28px",
+                padding: "16px",
               }}
             >
               <TransactionCenterRecentList rows={recentRows} maxItems={4} onRowClick={onRecentRowClick} />
@@ -247,7 +263,7 @@ export function TransactionCenterFigmaBody({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.4 }}
-          className="mb-6 sm:mb-8"
+          className="mb-4 sm:mb-6"
         >
           <TransactionCenterSectionHeader
             icon={<Sparkles className="w-4 h-4" />}

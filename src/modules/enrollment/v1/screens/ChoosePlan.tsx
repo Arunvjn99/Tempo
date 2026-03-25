@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -13,6 +13,7 @@ import { pathForWizardStep } from "../flow/v1WizardPaths";
 import type { SelectedPlanOption } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
+import { AIButton } from "@/components/ui/AIButton";
 
 export function ChoosePlan() {
   const navigate = useNavigate();
@@ -22,8 +23,14 @@ export function ChoosePlan() {
 
   const [showAI, setShowAI] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<SelectedPlanOption | null>(data.selectedPlan);
+  const [selectedPlan, setSelectedPlan] = useState<SelectedPlanOption | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const traditionalOptRef = useRef<HTMLDivElement>(null);
+  const rothOptRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSelectedPlan(data.selectedPlan);
+  }, [data.selectedPlan]);
 
   const companyPlans = data.companyPlans;
   const hasTwoPlans = companyPlans.length >= 2;
@@ -36,6 +43,24 @@ export function ChoosePlan() {
 
   const handleCardClick = (plan: SelectedPlanOption) => {
     setSelectedPlan(plan);
+  };
+
+  const handleOptionKeyDown = (e: KeyboardEvent, plan: SelectedPlanOption) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick(plan);
+      return;
+    }
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      if (plan === "traditional") rothOptRef.current?.focus();
+      else traditionalOptRef.current?.focus();
+    }
+    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (plan === "traditional") rothOptRef.current?.focus();
+      else traditionalOptRef.current?.focus();
+    }
   };
 
   if (!hasTwoPlans) {
@@ -85,7 +110,9 @@ export function ChoosePlan() {
   return (
     <div className="space-y-5">
       <div className="text-center md:text-left">
-        <h1 className="text-xl font-semibold text-foreground md:text-2xl">Choose Your Retirement Plan</h1>
+        <h1 id="enrollment-plan-selection-heading" className="text-xl font-semibold text-foreground md:text-2xl">
+          Choose Your Retirement Plan
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground md:text-base">
           Select the retirement plan that fits your tax strategy.
         </p>
@@ -99,12 +126,18 @@ export function ChoosePlan() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div
+        className="grid gap-4 md:grid-cols-2"
+        role="listbox"
+        aria-labelledby="enrollment-plan-selection-heading"
+      >
         <div
-          role="button"
+          ref={traditionalOptRef}
+          role="option"
           tabIndex={0}
+          aria-selected={selectedPlan === "traditional"}
           onClick={() => handleCardClick("traditional")}
-          onKeyDown={(e) => e.key === "Enter" && handleCardClick("traditional")}
+          onKeyDown={(e) => handleOptionKeyDown(e, "traditional")}
           className={cn(
             "plan-option-card",
             selectedPlan === "traditional" && "plan-option-card--selected",
@@ -140,11 +173,16 @@ export function ChoosePlan() {
 
           <button
             type="button"
+            disabled={selectedPlan !== "traditional"}
+            aria-disabled={selectedPlan !== "traditional"}
             onClick={(e) => {
               e.stopPropagation();
-              confirmPlan("traditional");
+              if (selectedPlan === "traditional") confirmPlan("traditional");
             }}
-            className="btn btn-primary mt-5 w-full"
+            className={cn(
+              "btn mt-5 w-full",
+              selectedPlan === "traditional" ? "btn-primary" : "btn-outline",
+            )}
           >
             Continue with Traditional 401(k)
             <ArrowRight className="size-4 shrink-0" aria-hidden />
@@ -152,10 +190,12 @@ export function ChoosePlan() {
         </div>
 
         <div
-          role="button"
+          ref={rothOptRef}
+          role="option"
           tabIndex={0}
+          aria-selected={selectedPlan === "roth"}
           onClick={() => handleCardClick("roth")}
-          onKeyDown={(e) => e.key === "Enter" && handleCardClick("roth")}
+          onKeyDown={(e) => handleOptionKeyDown(e, "roth")}
           className={cn("plan-option-card", selectedPlan === "roth" && "plan-option-card--selected")}
         >
           <h3 className="font-semibold text-foreground">Roth 401(k)</h3>
@@ -176,11 +216,13 @@ export function ChoosePlan() {
 
           <button
             type="button"
+            disabled={selectedPlan !== "roth"}
+            aria-disabled={selectedPlan !== "roth"}
             onClick={(e) => {
               e.stopPropagation();
-              confirmPlan("roth");
+              if (selectedPlan === "roth") confirmPlan("roth");
             }}
-            className="btn btn-outline mt-5 w-full"
+            className={cn("btn mt-5 w-full", selectedPlan === "roth" ? "btn-primary" : "btn-outline")}
           >
             Choose Roth 401(k)
             <ArrowRight className="size-4 shrink-0" aria-hidden />
@@ -198,17 +240,17 @@ export function ChoosePlan() {
         <p className="font-medium text-foreground">Not sure which plan is right for you?</p>
         <p className="text-sm text-muted-foreground">Our AI assistant can help explain the differences.</p>
         <div className="mt-3 flex flex-wrap gap-3">
-          <button
+          <AIButton
             type="button"
+            label="Ask AI"
+            pressed={showAI}
+            aria-pressed={showAI}
+            className="w-full sm:w-auto"
             onClick={() => {
               setShowAI(!showAI);
               setShowCompare(false);
             }}
-            className={cn("btn w-full sm:w-auto", showAI ? "btn-primary" : "btn-outline")}
-          >
-            <Sparkles className="size-4 shrink-0" aria-hidden />
-            Ask AI
-          </button>
+          />
           <button
             type="button"
             onClick={() => {
@@ -223,11 +265,13 @@ export function ChoosePlan() {
         </div>
 
         {showAI ? (
-          <div className="card-highlight mt-4">
+          <div className="ai-insight mt-4 p-4">
             <div className="flex items-start gap-2">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+              <span className="ai-insight__icon-wrap mt-0.5 shrink-0" aria-hidden>
+                <Sparkles className="ai-insight__sparkle text-[var(--ai-primary)]" strokeWidth={2} />
+              </span>
               <div className="text-sm">
-                <p className="font-semibold text-foreground">AI Recommendation</p>
+                <p className="ai-insight__label">AI Recommendation</p>
                 <p className="mt-1 text-muted-foreground">
                   <strong className="text-foreground">Traditional 401(k)</strong> is ideal if you expect to be in
                   a lower tax bracket in retirement — your contributions reduce your taxable income now.{" "}

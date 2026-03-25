@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Slider } from "@/components/ui/Slider";
 import { calculateEMI } from "@/core/ai/utils/emiCalculator";
 import type { CoreAIStructuredPayload, LoanSimulatorCardPayload } from "@/core/ai/interactive/types";
+import { getLoanInsight } from "@/core/ai/insights";
+import { InsightBox } from "./InsightBox";
 
 function money(n: number): string {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -29,6 +31,7 @@ export function LoanSimulatorCard({ payload, onAction }: LoanSimulatorCardProps)
     [amount, tenureMonths, payload.annualRatePercent],
   );
 
+  const { insight } = useMemo(() => getLoanInsight(amount, tenureMonths), [amount, tenureMonths]);
   const years = tenureMonths / 12;
 
   return (
@@ -78,13 +81,24 @@ export function LoanSimulatorCard({ payload, onAction }: LoanSimulatorCardProps)
         />
       </div>
 
-      <button
-        type="button"
-        onClick={() => onAction({ action: "loan_simulator_continue", amount, tenureMonths })}
-        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-      >
-        Continue
-      </button>
+      <InsightBox insight={insight} />
+
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+        <button
+          type="button"
+          onClick={() => onAction({ action: "loan_simulator_continue", amount, tenureMonths })}
+          className="sm:flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+        >
+          Continue
+        </button>
+        <button
+          type="button"
+          onClick={() => onAction({ action: "START_LOAN_REVIEW", amount, tenureMonths })}
+          className="sm:flex-1 rounded-xl border border-[var(--color-border)] py-2.5 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface)]"
+        >
+          Review
+        </button>
+      </div>
     </div>
   );
 }

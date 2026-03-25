@@ -32,7 +32,8 @@ export const EnrollmentInvestmentsGuard = ({ children }: EnrollmentInvestmentsGu
       return <Navigate to={withVersion(version, "/enrollment/contribution")} replace />;
     }
     const draftContribution = draft.contributionAmount ?? 0;
-    const cameFromFutureContributions = draft.autoIncrease !== undefined;
+    const cameFromFutureContributions =
+      draft.autoIncrease !== undefined || draft.autoIncreasePreference?.skipped === true;
     if (draftContribution <= 0 && !cameFromFutureContributions) {
       return <Navigate to={withVersion(version, "/enrollment/contribution")} replace />;
     }

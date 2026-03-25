@@ -10,14 +10,10 @@ import { FloatingSearchBar } from "@/components/search/FloatingSearchBar";
 
 const HIDE_CORE_AI_PATHS = [
   "/",
-  "/dashboard",
-  "/v1/dashboard",
-  "/v2/dashboard",
   "/v1/login",
   "/v2/login",
   "/v1/verify",
   "/v2/verify",
-  "/test/pre-enrollment-dashboard",
 ];
 
 /**

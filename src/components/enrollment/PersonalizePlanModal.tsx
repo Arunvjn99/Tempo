@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,8 +11,14 @@ import {
 } from "@/enrollment/enrollmentDraftStore";
 import { US_STATES } from "@/constants/usStates";
 import { getRoutingVersion, withVersion } from "@/core/version";
+import { Step4Comfort, type InvestmentComfort } from "./Step4Comfort";
+import { InsightCard } from "./InsightCard";
+import { Step2Location } from "./Step2Location";
+import { RETIREMENT_LOCATION_UNKNOWN } from "./wizardConstants";
 
-const TOTAL_STEPS = 3;
+export { RETIREMENT_LOCATION_UNKNOWN };
+
+const TOTAL_STEPS = 4;
 const DEFAULT_DOB = "1994-04-16";
 
 function getAgeFromDOB(isoDate: string): number {
@@ -42,6 +48,7 @@ interface WizardFormState {
   annualSalary: number;
   retirementLocation: string;
   savingsAmount: number;
+  investmentComfort: InvestmentComfort;
 }
 
 const DEFAULT_STATE: WizardFormState = {
@@ -50,6 +57,7 @@ const DEFAULT_STATE: WizardFormState = {
   annualSalary: 45000,
   retirementLocation: "",
   savingsAmount: 0,
+  investmentComfort: "balanced",
 };
 
 export interface PersonalizePlanModalProps {
@@ -70,49 +78,64 @@ function parseCurrencyInput(value: string): number {
 
 const stepTransition = { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] };
 
-const STEP_LABELS = ["Age", "Location", "Savings"];
+const STEP_LABELS = ["Age", "Location", "Savings", "Comfort"] as const;
 
-function StepIndicator({ currentStep }: { currentStep: number }) {
+function WizardStepProgress({ currentStep }: { currentStep: number }) {
   return (
-    <div className="flex items-center justify-center gap-3 py-1">
-      {Array.from({ length: TOTAL_STEPS }, (_, i) => {
-        const stepNum = i + 1;
-        const isCompleted = stepNum < currentStep;
-        const isCurrent = stepNum === currentStep;
-        const isUpcoming = stepNum > currentStep;
-        return (
-          <div key={i} className="flex items-center gap-3">
-            <div className="flex flex-col items-center gap-1.5">
-              <motion.div
+    <div className="py-1">
+      <p className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">
+        Step {currentStep} of {TOTAL_STEPS}
+      </p>
+      <div className="flex items-stretch gap-1.5 sm:gap-2">
+        {STEP_LABELS.map((label, i) => {
+          const stepNum = i + 1;
+          const isCompleted = stepNum < currentStep;
+          const isCurrent = stepNum === currentStep;
+          const isUpcoming = stepNum > currentStep;
+          return (
+            <div key={label} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+              <div
                 className={cn(
-                  "premium-wizard__step-dot",
-                  isCompleted && "premium-wizard__step-dot--completed",
-                  isCurrent && "premium-wizard__step-dot--current",
-                  isUpcoming && "premium-wizard__step-dot--upcoming"
+                  "h-1.5 w-full rounded-full transition-colors",
+                  isCompleted && "bg-[var(--color-primary)]",
+                  isCurrent && "bg-[var(--color-primary)] opacity-80",
+                  isUpcoming && "bg-[var(--color-border)]",
                 )}
-                layout
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-              >
-                <AnimatePresence mode="wait">
-                  {isCompleted ? (
-                    <motion.svg key="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                aria-hidden
+              />
+              <div className="flex flex-col items-center gap-0.5">
+                {isCompleted ? (
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white" aria-hidden>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
-                    </motion.svg>
-                  ) : (
-                    <motion.span key="num" className="text-xs font-bold" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }}>{stepNum}</motion.span>
+                    </svg>
+                  </span>
+                ) : (
+                  <span
+                    className={cn(
+                      "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold tabular-nums",
+                      isCurrent && "bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]",
+                      isUpcoming && "text-[var(--color-text-tertiary,var(--color-text-secondary))]",
+                    )}
+                  >
+                    {stepNum}
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    "text-center text-[10px] font-medium leading-tight sm:text-[11px]",
+                    isCurrent && "font-semibold text-[var(--color-primary)]",
+                    isCompleted && "text-[var(--color-text-secondary)]",
+                    isUpcoming && "text-[var(--color-text-tertiary,var(--color-text-secondary))]",
                   )}
-                </AnimatePresence>
-              </motion.div>
-              <span className={cn("text-[11px] font-medium transition-colors duration-300", isCurrent ? "text-[var(--color-primary)]" : isCompleted ? "text-[var(--color-text-secondary)]" : "text-[var(--color-text-tertiary,var(--color-text-secondary))]")}>{STEP_LABELS[i]}</span>
-            </div>
-            {i < TOTAL_STEPS - 1 && (
-              <div className="relative h-[2px] w-8 sm:w-12 rounded-full bg-[var(--color-border)] overflow-hidden mb-5">
-                <motion.div className="absolute inset-y-0 left-0 rounded-full bg-[var(--color-primary)]" initial={false} animate={{ width: isCompleted ? "100%" : "0%" }} transition={{ duration: 0.4, ease: "easeInOut" }} />
+                >
+                  {label}
+                </span>
               </div>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -144,6 +167,8 @@ function Step1RetirementAge({
   onDoneEditing,
   onDateOfBirthChange,
   onRetirementAgeChange,
+  onApplySuggestedAge,
+  canApplySuggestedAge,
 }: {
   dateOfBirth: string;
   currentAge: number;
@@ -153,6 +178,8 @@ function Step1RetirementAge({
   onDoneEditing: () => void;
   onDateOfBirthChange: (isoDate: string) => void;
   onRetirementAgeChange: (v: number) => void;
+  onApplySuggestedAge: () => void;
+  canApplySuggestedAge: boolean;
 }) {
   const max = 75;
   const min = Math.min(max, Math.max(22, currentAge + 1));
@@ -160,11 +187,14 @@ function Step1RetirementAge({
   const isRangeLocked = min === max;
   const yearsToGrow = Math.max(0, sliderValue - currentAge);
   const sliderPercent = ((sliderValue - min) / (max - min)) * 100;
-  const encouragement = useMemo(() => {
-    if (yearsToGrow >= 30) return `If you retire at ${sliderValue}, your investments have ${yearsToGrow} years to grow. That's incredible compound potential.`;
-    if (yearsToGrow >= 20) return `Retiring at ${sliderValue} gives your portfolio ${yearsToGrow} years of growth — a strong runway for building wealth.`;
-    if (yearsToGrow >= 10) return `At ${sliderValue}, you'll have ${yearsToGrow} years of growth ahead. Every year counts toward your future.`;
-    return `Retiring at ${sliderValue} means ${yearsToGrow} years of growth. Let's make every year work hard for you.`;
+  const ageInsightText = useMemo(() => {
+    if (yearsToGrow >= 30)
+      return `Retiring at ${sliderValue} gives you ${yearsToGrow} years of growth — a long runway for compounding and a powerful advantage for your nest egg.`;
+    if (yearsToGrow >= 20)
+      return `Retiring at ${sliderValue} gives you ${yearsToGrow} years of growth — a strong runway to build wealth before you tap your savings.`;
+    if (yearsToGrow >= 10)
+      return `At ${sliderValue}, you'll have ${yearsToGrow} years of growth ahead. Every extra year in the market can meaningfully boost your outcome.`;
+    return `Retiring at ${sliderValue} means ${yearsToGrow} years of growth. We'll help you make the most of the time you have.`;
   }, [sliderValue, yearsToGrow]);
 
   return (
@@ -195,69 +225,80 @@ function Step1RetirementAge({
       <div><h3 className="premium-wizard__question">At what age would you like to retire?</h3></div>
       <div className="space-y-4">
         <div className="premium-wizard__slider-container">
-          <input type="range" min={min} max={max} value={sliderValue} disabled={isRangeLocked} onChange={(e) => onRetirementAgeChange(parseInt(e.target.value, 10))} className="premium-wizard__slider" style={{ "--slider-percent": `${sliderPercent}%` } as React.CSSProperties} aria-label="Retirement age" />
+          <input
+            type="range"
+            min={min}
+            max={max}
+            value={sliderValue}
+            disabled={isRangeLocked}
+            onChange={(e) => onRetirementAgeChange(parseInt(e.target.value, 10))}
+            className="premium-wizard__slider"
+            style={{ "--slider-percent": `${sliderPercent}%` } as React.CSSProperties}
+            aria-label="Retirement age"
+          />
           <div className="flex justify-between mt-1.5 px-0.5"><span className="text-[11px] text-[var(--color-text-tertiary,var(--color-text-secondary))] font-medium">{min}</span><span className="text-[11px] text-[var(--color-text-tertiary,var(--color-text-secondary))] font-medium">{max}</span></div>
         </div>
         <div className="flex items-center justify-center">
           <div className="premium-wizard__stepper">
             <button type="button" disabled={isRangeLocked || sliderValue <= min} onClick={() => onRetirementAgeChange(Math.max(min, sliderValue - 1))} className="premium-wizard__stepper-btn" aria-label="Decrease retirement age"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12" /></svg></button>
             <div className="premium-wizard__stepper-value">
-              <motion.span key={sliderValue} initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="text-2xl font-bold text-[var(--color-primary)] tabular-nums">{sliderValue}</motion.span>
+              <motion.span
+                key={sliderValue}
+                initial={{ y: -6, opacity: 0.65 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                className="text-2xl font-bold text-[var(--color-primary)] tabular-nums"
+              >
+                {sliderValue}
+              </motion.span>
               <span className="text-xs font-medium text-[var(--color-text-secondary)] mt-0.5">years old</span>
             </div>
             <button type="button" disabled={isRangeLocked || sliderValue >= max} onClick={() => onRetirementAgeChange(Math.min(max, sliderValue + 1))} className="premium-wizard__stepper-btn" aria-label="Increase retirement age"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg></button>
           </div>
         </div>
       </div>
-      <motion.div key={sliderValue} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="premium-wizard__encouragement">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-[var(--color-primary)] mt-0.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
-        <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">{encouragement}</p>
-      </motion.div>
-    </div>
-  );
-}
-
-function Step2Location({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [search, setSearch] = useState("");
-  const filtered = useMemo(() => {
-    if (!search.trim()) return US_STATES;
-    const q = search.toLowerCase();
-    return US_STATES.filter((s) => s.toLowerCase().includes(q));
-  }, [search]);
-
-  return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h3 className="premium-wizard__question">Where do you imagine retiring?</h3>
-        <p className="mt-2 text-sm text-[var(--color-text-secondary)] leading-relaxed">Your location helps us estimate cost of living and plan smarter.</p>
-      </div>
-      <div className="relative">
-        <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--color-text-secondary)]"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg></div>
-        <input type="text" placeholder="Search states..." value={search} onChange={(e) => setSearch(e.target.value)} className="premium-wizard__search-input" />
-      </div>
-      <div className="max-h-[240px] overflow-y-auto rounded-xl premium-wizard__scroll sm:max-h-[260px]">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5">
-          {filtered.map((location) => {
-            const selected = value === location;
-            return (
-              <motion.button key={location} type="button" onClick={() => onChange(selected ? "" : location)} className={cn("premium-wizard__chip", selected && "premium-wizard__chip--selected")} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} layout>
-                <span className="flex-1 text-left">{location}</span>
-                <AnimatePresence>
-                  {selected && (
-                    <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }} transition={{ duration: 0.2, ease: "backOut" }} className="premium-wizard__chip-check">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
-            );
-          })}
-          {filtered.length === 0 && <p className="col-span-full text-center text-sm text-[var(--color-text-secondary)] py-8">No locations found for "{search}"</p>}
-        </div>
+      <div className="space-y-3 pt-1">
+        <AnimatePresence mode="wait">
+          <InsightCard key={sliderValue}>{ageInsightText}</InsightCard>
+        </AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="rounded-xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface-elevated,var(--color-background))_100%,transparent)] p-4 shadow-sm dark:bg-[color-mix(in_srgb,var(--color-surface-elevated,#1a1a1a)_80%,transparent)]"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-[var(--color-text)]">Most people retire at 65</p>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">A common benchmark that balances longevity and time in the market.</p>
+            </div>
+            <span className="shrink-0 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">Popular</span>
+          </div>
+          <button
+            type="button"
+            disabled={!canApplySuggestedAge}
+            onClick={onApplySuggestedAge}
+            className={cn(
+              "mt-3 w-full rounded-lg py-2.5 text-sm font-semibold transition-colors",
+              canApplySuggestedAge
+                ? "bg-[var(--color-primary)] text-white hover:opacity-95"
+                : "cursor-not-allowed bg-[var(--color-border)] text-[var(--color-text-secondary)] opacity-60",
+            )}
+          >
+            Apply this age
+          </button>
+        </motion.div>
       </div>
     </div>
   );
 }
+
+const SAVINGS_QUICK_CHIPS: { label: string; amount: number }[] = [
+  { label: "$0", amount: 0 },
+  { label: "$5K", amount: 5000 },
+  { label: "$10K", amount: 10000 },
+  { label: "$50K+", amount: 50000 },
+];
 
 function Step3Savings({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const display = value > 0 ? formatCurrency(value) : "";
@@ -270,15 +311,41 @@ function Step3Savings({ value, onChange }: { value: number; onChange: (v: number
         <h3 className="premium-wizard__question">Have you built retirement savings elsewhere?</h3>
         <p className="mt-2 text-sm text-[var(--color-text-secondary)] leading-relaxed">This won't affect your enrollment — it simply helps us create a more complete retirement outlook.</p>
       </div>
+      <div>
+        <p className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">Quick select</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Quick savings amounts">
+          {SAVINGS_QUICK_CHIPS.map((chip) => {
+            const selected = value === chip.amount;
+            return (
+              <motion.button
+                key={chip.label}
+                type="button"
+                onClick={() => onChange(chip.amount)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className={cn(
+                  "rounded-full border-2 px-3.5 py-2 text-sm font-semibold transition-colors",
+                  selected
+                    ? "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-text)] shadow-sm ring-2 ring-[color-mix(in_srgb,var(--color-primary)_28%,transparent)]"
+                    : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-secondary)] hover:border-[color-mix(in_srgb,var(--color-primary)_35%,var(--color-border))]",
+                )}
+              >
+                {chip.label}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
       <div className={cn("premium-wizard__currency-wrapper", isFocused && "premium-wizard__currency-wrapper--focused")}>
         <span className="premium-wizard__currency-symbol">$</span>
         <input type="text" inputMode="numeric" value={display} onChange={(e) => onChange(parseCurrencyInput(e.target.value))} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} placeholder="Enter total balance (optional)" className="premium-wizard__currency-input" aria-describedby="step3-helper" />
       </div>
       <p id="step3-helper" className="text-sm text-[var(--color-text-secondary)]">{hasValue ? "Great — we'll include this in your long-term projection." : "No problem — we'll plan based on this account alone."}</p>
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="premium-wizard__support-card">
-        <div className="premium-wizard__support-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 2v4l4 6-4 6v4" /><path d="M12 22v-4l-4-6 4-6V2" /></svg></div>
-        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">Even small balances matter over time. Combining all your savings gives you a clearer retirement picture.</p>
-      </motion.div>
+      <AnimatePresence mode="wait">
+        <InsightCard key="savings-insight-static">
+          Even small savings grow significantly over time through compounding — every dollar you add now can work harder for your future self.
+        </InsightCard>
+      </AnimatePresence>
     </div>
   );
 }
@@ -292,7 +359,77 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
   const [editingAge, setEditingAge] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const ageAnimRef = useRef<number | null>(null);
+
   const currentAge = useMemo(() => getAgeFromDOB(state.dateOfBirth), [state.dateOfBirth]);
+
+  const minRetirementAge = useMemo(() => Math.min(75, Math.max(22, currentAge + 1)), [currentAge]);
+
+  const canApplySuggestedAge = minRetirementAge <= 65;
+
+  const applyRetirementAgeSmooth = useCallback(() => {
+    if (ageAnimRef.current != null) cancelAnimationFrame(ageAnimRef.current);
+    const prev = stateRef.current;
+    const ca = getAgeFromDOB(prev.dateOfBirth);
+    const min = Math.min(75, Math.max(22, ca + 1));
+    const end = Math.min(75, Math.max(min, 65));
+    const start = prev.retirementAge;
+    if (start === end) return;
+
+    const t0 = performance.now();
+    const duration = 400;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - t0) / duration);
+      const eased = 1 - (1 - t) * (1 - t);
+      const v = Math.round(start + (end - start) * eased);
+      setState((p) => ({ ...p, retirementAge: v }));
+      if (t < 1) {
+        ageAnimRef.current = requestAnimationFrame(tick);
+      } else {
+        ageAnimRef.current = null;
+      }
+    };
+    ageAnimRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (ageAnimRef.current != null) cancelAnimationFrame(ageAnimRef.current);
+    };
+  }, []);
+
+  const canProceedFromStep = useCallback(
+    (s: number): boolean => {
+      switch (s) {
+        case 1:
+          return (
+            Number.isFinite(state.retirementAge) &&
+            state.retirementAge >= minRetirementAge &&
+            state.retirementAge <= 75
+          );
+        case 2: {
+          const loc = state.retirementLocation;
+          if (!loc) return false;
+          if (loc === RETIREMENT_LOCATION_UNKNOWN) return true;
+          return US_STATES.includes(loc);
+        }
+        case 3:
+          return true;
+        case 4:
+          return (
+            state.investmentComfort === "conservative" ||
+            state.investmentComfort === "balanced" ||
+            state.investmentComfort === "growth" ||
+            state.investmentComfort === "aggressive"
+          );
+        default:
+          return false;
+      }
+    },
+    [state, minRetirementAge],
+  );
 
   useEffect(() => {
     setState((prev) => {
@@ -318,12 +455,17 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
           annualSalary: draft.annualSalary ?? prev.annualSalary,
           retirementLocation: draft.retirementLocation || prev.retirementLocation,
           savingsAmount: draft.otherSavings?.amount ?? prev.savingsAmount,
+          investmentComfort: draft.investmentComfort ?? prev.investmentComfort,
         }));
       }
     }
   }, [isOpen]);
 
   const update = useCallback(<K extends keyof WizardFormState>(key: K, value: WizardFormState[K]) => {
+    if (key === "retirementAge" && ageAnimRef.current != null) {
+      cancelAnimationFrame(ageAnimRef.current);
+      ageAnimRef.current = null;
+    }
     setState((prev) => ({ ...prev, [key]: value }));
   }, []);
 
@@ -338,6 +480,7 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
       yearsToRetire,
       annualSalary: state.annualSalary,
       retirementLocation: state.retirementLocation,
+      investmentComfort: state.investmentComfort,
       otherSavings: state.savingsAmount > 0 ? { type: "Other", amount: state.savingsAmount } : existing?.otherSavings,
     };
     saveEnrollmentDraft(merged);
@@ -354,6 +497,7 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
     onClose();
   };
   const handleNext = () => {
+    if (!canProceedFromStep(step)) return;
     if (step < TOTAL_STEPS) setStep(step + 1);
     else {
       persistDraft();
@@ -365,7 +509,8 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
 
   const isLastStep = step === TOTAL_STEPS;
   const isFirstStep = step === 1;
-  const ctaLabel = step === 1 ? "Continue" : isLastStep ? "See My Retirement Outlook" : "Next";
+  const ctaLabel = step === 1 ? "Continue" : isLastStep ? "Start Enrollment" : "Next";
+  const nextDisabled = !canProceedFromStep(step);
 
   return (
     <Modal isOpen={isOpen} onClose={handleCloseAttempt} closeOnOverlayClick={false} dialogClassName="premium-wizard__dialog" wizard>
@@ -380,12 +525,25 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
         </div>
-        <div className="px-6 pt-4 pb-2 sm:px-8"><StepIndicator currentStep={step} /></div>
+        <div className="px-6 pt-4 pb-2 sm:px-8">
+          <WizardStepProgress currentStep={step} />
+        </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 sm:px-8 sm:py-5">
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div key="step-1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={stepTransition}>
-                <Step1RetirementAge dateOfBirth={state.dateOfBirth} currentAge={currentAge} retirementAge={state.retirementAge} editingAge={editingAge} onEdit={() => setEditingAge(true)} onDoneEditing={() => setEditingAge(false)} onDateOfBirthChange={(v) => update("dateOfBirth", v)} onRetirementAgeChange={(v) => update("retirementAge", v)} />
+                <Step1RetirementAge
+                  dateOfBirth={state.dateOfBirth}
+                  currentAge={currentAge}
+                  retirementAge={state.retirementAge}
+                  editingAge={editingAge}
+                  onEdit={() => setEditingAge(true)}
+                  onDoneEditing={() => setEditingAge(false)}
+                  onDateOfBirthChange={(v) => update("dateOfBirth", v)}
+                  onRetirementAgeChange={(v) => update("retirementAge", v)}
+                  onApplySuggestedAge={applyRetirementAgeSmooth}
+                  canApplySuggestedAge={canApplySuggestedAge}
+                />
               </motion.div>
             )}
             {step === 2 && (
@@ -396,6 +554,11 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
             {step === 3 && (
               <motion.div key="step-3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={stepTransition}>
                 <Step3Savings value={state.savingsAmount} onChange={(v) => update("savingsAmount", v)} />
+              </motion.div>
+            )}
+            {step === 4 && (
+              <motion.div key="step-4" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={stepTransition}>
+                <Step4Comfort value={state.investmentComfort} onChange={(v) => update("investmentComfort", v)} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -412,7 +575,19 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
                 Back
               </motion.button>
             )}
-            <motion.button type="button" onClick={handleNext} className="premium-wizard__cta" whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>{ctaLabel}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6" /></svg></motion.button>
+            <motion.button
+              type="button"
+              onClick={handleNext}
+              disabled={nextDisabled}
+              className={cn("premium-wizard__cta", nextDisabled && "pointer-events-none opacity-50")}
+              whileHover={nextDisabled ? undefined : { y: -1 }}
+              whileTap={nextDisabled ? undefined : { scale: 0.98 }}
+            >
+              {ctaLabel}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </motion.button>
           </div>
         </div>
         {showExitConfirm && <ExitConfirmation isOpen={showExitConfirm} onConfirm={handleConfirmExit} onCancel={() => setShowExitConfirm(false)} />}

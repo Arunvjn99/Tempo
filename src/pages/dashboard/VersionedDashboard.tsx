@@ -1,17 +1,9 @@
-import { useParams } from "react-router-dom";
-import { PreEnrollment } from "@/versions/v1/dashboard/PreEnrollment";
-import { Dashboard } from "@/versions/v2/dashboard/Dashboard";
+import { PostEnrollmentDashboard } from "./PostEnrollmentDashboard";
 
 /**
- * Renders the dashboard variant for URL pattern /:version/dashboard.
- * v1 → PreEnrollment (main); v2 → classic Dashboard; any other version → v1.
+ * `/:version/dashboard` — same Snitch post-enrollment surface as `/dashboard/post-enrollment`.
+ * {@link PostEnrollmentDashboard} redirects non–post-enrollment users to `/dashboard/pre-enrollment`.
  */
 export function VersionedDashboard() {
-  const { version } = useParams<{ version: string }>();
-
-  if (version === "v2") {
-    return <Dashboard />;
-  }
-
-  return <PreEnrollment />;
+  return <PostEnrollmentDashboard />;
 }

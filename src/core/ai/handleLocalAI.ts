@@ -1,10 +1,14 @@
+import { useLoanStore } from "@/stores/loanStore";
 import { buildResponse } from "./responseBuilder";
+import { bootstrapLoanReviewResponse } from "./flows/loanGuidedFlow";
 import { resolveIntent } from "./intentResolver";
 import { assistantMessage } from "./messageUtils";
 import { runFlow } from "./flowEngine";
 import type { CoreAIStructuredPayload } from "./interactive/types";
 import type { LocalAIResult, LocalFlowState } from "./types";
+import { LOAN_AI_TENURE_MONTHS } from "./utils/emiCalculator";
 import { parseLoanInput } from "./utils/parseLoanInput";
+import { getFAQById } from "./faqAnswers";
 
 const FALLBACK_SUGGESTIONS = [
   "Apply for a loan",
@@ -23,8 +27,68 @@ export function handleLocalAI(
   structured: CoreAIStructuredPayload | null = null,
 ): LocalAIResult {
   if (structured) {
+    /* Suggestion chips (e.g. from vested insight) → treat as new user input */
+    if (structured.action === "info_card_suggestion") {
+      return handleLocalAI(structured.suggestion, null, null);
+    }
+    /** Jump straight to loan review card (works even when modal lost `flowState`). */
+    if (structured.action === "START_LOAN_REVIEW") {
+      return bootstrapLoanReviewResponse(structured.amount, structured.tenureMonths);
+    }
+    if (structured.action === "FAQ_DETAIL") {
+      if (import.meta.env.DEV) {
+        console.log("FAQ_DETAIL HIT", structured);
+      }
+      const entry = getFAQById(structured.faqId);
+      if (import.meta.env.DEV) {
+        console.log("FAQ FOUND", entry ?? null);
+      }
+      if (entry) {
+        const messages = [assistantMessage(entry.fullAnswer)];
+        if (import.meta.env.DEV) {
+          console.log("FAQ_DETAIL returning messages", messages.length);
+        }
+        return {
+          messages,
+          nextState: null,
+        };
+      }
+      return {
+        messages: [
+          assistantMessage(
+            "I couldn’t load that help topic. Try asking again in your own words, or pick a suggestion below.",
+            { suggestions: FALLBACK_SUGGESTIONS },
+          ),
+        ],
+        nextState: null,
+      };
+    }
     if (!flowState?.type) {
-      return { messages: [], nextState: flowState };
+      if (structured.action === "success_card_dismiss") {
+        return { messages: [], nextState: null, navigate: "/transactions/loan/configuration" };
+      }
+      if (structured.action === "vested_dismiss") {
+        return { messages: [], nextState: null, navigate: "/dashboard/pre-enrollment" };
+      }
+      /* Documents → review without session: recover from loan prefill store (Core AI → transaction handoff). */
+      if (structured.action === "document_upload_card_continue") {
+        const { loanData } = useLoanStore.getState();
+        const amt = loanData.amount;
+        if (amt != null && amt > 0) {
+          return bootstrapLoanReviewResponse(amt, LOAN_AI_TENURE_MONTHS, {
+            purpose: loanData.purpose ?? "general",
+          });
+        }
+      }
+      return {
+        messages: [
+          assistantMessage(
+            "That step couldn’t be resumed in this chat. Say **apply loan** to continue, or open **Transactions** → **Loan** from the menu.",
+            { suggestions: ["Apply for a loan"] },
+          ),
+        ],
+        nextState: null,
+      };
     }
     return runFlow(flowState, "", structured);
   }

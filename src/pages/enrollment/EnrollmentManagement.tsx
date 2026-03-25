@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion, useReducedMotion } from "framer-motion";
@@ -57,6 +57,12 @@ export const EnrollmentManagement = () => {
   const version = getRoutingVersion(pathname);
   const [filter, setFilter] = useState<PlanStatus | "all">("all");
   const reducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("[Enrollment] EnrollmentManagement hub (NEW enrollment management UI)", { pathname });
+    }
+  }, [pathname]);
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat(getCurrencyLocale(i18n.language), {
       style: "currency",

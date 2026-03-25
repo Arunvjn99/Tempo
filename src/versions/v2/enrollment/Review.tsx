@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEnrollment } from "@/enrollment/context/EnrollmentContext";
+import { useUser } from "@/context/UserContext";
 import { useInvestment } from "@/context/InvestmentContext";
+import { markEnrollmentCompleted } from "@/services/enrollmentService";
 import { getFundById } from "@/data/mockFunds";
 import { EnrollmentFooter } from "@/components/enrollment/EnrollmentFooter";
 import { EnrollmentPageContent } from "@/components/enrollment/EnrollmentPageContent";
@@ -12,7 +14,6 @@ import { AIAdvisorModal } from "@/components/enrollment/AIAdvisorModal";
 import { AiCoreBridgeButton } from "@/components/ai/AiCoreBridgeButton";
 import { EnrollmentAiHint } from "@/components/ai/EnrollmentAiHint";
 import { SuccessEnrollmentModal } from "@/components/enrollment/SuccessEnrollmentModal";
-import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 import type { SelectedPlanId } from "@/enrollment/context/EnrollmentContext";
 import type { ContributionSource, IncrementCycle } from "@/enrollment/logic/types";
 import { getRoutingVersion, withVersion } from "@/core/version";
@@ -111,22 +112,13 @@ export const Review = () => {
   const version = getRoutingVersion(pathname);
   const enrollment = useEnrollment();
   const investment = useInvestment();
+  const { refreshEnrollment } = useUser();
 
   const [acknowledgements, setAcknowledgements] = useState({ termsAccepted: false });
   const [showAdvisorModal, setShowAdvisorModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showEnrollmentFeedback, setShowEnrollmentFeedback] = useState(false);
-  const [pendingFeedback, setPendingFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!pendingFeedback || showSuccessModal) return;
-    const timer = setTimeout(() => {
-      setPendingFeedback(false);
-      setShowEnrollmentFeedback(true);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [pendingFeedback, showSuccessModal]);
 
   const showFeedback = useCallback((msg: string) => {
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
@@ -189,6 +181,21 @@ export const Review = () => {
   const shortfallAmount = Math.max(0, readinessGoal - projectedValue);
 
   const canEnroll = prerequisites.allMet && investment.canConfirmAllocation && acknowledgements.termsAccepted;
+
+  const handleEnrollmentSubmit = useCallback(async () => {
+    if (!canEnroll) return;
+    const { ok, error } = await markEnrollmentCompleted();
+    if (import.meta.env.DEV && !ok) console.warn("[enrollment] markEnrollmentCompleted:", error);
+    await refreshEnrollment();
+    setShowSuccessModal(true);
+  }, [canEnroll, refreshEnrollment]);
+
+  /** POC — success modal: go straight to post dashboard (no backend gate). */
+  const completeEnrollmentAndGoHome = useCallback(() => {
+    setShowSuccessModal(false);
+    console.log("SUCCESS → POST DASHBOARD");
+    navigate("/dashboard/post-enrollment");
+  }, [navigate]);
 
   const formatContributionPct = (pct: number) => (pct % 1 === 0 ? `${pct}%` : `${pct.toFixed(1)}%`);
 
@@ -462,7 +469,7 @@ export const Review = () => {
                     <span className="text-2xl font-bold" style={{ color: "var(--enroll-text-primary)" }}>{readinessPercent}%</span>
                   </div>
                 </div>
-                <button type="button" onClick={() => setShowAdvisorModal(true)} className="ai-assistant w-full rounded-full py-2 text-[11px] font-semibold text-white shadow-sm" style={{ background: "var(--ai-primary)" }}>
+                <button type="button" onClick={() => setShowAdvisorModal(true)} className="ai-assistant w-full rounded-full py-2 text-[11px] font-semibold text-white shadow-sm">
                   {t("aiSystem.askCoreAI")}
                 </button>
               </div>
@@ -507,7 +514,7 @@ export const Review = () => {
         <EnrollmentFooter
           primaryLabel={t("enrollment.submit")}
           primaryDisabled={!canEnroll}
-          onPrimary={() => { if (canEnroll) setShowSuccessModal(true); }}
+          onPrimary={() => { void handleEnrollmentSubmit(); }}
           summaryText={!isAllocationValid ? t("enrollment.allocationMustTotal") : t("enrollment.readyToSubmit")}
           summaryError={!isAllocationValid}
           getDraftSnapshot={() => {
@@ -543,31 +550,11 @@ export const Review = () => {
       <SuccessEnrollmentModal
         open={showSuccessModal}
         onClose={() => {
-          setShowSuccessModal(false);
-          if (!sessionStorage.getItem("enrollment_feedback_shown")) {
-            sessionStorage.setItem("enrollment_feedback_shown", "1");
-            setPendingFeedback(true);
-          } else {
-            navigate("/dashboard/overview");
-          }
+          void completeEnrollmentAndGoHome();
         }}
         onViewPlanDetails={() => {
-          setShowSuccessModal(false);
-          if (!sessionStorage.getItem("enrollment_feedback_shown")) {
-            sessionStorage.setItem("enrollment_feedback_shown", "1");
-            setPendingFeedback(true);
-          } else {
-            navigate("/dashboard/overview");
-          }
+          void completeEnrollmentAndGoHome();
         }}
-      />
-      <FeedbackModal
-        isOpen={showEnrollmentFeedback}
-        onClose={() => {
-          setShowEnrollmentFeedback(false);
-          navigate("/dashboard/overview");
-        }}
-        workflowType="enrollment_flow"
       />
     </>
   );

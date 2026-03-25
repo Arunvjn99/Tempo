@@ -69,7 +69,7 @@ const initialSnapshot: EnrollmentV1Snapshot = {
   autoIncreaseStepResolved: false,
   autoIncreaseRate: 1,
   autoIncreaseMax: 15,
-  incrementCycle: "calendar",
+  incrementCycle: "participant",
   riskLevel: null,
   useRecommendedPortfolio: true,
   agreedToTerms: false,

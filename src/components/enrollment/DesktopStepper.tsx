@@ -10,6 +10,10 @@ export interface DesktopStepperProps {
   /** Tighter nodes and labels (e.g. wizard header). */
   dense?: boolean;
   className?: string;
+  /**
+   * Figma wizard modal: numbered circle + label in a row, gray segment connectors (no fill animation).
+   */
+  variant?: "default" | "wizard";
 }
 
 function clampIndex(index: number, length: number) {
@@ -23,6 +27,7 @@ export function DesktopStepper({
   onStepClick,
   dense = false,
   className,
+  variant = "default",
 }: DesktopStepperProps) {
   const n = steps.length;
   const safeIndex = clampIndex(currentStepIndex, n);
@@ -36,6 +41,80 @@ export function DesktopStepper({
     : "max-w-[6.5rem] text-center text-xs leading-tight sm:max-w-[8rem] sm:text-sm";
 
   if (n === 0) return null;
+
+  if (variant === "wizard") {
+    const iconSize = 12;
+    return (
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-full flex-wrap items-center justify-center gap-6",
+          className,
+        )}
+      >
+        {steps.map((label, index) => {
+          const isLast = index === n - 1;
+          const isCompleted = index < safeIndex;
+          const isCurrent = index === safeIndex;
+          const circle = (
+            <div
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors motion-reduce:transition-none",
+                (isCompleted || isCurrent) &&
+                  "bg-[#155dfc] text-white dark:bg-primary dark:text-primary-foreground",
+                !isCompleted &&
+                  !isCurrent &&
+                  "bg-[#e5e7eb] text-[#6a7282] dark:bg-muted dark:text-muted-foreground",
+              )}
+            >
+              {isCompleted ? (
+                <Check size={iconSize} strokeWidth={2.5} className="shrink-0" aria-hidden />
+              ) : (
+                <span className="tabular-nums">{index + 1}</span>
+              )}
+            </div>
+          );
+          const labelEl = (
+            <span
+              className={cn(
+                "max-w-[9rem] truncate text-sm font-medium tracking-tight",
+                isCurrent && "text-[#101828] dark:text-foreground",
+                !isCurrent && "text-[#99a1af] dark:text-muted-foreground",
+              )}
+              title={label}
+            >
+              {label}
+            </span>
+          );
+          const row = onStepClick ? (
+            <button
+              type="button"
+              onClick={() => onStepClick(index)}
+              className="flex shrink-0 items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
+            >
+              {circle}
+              {labelEl}
+            </button>
+          ) : (
+            <div className="flex shrink-0 items-center gap-2">
+              {circle}
+              {labelEl}
+            </div>
+          );
+          return (
+            <React.Fragment key={`${label}-${index}`}>
+              {row}
+              {!isLast ? (
+                <div
+                  className="hidden h-0.5 w-12 shrink-0 rounded-full bg-[#e5e7eb] sm:block"
+                  aria-hidden
+                />
+              ) : null}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  }
 
   const renderStepBody = (label: string, index: number) => {
     const isCompleted = index < safeIndex;

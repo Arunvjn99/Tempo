@@ -1,0 +1,20 @@
+/**
+ * Global design tokens (AI / assistant surfaces).
+ * Imported early in main.tsx so components and theme layers can reference these variables.
+ */
+:root {
+  --ai-primary: #7c3aed;
+  --ai-secondary: #4f46e5;
+  --ai-gradient: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+  --ai-gradient-hover: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  --ai-glow: 0 0 20px rgba(124, 58, 237, 0.4);
+  --ai-glow-hover: 0 0 28px rgba(124, 58, 237, 0.55);
+  --ai-glow-strong: 0 6px 32px rgba(124, 58, 237, 0.45);
+  --ai-bg-soft: #f3f0ff;
+  /* Used by existing .ai-insight and borders across the app */
+  --ai-border: color-mix(in srgb, var(--ai-primary) 22%, transparent);
+}
+
+.dark {
+  --ai-bg-soft: color-mix(in srgb, var(--ai-primary) 14%, var(--card, #141418));
+}

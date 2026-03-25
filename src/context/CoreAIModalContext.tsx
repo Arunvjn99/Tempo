@@ -1,5 +1,6 @@
 import * as React from "react";
 import { CoreAssistantModal } from "../components/core-ai/CoreAssistantModal";
+import type { CoreAIStructuredPayload } from "@/core/ai/interactive/types";
 import { CORE_AI_SEARCH_EVENT, OPEN_AI_ASSISTANT_EVENT } from "@/core/search/aiBridge";
 import { normalizeOpenAIModalInput, useAIAssistantStore, type OpenAIModalInput } from "@/stores/aiAssistantStore";
 
@@ -37,12 +38,20 @@ export function CoreAIModalProvider({ children }: { children: React.ReactNode })
   const [initialPrompt, setInitialPrompt] = React.useState<string | null>(null);
   const [composerFocusTick, setComposerFocusTick] = React.useState(0);
   const [pendingSend, setPendingSend] = React.useState<{ id: number; text: string } | null>(null);
+  const [pendingStructured, setPendingStructured] = React.useState<{
+    id: number;
+    payload: CoreAIStructuredPayload;
+  } | null>(null);
 
   const isOpenRef = React.useRef(isOpen);
   isOpenRef.current = isOpen;
 
   const debounceOpenRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingOpenRef = React.useRef<{ text: string; openEmpty: boolean } | null>(null);
+  const pendingOpenRef = React.useRef<{
+    text: string;
+    openEmpty: boolean;
+    structuredAfterOpen?: CoreAIStructuredPayload;
+  } | null>(null);
 
   const clearInitialPrompt = React.useCallback(() => {
     setInitialPrompt(null);
@@ -56,6 +65,7 @@ export function CoreAIModalProvider({ children }: { children: React.ReactNode })
     setOpen(false);
     setInitialPrompt(null);
     setPendingSend(null);
+    setPendingStructured(null);
   }, []);
 
   const open = React.useCallback(() => {
@@ -79,17 +89,39 @@ export function CoreAIModalProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const openAIModal = React.useCallback((raw?: OpenAIModalInput) => {
-    const { text, openEmpty } = normalizeOpenAIModalInput(raw);
+    const { text, openEmpty, structuredAfterOpen } = normalizeOpenAIModalInput(raw);
+    if (import.meta.env.DEV) {
+      console.log("OPEN AI MODAL PAYLOAD", structuredAfterOpen);
+    }
     useAIAssistantStore.setState({ query: text });
 
-    pendingOpenRef.current = { text, openEmpty };
+    pendingOpenRef.current = { text, openEmpty, structuredAfterOpen };
     if (debounceOpenRef.current) clearTimeout(debounceOpenRef.current);
     debounceOpenRef.current = setTimeout(() => {
       debounceOpenRef.current = null;
       const pending = pendingOpenRef.current;
       const q = pending?.text ?? "";
       const empty = pending?.openEmpty ?? true;
+      const struct = pending?.structuredAfterOpen;
       const openNow = isOpenRef.current;
+
+      /* Open modal first, then CoreAssistantModal dispatches structured action (loan review, etc.). */
+      if (empty && q === "" && struct) {
+        if (import.meta.env.DEV) {
+          console.log("MODAL RECEIVED", struct);
+        }
+        setInitialPrompt(null);
+        setPendingSend(null);
+        setPendingStructured({ id: Date.now(), payload: struct });
+        if (openNow) {
+          setComposerFocusTick((n) => n + 1);
+        } else {
+          setOpen(true);
+        }
+        return;
+      }
+
+      setPendingStructured(null);
 
       if (empty) {
         setInitialPrompt(null);
@@ -169,6 +201,8 @@ export function CoreAIModalProvider({ children }: { children: React.ReactNode })
           composerFocusSignal={composerFocusTick}
           externalSend={pendingSend}
           onExternalSendConsumed={() => setPendingSend(null)}
+          pendingStructured={pendingStructured}
+          onPendingStructuredConsumed={() => setPendingStructured(null)}
         />
       )}
     </CoreAIModalContext.Provider>

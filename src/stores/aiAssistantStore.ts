@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { CoreAIStructuredPayload } from "@/core/ai/interactive/types";
 
 /** `string` and `{ prompt }` open Core AI with auto-send; `undefined` / empty opens empty composer. */
 export type OpenAIModalInput =
@@ -9,6 +10,8 @@ export type OpenAIModalInput =
       query?: string;
       /** Default true; reserved for future “prefill only” behavior. */
       autoSend?: boolean;
+      /** After the modal opens, dispatch once (e.g. `START_LOAN_REVIEW`) so chat state is never blank. */
+      structuredAfterOpen?: CoreAIStructuredPayload;
     };
 
 /**
@@ -30,7 +33,11 @@ export const useAIAssistantStore = create<AIAssistantStoreState>(() => ({
   closeAIModal: () => {},
 }));
 
-export function normalizeOpenAIModalInput(raw?: OpenAIModalInput): { text: string; openEmpty: boolean } {
+export function normalizeOpenAIModalInput(raw?: OpenAIModalInput): {
+  text: string;
+  openEmpty: boolean;
+  structuredAfterOpen?: CoreAIStructuredPayload;
+} {
   if (raw === undefined || raw === null) {
     return { text: "", openEmpty: true };
   }
@@ -38,6 +45,14 @@ export function normalizeOpenAIModalInput(raw?: OpenAIModalInput): { text: strin
     const t = raw.trim();
     return t === "" ? { text: "", openEmpty: true } : { text: t, openEmpty: false };
   }
+  const structuredAfterOpen = raw.structuredAfterOpen;
   const t = (raw.prompt ?? raw.query ?? "").trim();
-  return t === "" ? { text: "", openEmpty: true } : { text: t, openEmpty: false };
+  if (structuredAfterOpen && t === "") {
+    return { text: "", openEmpty: true, structuredAfterOpen };
+  }
+  return {
+    text: t,
+    openEmpty: t === "",
+    ...(structuredAfterOpen ? { structuredAfterOpen } : {}),
+  };
 }

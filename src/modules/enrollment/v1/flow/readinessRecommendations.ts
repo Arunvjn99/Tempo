@@ -21,6 +21,12 @@ export type GeneratedRecommendation = {
   projectedGain: string;
   scoreImpact: string;
   scoreDelta: number;
+  /** Score after applying this recommendation alone (capped 0–100). */
+  newScore: number;
+  /** Projected retirement balance after this recommendation. */
+  projectedBalanceAfter: number;
+  /** Estimated extra annual savings (employee + employer) vs. current, where applicable. */
+  additionalAnnualSavings: number;
   Icon: LucideIcon;
   patch: ReadinessApplyPatch;
 };
@@ -71,6 +77,10 @@ export function generateRecommendations(
       data.currentSavings,
     );
     const dScore = newScore - score;
+    const empBefore = Math.round((data.salary * Math.min(data.contribution, 6)) / 100);
+    const empAfter = Math.round((data.salary * Math.min(bumpPct, 6)) / 100);
+    const addAnnual =
+      Math.round(((bumpPct - data.contribution) * data.salary) / 100) + Math.max(0, empAfter - empBefore);
     pushIf("increase-contribution", {
       title: "Increase Contributions by 3%",
       description:
@@ -79,6 +89,9 @@ export function generateRecommendations(
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
       scoreDelta: dScore,
+      newScore: Math.min(100, newScore),
+      projectedBalanceAfter: futureBal,
+      additionalAnnualSavings: addAnnual,
       Icon: DollarSign,
       patch: { kind: "contribution", value: bumpPct },
     });
@@ -103,14 +116,17 @@ export function generateRecommendations(
       data.autoIncreaseMax,
     );
     const deltaBal = futureBal - projectedBalance;
+    const addAnnual = Math.max(0, Math.round((data.salary * data.autoIncreaseRate) / 100));
     pushIf("auto-increase", {
-      title: "Enable Auto-Increase (1% annually)",
-      description:
-        "Gradual annual increases help you save more without feeling the impact all at once on your monthly budget.",
+      title: "Enable automatic contribution increases",
+      description: `Automatically increase your contribution by ${data.autoIncreaseRate}% each year up to ${data.autoIncreaseMax}%.`,
       impact: "Medium",
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
       scoreDelta: dScore,
+      newScore: Math.min(100, newScore),
+      projectedBalanceAfter: futureBal,
+      additionalAnnualSavings: addAnnual,
       Icon: TrendingUp,
       patch: { kind: "autoIncreaseOn" },
     });
@@ -134,6 +150,9 @@ export function generateRecommendations(
       data.currentSavings,
     );
     const dScore = newScore - score;
+    const addAnnual =
+      Math.round(((targetMatch - data.contribution) * data.salary) / 100) +
+      Math.round(((Math.min(targetMatch, 6) - Math.min(data.contribution, 6)) * data.salary) / 100);
     pushIf("employer-match", {
       title: "Maximize Employer Match",
       description:
@@ -142,6 +161,9 @@ export function generateRecommendations(
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
       scoreDelta: dScore,
+      newScore: Math.min(100, newScore),
+      projectedBalanceAfter: futureBal,
+      additionalAnnualSavings: Math.max(0, addAnnual),
       Icon: ShieldCheck,
       patch: { kind: "contribution", value: targetMatch },
     });
@@ -173,6 +195,9 @@ export function generateRecommendations(
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
       scoreDelta: dScore,
+      newScore: Math.min(100, newScore),
+      projectedBalanceAfter: futureBal,
+      additionalAnnualSavings: 0,
       Icon: Sparkles,
       patch: { kind: "riskLevel", value: "balanced" },
     });
@@ -191,6 +216,9 @@ export function generateRecommendations(
         projectedGain: "+$0",
         scoreImpact: "+0 pts",
         scoreDelta: 0,
+        newScore: score,
+        projectedBalanceAfter: projectedBalance,
+        additionalAnnualSavings: 0,
         Icon: Sparkles,
         patch: { kind: "none" },
       },

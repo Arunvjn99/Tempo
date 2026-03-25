@@ -2,7 +2,6 @@ import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { HeroSkeleton } from "@/components/pre-enrollment";
 import { useUser } from "@/context/UserContext";
-import { SearchBar } from "@/components/search/SearchBar";
 import { HeroSection } from "./HeroSection";
 import FeaturedLearningSection from "@/components/pre-enrollment/FeaturedLearningSection";
 import { AssistanceSection } from "@/components/pre-enrollment/dashboard-premium";
@@ -44,9 +43,6 @@ export const PreEnrollment = () => {
             }}
           >
             <HeroSection />
-            <div className="relative z-20 -mt-3 px-4 sm:-mt-4 sm:px-6 lg:px-8">
-              <SearchBar className="mx-auto max-w-3xl xl:max-w-4xl" />
-            </div>
             <div className="mx-auto max-w-7xl space-y-10 px-4 pb-10 pt-8 sm:space-y-12 sm:px-6 sm:pt-10 md:space-y-12 lg:px-8">
               <FeaturedLearningSection />
               <AssistanceSection />

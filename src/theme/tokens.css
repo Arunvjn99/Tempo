@@ -12,6 +12,12 @@
   --brand-active: #1d4ed8;
   --danger: #ef4444;
   --success: #10b981;
+  --primary: var(--brand-primary);
+  /* Page / surface aliases (dashboard + shared layouts; ThemeProvider may override) */
+  --bg-primary: var(--surface-primary);
+  --bg-secondary: var(--surface-secondary);
+  --bg-tertiary: #f1f5f9;
+  --text-muted: var(--text-secondary);
 }
 
 .dark {
@@ -27,6 +33,11 @@
   --brand-active: #2563eb;
   --danger: #f87171;
   --success: #34d399;
+  --primary: var(--brand-primary);
+  --bg-primary: var(--surface-primary);
+  --bg-secondary: var(--surface-secondary);
+  --bg-tertiary: #334155;
+  --text-muted: var(--text-secondary);
   /* Legacy tokens (ThemeProvider overrides these from branding_json when mounted) */
   --color-background: #0f172a;
   --color-background-secondary: #1e293b;

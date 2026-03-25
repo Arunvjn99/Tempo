@@ -25,6 +25,8 @@ export interface EnrollmentDraft {
   yearsToRetire: number;
   annualSalary: number;
   retirementLocation: string;
+  /** Pre-enrollment wizard Step 4 — investment risk comfort */
+  investmentComfort?: "conservative" | "balanced" | "growth" | "aggressive";
   otherSavings?: {
     type: string | null;
     amount: number | null;
@@ -49,6 +51,14 @@ export interface EnrollmentDraft {
     annualIncreasePct: number;
     stopAtPct: number;
     minimumFloorPct?: number;
+  };
+  /**
+   * Explicit auto-increase step decision (enable vs skip).
+   * `enabled: null` means the user has not committed a choice yet.
+   */
+  autoIncreasePreference?: {
+    enabled: boolean | null;
+    skipped: boolean;
   };
 }
 

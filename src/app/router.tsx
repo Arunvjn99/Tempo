@@ -8,9 +8,9 @@ import { ForgotPasswordVerify } from "../pages/auth/ForgotPasswordVerify";
 import { ResetPassword } from "../pages/auth/ResetPassword";
 import { HelpCenter } from "../pages/auth/HelpCenter";
 import { Signup } from "../pages/auth/Signup";
-import { Dashboard } from "../pages/dashboard/Dashboard";
 import { VersionedDashboard } from "../pages/dashboard/VersionedDashboard";
 import { PostEnrollmentDashboard } from "../pages/dashboard/PostEnrollmentDashboard";
+import { PreEnrollmentDashboard } from "../pages/dashboard/PreEnrollmentDashboard";
 import { ParticipantsOverviewDashboard } from "../pages/dashboard/ParticipantsOverviewDashboard";
 import { DemoDashboard } from "../pages/dashboard/DemoDashboard";
 import { InvestmentPortfolioPage } from "../pages/dashboard/InvestmentPortfolioPage";
@@ -26,6 +26,7 @@ import {
 } from "../pages/enrollment/VersionedEnrollmentSteps";
 import { VersionedEnrollment } from "../pages/enrollment/VersionedEnrollment";
 import { FutureContributions } from "../pages/enrollment/FutureContributions";
+import { AutoIncreaseSkipConfirm } from "../pages/enrollment/AutoIncreaseSkipConfirm";
 import { TransactionsPage } from "../pages/transactions/TransactionsPage";
 import { TransactionAnalysis } from "../pages/transactions/TransactionAnalysis";
 import { LoanTransactionLayout } from "../pages/transactions/layouts/LoanTransactionLayout";
@@ -167,7 +168,7 @@ export const router = createBrowserRouter([
         path: "/dashboard",
         element: (
           <ProtectedRoute>
-            <Navigate to="/v1/dashboard" replace />
+            <Navigate to="/dashboard/pre-enrollment" replace />
           </ProtectedRoute>
         ),
       },
@@ -191,17 +192,25 @@ export const router = createBrowserRouter([
       },
       {
         path: "/dashboard/classic",
-        element: <ProtectedRoute><Dashboard /></ProtectedRoute>,
-      },
-      {
-        path: "/dashboard/post-enrollment",
-        element: <ProtectedRoute><PostEnrollmentDashboard /></ProtectedRoute>,
-      },
-      {
-        path: "/dashboard/overview",
         element: (
           <ProtectedRoute>
             <ParticipantsOverviewDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/pre-enrollment",
+        element: (
+          <ProtectedRoute>
+            <PreEnrollmentDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/dashboard/post-enrollment",
+        element: (
+          <ProtectedRoute>
+            <PostEnrollmentDashboard />
           </ProtectedRoute>
         ),
       },
@@ -221,6 +230,15 @@ export const router = createBrowserRouter([
         path: "/enrollment/*",
         element: <LegacyEnrollmentRedirect />,
       },
+      /*
+       * V1 wizard steps (/v1/enrollment/choose-plan, contribution, source, …):
+       * These static paths mount `EnrollmentV1Layout` + `modules/enrollment/v1/screens/*`.
+       * They take precedence over `/:version/enrollment/*` children, so edits to
+       * `pages/enrollment/VersionedEnrollmentSteps` or `archive/enrollment-v0/*` do NOT apply here.
+       *
+       * V1 hub only: exact `/v1/enrollment` → `/:version/enrollment` index → `EnrollmentManagement`.
+       * V2 steps: `/v2/enrollment/*` uses nested routes under `VersionedEnrollment` (no static override).
+       */
       ...V1_WIZARD_SEGMENTS.map((slug) => ({
         path: `/v1/enrollment/${slug}`,
         element: (
@@ -229,6 +247,22 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       })),
+      {
+        path: "/v1/enrollment/auto-increase/config",
+        element: (
+          <ProtectedRoute>
+            <EnrollmentV1Layout />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/v1/enrollment/auto-increase/skip",
+        element: (
+          <ProtectedRoute>
+            <EnrollmentV1Layout />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "/:version/enrollment",
         element: (
@@ -258,6 +292,10 @@ export const router = createBrowserRouter([
           {
             path: "contribution",
             element: <VersionedContribution />,
+          },
+          {
+            path: "auto-increase/skip",
+            element: <AutoIncreaseSkipConfirm />,
           },
           {
             path: "auto-increase",

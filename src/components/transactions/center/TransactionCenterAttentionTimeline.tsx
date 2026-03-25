@@ -52,9 +52,9 @@ export function TransactionCenterAttentionTimeline({
       <div
         style={{
           background: "var(--card-bg)",
-          borderRadius: 16,
+          borderRadius: 12,
           border: "1px solid var(--border)",
-          padding: "24px 28px",
+          padding: "16px",
         }}
       >
         <div className="text-center py-4">
@@ -69,9 +69,9 @@ export function TransactionCenterAttentionTimeline({
     <div
       style={{
         background: "var(--card-bg)",
-        borderRadius: 16,
+        borderRadius: 12,
         border: "1px solid var(--border)",
-        padding: "14px 18px",
+        padding: "12px 16px",
       }}
     >
       <div className="space-y-2.5">

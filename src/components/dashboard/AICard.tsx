@@ -10,6 +10,8 @@ export type AICardProps = {
   href?: string;
   betaLabel?: string;
   className?: string;
+  /** Larger layout for pre-enrollment assistance row */
+  size?: "default" | "lg";
 };
 
 /**
@@ -23,16 +25,23 @@ export function AICard({
   href,
   betaLabel = "BETA",
   className,
+  size = "default",
 }: AICardProps) {
   const cta = href ? (
     <a href={href} className="dash-ai-card__cta">
       {actionLabel}
-      <ArrowRight className="dash-ai-card__cta-arrow h-4 w-4" aria-hidden />
+      <ArrowRight
+        className={cn("dash-ai-card__cta-arrow", size === "lg" ? "h-[1.125rem] w-[1.125rem]" : "h-4 w-4")}
+        aria-hidden
+      />
     </a>
   ) : (
     <button type="button" className="dash-ai-card__cta" onClick={onAction}>
       {actionLabel}
-      <ArrowRight className="dash-ai-card__cta-arrow h-4 w-4" aria-hidden />
+      <ArrowRight
+        className={cn("dash-ai-card__cta-arrow", size === "lg" ? "h-[1.125rem] w-[1.125rem]" : "h-4 w-4")}
+        aria-hidden
+      />
     </button>
   );
 
@@ -65,7 +74,10 @@ export function AICard({
                 animate={{ rotate: [0, 6, -4, 0] }}
                 transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
               >
-                <Sparkles className="h-5 w-5 text-[var(--color-primary)]" strokeWidth={2} />
+                <Sparkles
+                  className={cn("text-[var(--color-primary)]", size === "lg" ? "h-6 w-6" : "h-5 w-5")}
+                  strokeWidth={2}
+                />
               </motion.div>
             </div>
           </div>

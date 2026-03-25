@@ -61,7 +61,10 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const isComponent = message.type === "component";
-  const isInteractive = Boolean(message.interactiveType && message.interactivePayload != null && onInteractiveAction);
+  const wantsInteractive = Boolean(message.interactiveType && onInteractiveAction);
+  const hasInteractivePayload = message.interactivePayload != null;
+  const interactiveBroken = !isUser && !isComponent && wantsInteractive && !hasInteractivePayload;
+  const isInteractive = wantsInteractive && hasInteractivePayload;
   const isSpeaking = speakingId === message.id;
   const reduced = useReducedMotion();
 
@@ -104,6 +107,32 @@ export function MessageBubble({
             </motion.div>
 
             {/* No MessageActions for component blocks — not text-copyable */}
+          </>
+        )}
+
+        {/* ── Assistant: Interactive payload missing (never blank) ── */}
+        {interactiveBroken && message.interactiveType && (
+          <>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--banner-gradient)" }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+              </div>
+              <span className="text-[11px] font-medium text-[var(--color-textSecondary)]">Core AI</span>
+            </div>
+            <div
+              role="alert"
+              className="rounded-2xl border border-[var(--color-danger)]/40 bg-[var(--color-background)] px-4 py-3 text-sm text-[var(--color-text)]"
+            >
+              <p className="font-semibold text-[var(--color-danger)]">Could not load this step</p>
+              <p className="mt-1 text-xs text-[var(--color-textSecondary)]">
+                Missing UI data for <code className="rounded bg-[var(--color-background-tertiary)] px-1">{message.interactiveType}</code>. Please try
+                again or use the loan center.
+              </p>
+            </div>
           </>
         )}
 
@@ -189,7 +218,7 @@ export function MessageBubble({
         )}
 
         {/* ── Assistant: Text bubble ── */}
-        {!isUser && !isComponent && !isInteractive && (
+        {!isUser && !isComponent && !isInteractive && !interactiveBroken && (
           <>
             {/* Avatar + name */}
             <div className="flex items-center gap-2 mb-1">

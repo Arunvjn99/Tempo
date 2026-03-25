@@ -1,4 +1,5 @@
 import type { CoreAIStructuredPayload, SelectionCardPayload } from "@/core/ai/interactive/types";
+import { InsightBox } from "./InsightBox";
 
 export interface SelectionCardProps {
   payload: SelectionCardPayload;
@@ -12,6 +13,7 @@ export function SelectionCard({ payload, onAction }: SelectionCardProps) {
       {payload.subtitle && (
         <p className="mt-1 text-xs text-[var(--color-textSecondary)]">{payload.subtitle}</p>
       )}
+      {payload.insight && <InsightBox insight={payload.insight} />}
       <div className="mt-4 flex flex-col gap-2">
         {payload.options.map((opt) => (
           <button

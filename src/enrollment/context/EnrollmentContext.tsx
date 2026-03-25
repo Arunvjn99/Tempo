@@ -13,6 +13,33 @@ import { loadEnrollmentDraft } from "../enrollmentDraftStore";
 // Normalized plan IDs - stable enum values
 export type SelectedPlanId = "traditional_401k" | "roth_401k" | "roth_ira" | null;
 
+/** Auto-increase step: user choice (`enabled: null` until they enable or skip). */
+export type AutoIncreasePreferenceSnapshot = {
+  enabled: boolean | null;
+  skipped: boolean;
+};
+
+const DEFAULT_AUTO_INCREASE_PREFERENCE: AutoIncreasePreferenceSnapshot = {
+  enabled: null,
+  skipped: false,
+};
+
+function hydrateAutoIncreasePreferenceFromDraft(
+  draft: ReturnType<typeof loadEnrollmentDraft>,
+): AutoIncreasePreferenceSnapshot {
+  if (!draft) return DEFAULT_AUTO_INCREASE_PREFERENCE;
+  if (draft.autoIncreasePreference) {
+    return {
+      enabled: draft.autoIncreasePreference.enabled,
+      skipped: draft.autoIncreasePreference.skipped,
+    };
+  }
+  if (draft.autoIncrease?.enabled === true) {
+    return { enabled: true, skipped: false };
+  }
+  return DEFAULT_AUTO_INCREASE_PREFERENCE;
+}
+
 interface EnrollmentState {
   // Plan selection (legacy enum for contribution page display)
   selectedPlan: SelectedPlanId;
@@ -41,6 +68,7 @@ interface EnrollmentState {
   
   // Auto-increase
   autoIncrease: AutoIncreaseSettings;
+  autoIncreasePreference: AutoIncreasePreferenceSnapshot;
 
   // Profile data (from previous steps)
   currentAge: number;
@@ -71,6 +99,7 @@ interface EnrollmentContextValue {
   setSourcesEditMode: (enabled: boolean) => void;
   setSourcesViewMode: (mode: "percent" | "dollar") => void;
   setAutoIncrease: (settings: Partial<AutoIncreaseSettings>) => void;
+  setAutoIncreasePreference: (pref: AutoIncreasePreferenceSnapshot) => void;
   setInvestmentProfile: (profile: InvestmentProfile) => void;
   setInvestmentProfileCompleted: (completed: boolean) => void;
 
@@ -110,6 +139,7 @@ const DEFAULT_STATE: EnrollmentState = {
     rothIncrease: 2,
     afterTaxIncrease: 2,
   },
+  autoIncreasePreference: DEFAULT_AUTO_INCREASE_PREFERENCE,
   assumptions: {
     employerMatchPercentage: 100,
     employerMatchCap: 6,
@@ -140,6 +170,7 @@ function getInitialEnrollmentState(): EnrollmentState {
     currentBalance: draft.otherSavings?.amount ?? DEFAULT_STATE.currentBalance,
     investmentProfile: draft.investmentProfile ?? DEFAULT_STATE.investmentProfile,
     investmentProfileCompleted: draft.investmentProfileCompleted ?? DEFAULT_STATE.investmentProfileCompleted,
+    autoIncreasePreference: hydrateAutoIncreasePreferenceFromDraft(draft),
     autoIncrease: draft.autoIncrease
       ? {
           ...DEFAULT_STATE.autoIncrease,
@@ -204,6 +235,7 @@ export const EnrollmentProvider = ({ children }: EnrollmentProviderProps) => {
     setSourcesEditMode: (enabled) => setState((prev) => ({ ...prev, sourcesEditMode: enabled })),
     setSourcesViewMode: (mode) => setState((prev) => ({ ...prev, sourcesViewMode: mode })),
     setAutoIncrease: (settings) => setState((prev) => ({ ...prev, autoIncrease: { ...prev.autoIncrease, ...settings } })),
+    setAutoIncreasePreference: (pref) => setState((prev) => ({ ...prev, autoIncreasePreference: pref })),
     setInvestmentProfile: (profile) => setState((prev) => ({ ...prev, investmentProfile: profile })),
     setInvestmentProfileCompleted: (completed) =>
       setState((prev) => ({ ...prev, investmentProfileCompleted: completed })),

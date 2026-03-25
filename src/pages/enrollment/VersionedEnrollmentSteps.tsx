@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { ChoosePlan as V1ChoosePlan } from "@/archive/enrollment-v0/ChoosePlan";
 import { ChoosePlan as V2ChoosePlan } from "@/versions/v2/enrollment/ChoosePlan";
@@ -10,8 +11,14 @@ import { EnrollmentInvestmentsContent as V2EnrollmentInvestmentsContent } from "
 import { EnrollmentReviewContent as V1EnrollmentReviewContent } from "@/archive/enrollment-v0/EnrollmentReviewContent";
 import { EnrollmentReviewContent as V2EnrollmentReviewContent } from "@/versions/v2/enrollment/EnrollmentReviewContent";
 
+/** Nested `/:version/enrollment/*` steps; v1 wizard URLs are shadowed by static `/v1/enrollment/:slug` routes (see `router.tsx`). */
 export function VersionedChoosePlan() {
   const { version } = useParams<{ version?: string }>();
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("[Enrollment] VersionedChoosePlan (nested route — typically v2 only)", { version });
+    }
+  }, [version]);
   if (version === "v2") return <V2ChoosePlan />;
   return <V1ChoosePlan />;
 }

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { loadEnrollmentDraft } from "@/enrollment/enrollmentDraftStore";
-import { getRoutingVersion, withVersion } from "@/core/version";
 import { ChoosePlan } from "./ChoosePlan";
 
 /**
@@ -11,15 +10,13 @@ import { ChoosePlan } from "./ChoosePlan";
  */
 export const PlansPage = () => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const version = getRoutingVersion(pathname);
   const draft = loadEnrollmentDraft();
 
   useEffect(() => {
     if (!draft) {
-      navigate(withVersion(version, "/dashboard"), { replace: true });
+      navigate("/dashboard/pre-enrollment", { replace: true });
     }
-  }, [draft, navigate, version]);
+  }, [draft, navigate]);
 
   if (!draft) {
     return null;

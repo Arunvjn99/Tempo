@@ -14,11 +14,11 @@ export function runFlow(
     case "loan":
       return loanFlow(state, input, structured);
     case "withdrawal":
-      return withdrawalFlow(state, input);
+      return withdrawalFlow(state, input, structured);
     case "enrollment":
-      return enrollmentFlow(state, input);
+      return enrollmentFlow(state, input, structured);
     case "vesting":
-      return vestingFlow(state, input);
+      return vestingFlow(state, input, structured);
     default:
       return { messages: [], nextState: null };
   }

@@ -1,7 +1,6 @@
 /**
  * Whether the bottom floating search bar should render for the current route.
- * The pill is off app-wide; search stays available via header (DashboardHeader) and
- * GlobalSearchHost (⌘K / Ctrl+K). v1 dashboard keeps hero-focused search unchanged.
+ * The pill is off app-wide; search stays available via header and GlobalSearchHost (⌘K / Ctrl+K).
  */
 export function shouldShowFloatingSearch(_pathname: string): boolean {
   return false;

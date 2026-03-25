@@ -38,7 +38,7 @@ export function AIAssetsPage() {
             <h1 className="text-xl font-bold text-[var(--color-text)]">AI asset generator</h1>
           </div>
           <Link
-            to="/v1/dashboard"
+            to="/dashboard/pre-enrollment"
             className="text-sm font-medium text-[var(--color-primary)] hover:underline"
           >
             ← Back to dashboard

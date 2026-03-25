@@ -24,7 +24,7 @@ import "@/styles/dashboard-screen.css";
 
 /**
  * Production overview dashboard (Figma: Participants Portal Playground — node 1603-533).
- * Route: /dashboard/overview
+ * Route: /dashboard/classic
  */
 export function ParticipantsOverviewDashboard() {
   const { t } = useTranslation();

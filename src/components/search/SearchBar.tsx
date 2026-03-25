@@ -4,7 +4,9 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HERO_SEARCH_FOCUS_EVENT } from "@/lib/heroSearchFocus";
 import { useSearch } from "@/hooks/useSearch";
+import { openKnowMoreForQuickAnswer } from "@/core/search/knowMoreFromQuickAnswer";
 import { SearchPanel } from "./SearchPanel";
+import { InlineAnswerCard } from "./InlineAnswerCard";
 
 const BLUR_CLOSE_MS = 200;
 
@@ -127,7 +129,8 @@ export function SearchBar({ className }: SearchBarProps) {
   const onQuickAnswerCta = () => {
     if (!answer) return;
     clearBlurTimer();
-    handleSelect(answer.scenarioId, query.trim() || answer.question);
+    const prompt = query.trim() || answer.question;
+    useAIAssistantStore.getState().openAIModal({ prompt, autoSend: true });
     setOpen(false);
     setQuery("");
     setActiveIndex(-1);
@@ -214,22 +217,12 @@ export function SearchBar({ className }: SearchBarProps) {
           ) : null}
 
           {answer ? (
-            <div
-              className="answer-card"
-              role="region"
-              aria-label={t("preEnrollment.heroQuickAnswer", { defaultValue: "Quick answer" })}
-            >
-              <p className="answer-question">{answer.question}</p>
-              <p className="answer-text">{answer.answer}</p>
-              <button
-                type="button"
-                className="answer-cta"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={onQuickAnswerCta}
-              >
-                {t("preEnrollment.heroQuickAnswerCta", { defaultValue: "View more →" })}
-              </button>
-            </div>
+            <InlineAnswerCard
+              question={answer.question}
+              shortAnswer={answer.answer}
+              containerClassName="answer-card"
+              onKnowMore={onQuickAnswerCta}
+            />
           ) : null}
 
           <SearchPanel

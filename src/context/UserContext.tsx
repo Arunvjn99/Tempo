@@ -7,8 +7,10 @@
  */
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -39,10 +41,21 @@ interface UserContextValue {
   user: User | null;
   profile: Profile | null;
   company: Company | null;
+  /** Enrollment state from `enrollments` row when present (`status` or `enrollment_status` if available). */
+  enrollmentStatus: string | null;
   loading: boolean;
+  refreshEnrollment: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
+
+function pickEnrollmentStatus(row: unknown): string | null {
+  if (!row || typeof row !== "object") return null;
+  const r = row as Record<string, unknown>;
+  if (typeof r.status === "string") return r.status;
+  if (typeof r.enrollment_status === "string") return r.enrollment_status;
+  return null;
+}
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { user: authUser, session, loading: authLoading } = useAuth();
@@ -50,7 +63,23 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
+  const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+
+  const refreshEnrollment = useCallback(async () => {
+    if (!supabase || !authUser?.id) return;
+    const { data, error } = await supabase
+      .from("enrollments")
+      .select("*")
+      .eq("user_id", authUser.id)
+      .maybeSingle();
+    if (error) {
+      console.warn("Enrollment fetch failed:", error.message);
+      setEnrollmentStatus(null);
+      return;
+    }
+    setEnrollmentStatus(pickEnrollmentStatus(data));
+  }, [authUser?.id]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -58,6 +87,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     if (!authUser || !session) {
       setProfile(null);
       setCompany(null);
+      setEnrollmentStatus(null);
       setBrandingLoading(false);
       setProfileLoading(false);
       if (typeof document?.documentElement?.style?.removeProperty === "function") {
@@ -74,10 +104,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (!supabase) {
         setProfile(null);
         setCompany(null);
+        setEnrollmentStatus(null);
         setBrandingLoading(false);
         setProfileLoading(false);
         return;
       }
+
+      const enrollmentPromise = supabase
+        .from("enrollments")
+        .select("*")
+        .eq("user_id", authUser.id)
+        .maybeSingle()
+        .then((res): string | null => {
+          if (res.error) {
+            console.warn("Enrollment fetch failed:", res.error.message);
+            return null;
+          }
+          return pickEnrollmentStatus(res.data);
+        });
+
+      try {
       if (import.meta.env.DEV) console.log("[user-diag] fetching profile for", authUser.id);
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
@@ -198,6 +244,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setCompanyBranding(company.name, company.branding_json ?? undefined, company.logo_url ?? null);
       setBrandingLoading(false);
       setProfileLoading(false);
+      } finally {
+        const status = await enrollmentPromise;
+        if (!cancelled) setEnrollmentStatus(status);
+      }
     };
 
     fetchUserData();
@@ -206,8 +256,20 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const loading = authLoading || profileLoading;
 
+  const value = useMemo(
+    () => ({
+      user: authUser,
+      profile,
+      company,
+      enrollmentStatus,
+      loading,
+      refreshEnrollment,
+    }),
+    [authUser, profile, company, enrollmentStatus, loading, refreshEnrollment]
+  );
+
   return (
-    <UserContext.Provider value={{ user: authUser, profile, company, loading }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );

@@ -76,3 +76,13 @@ export function previewPaymentSchedule(
 
   return { emi, rows };
 }
+
+/** First N payments — used by loan flow review UI (alias of {@link previewPaymentSchedule}). */
+export function generateSchedule(
+  principal: number,
+  annualRatePercent: number,
+  tenureMonths: number,
+  previewMonths: number = 3,
+): { emi: number; rows: SchedulePreviewRow[] } {
+  return previewPaymentSchedule(principal, annualRatePercent, tenureMonths, previewMonths);
+}

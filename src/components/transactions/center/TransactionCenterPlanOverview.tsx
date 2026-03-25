@@ -48,15 +48,15 @@ export function TransactionCenterPlanOverview({
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="mb-5 sm:mb-6"
+      className="mb-4 sm:mb-5"
     >
       <div
         className="overflow-hidden"
         style={{
           background: "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 14%, var(--background)) 0%, color-mix(in srgb, var(--color-primary) 10%, var(--muted)) 100%)",
           border: "1px solid color-mix(in srgb, var(--color-primary) 35%, var(--border))",
-          borderRadius: 16,
-          padding: "24px 28px",
+          borderRadius: 12,
+          padding: "16px 20px",
         }}
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-0">

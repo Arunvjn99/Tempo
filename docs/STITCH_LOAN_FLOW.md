@@ -33,6 +33,8 @@ Follow the prompts (gcloud, project, OAuth).
 
 From the repo root, with `STITCH_API_KEY` set (or after `stitch-mcp init`).
 
+The fetch script calls **`get_screen`** first and uses **`curl -L`** on `htmlCode.downloadUrl` / `screenshot.downloadUrl` when present; otherwise it uses **`get_screen_code`** / **`get_screen_image`**. Override targets with `STITCH_PROJECT_ID`, `STITCH_SCREEN_ID`, and `STITCH_OUT_DIR` (defaults match this loan-hub screen).
+
 **Option 1 – npm script**
 ```bash
 STITCH_API_KEY=your-key npm run stitch:fetch-loan-hub

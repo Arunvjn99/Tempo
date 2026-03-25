@@ -59,7 +59,7 @@ export const Login = () => {
   useEffect(() => {
     if (authLoading) return;
     if (user && isOtpVerified) {
-      navigate(withVersion(version, "/dashboard"), { replace: true });
+      navigate("/dashboard/pre-enrollment", { replace: true });
     }
   }, [authLoading, user, isOtpVerified, navigate, version]);
 

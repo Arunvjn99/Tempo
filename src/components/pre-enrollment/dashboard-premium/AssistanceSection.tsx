@@ -28,6 +28,7 @@ export function AssistanceSection({ className }: { className?: string }) {
 
       <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
         <AdvisorAssistanceCard
+          size="lg"
           className="h-full min-h-0 lg:col-span-7"
           title={safeT(t, "dashboard.assistanceHumanTitle", "Speak with a retirement specialist")}
           description={safeT(
@@ -40,6 +41,7 @@ export function AssistanceSection({ className }: { className?: string }) {
         />
 
         <AICard
+          size="lg"
           className="h-full min-h-0 lg:col-span-5"
           title={safeT(t, "dashboard.assistanceAiTitle", "Ask Core AI")}
           description={safeT(

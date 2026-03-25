@@ -1,4 +1,4 @@
-import { getScenarioById, SEARCH_SCENARIOS } from "./scenarioConfig";
+import { getScenarioById, SEARCH_SCENARIOS, type ScenarioType } from "./scenarioConfig";
 
 export interface SuggestionItem {
   /** Stable row id for list keys / aria */
@@ -67,7 +67,7 @@ function paletteSubtitle(scenario: ReturnType<typeof getScenarioById>): string |
   return undefined;
 }
 
-/** Map suggestions to command-palette list rows (title + subtitle). */
+/** Map suggestions to command-palette list rows (title + subtitle + scenario type for grouping). */
 export function suggestionsToPaletteRows(items: SuggestionItem[]): PaletteRowItem[] {
   return items.map((s) => {
     const scenario = getScenarioById(s.scenarioId);
@@ -76,6 +76,7 @@ export function suggestionsToPaletteRows(items: SuggestionItem[]): PaletteRowIte
       title: s.label,
       subtitle: paletteSubtitle(scenario),
       scenarioId: s.scenarioId,
+      scenarioType: scenario?.type ?? "ai",
     };
   });
 }
@@ -85,4 +86,20 @@ export interface PaletteRowItem {
   title: string;
   subtitle?: string;
   scenarioId: string;
+  scenarioType: ScenarioType;
+}
+
+export type PaletteRowGroup = { label: string; items: PaletteRowItem[] };
+
+/** Split rows into commands (navigation + ai) vs actions; preserve keyboard order as commands then actions. */
+export function groupPaletteRows(rows: PaletteRowItem[], hasQuery: boolean): { ordered: PaletteRowItem[]; groups: PaletteRowGroup[] } {
+  const commands = rows.filter((r) => r.scenarioType !== "action");
+  const actions = rows.filter((r) => r.scenarioType === "action");
+  const ordered = [...commands, ...actions];
+  const cmdLabel = hasQuery ? "Matching commands" : "Suggested commands";
+  const groups: PaletteRowGroup[] = [
+    ...(commands.length ? [{ label: cmdLabel, items: commands }] : []),
+    ...(actions.length ? [{ label: "Suggested actions", items: actions }] : []),
+  ];
+  return { ordered, groups };
 }

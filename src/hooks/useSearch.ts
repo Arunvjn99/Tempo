@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getRoutingVersion } from "@/core/version";
+import { classifyQuery } from "@/core/search/classifyQuery";
 import { getQuickAnswer } from "@/core/search/answerEngine";
 import { executeScenario, submitSearchQuery, type ScenarioExecutionContext } from "@/core/search/executeScenario";
 import { getSuggestions, type SuggestionItem } from "@/core/search/suggestionEngine";
@@ -36,6 +37,7 @@ export function useSearch(options?: UseSearchOptions) {
 
   const suggestions = useMemo(() => getSuggestions(query), [query]);
   const answer = useMemo(() => getQuickAnswer(query), [query]);
+  const queryClassification = useMemo(() => classifyQuery(query), [query]);
 
   const handleSelect = useCallback(
     (scenarioId: string, label?: string) => {
@@ -57,6 +59,16 @@ export function useSearch(options?: UseSearchOptions) {
     [query, ctx, suggestionPayload],
   );
 
+  /**
+   * Same as submit but uses the ordered rows shown in the palette (e.g. commands before actions).
+   */
+  const submitWithSuggestionRows = useCallback(
+    (activeIndex: number, rows: { scenarioId: string; label: string }[]) => {
+      submitSearchQuery(query, ctx, rows, activeIndex);
+    },
+    [query, ctx],
+  );
+
   /** No local matches (palette “ask AI” card). */
   const submitFreeform = useCallback(
     (raw: string) => {
@@ -75,8 +87,10 @@ export function useSearch(options?: UseSearchOptions) {
     setQuery,
     suggestions,
     answer,
+    queryClassification,
     handleSelect,
     submitWithIndex,
+    submitWithSuggestionRows,
     submitFreeform,
     openAIModalEmpty,
   };

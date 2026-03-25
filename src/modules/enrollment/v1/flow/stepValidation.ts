@@ -22,8 +22,7 @@ export function isEnrollmentStepValid(
       return Math.abs(t - 100) < 0.001;
     }
     case "autoIncrease":
-      if (!state.autoIncreaseStepResolved) return false;
-      if (!state.autoIncrease) return true;
+      if (!state.autoIncrease) return state.autoIncreaseStepResolved;
       return (
         state.autoIncreaseRate > 0 &&
         state.autoIncreaseRate <= 3 &&

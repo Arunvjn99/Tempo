@@ -40,7 +40,7 @@ const typeStyles = {
 
 export function TransactionCenterFinancialGuidance() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
       {insights.map((insight, idx) => {
         const style = typeStyles[insight.type];
         return (
@@ -56,13 +56,13 @@ export function TransactionCenterFinancialGuidance() {
             className="relative overflow-hidden cursor-pointer group transition-all duration-200"
             style={{
               background: "var(--card-bg)",
-              borderRadius: 16,
+              borderRadius: 12,
               border: "1px solid var(--border)",
-              padding: "20px 24px",
+              padding: "16px",
             }}
           >
             <div
-              className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+              className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-200 group-hover:opacity-100"
               style={{
                 background:
                   "linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, transparent) 0%, color-mix(in srgb, var(--color-primary) 6%, transparent) 100%)",

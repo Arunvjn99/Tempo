@@ -13,14 +13,13 @@ import { NotificationPanel } from "@/components/dashboard/NotificationPanel";
 import { branding } from "@/config/branding";
 import { getRoutingVersion, stripRoutingVersionPrefix, withVersion } from "@/core/version";
 import { Search } from "lucide-react";
-import { requestHeroSearchFocus } from "@/lib/heroSearchFocus";
 import { requestOpenGlobalSearch } from "@/hooks/useGlobalSearch";
 
 /* ────────────────────────────── Nav config ────────────────────────────── */
 
-function getNavLinks(isDemoMode: boolean, version: string) {
+function getNavLinks(isDemoMode: boolean, version: string, dashboardHome: string) {
   return [
-    { to: isDemoMode ? "/demo" : withVersion(version, "/dashboard"), labelKey: "nav.dashboard" as const },
+    { to: isDemoMode ? "/demo" : dashboardHome, labelKey: "nav.dashboard" as const },
     { to: withVersion(version, "/enrollment"), labelKey: "nav.retirementPlan" as const },
     { to: withVersion(version, "/transactions"), labelKey: "nav.transactions" as const },
     { to: "/dashboard/investment-portfolio", labelKey: "nav.investmentPortfolio" as const },
@@ -70,9 +69,6 @@ function ChevronDownIcon({ className }: { className?: string }) {
 
 const ICON_BTN =
   "relative h-9 w-9 flex shrink-0 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]";
-
-/** Contextual hero search exists only on v1 pre-enrollment dashboard. */
-const CONTEXTUAL_SEARCH_PATH = "/v1/dashboard";
 
 const HEADER_SEARCH_BTN =
   "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/20 text-foreground transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -264,7 +260,7 @@ export const DashboardHeader = () => {
   const demoUser = useDemoUser();
   const { signOut } = useAuth();
   const { resetOtp } = useOtp();
-  const { user, profile } = useUser();
+  const { user, profile, enrollmentStatus } = useUser();
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -303,20 +299,22 @@ export const DashboardHeader = () => {
   }, [performLogout]);
 
   const routeVersion = getRoutingVersion(location.pathname);
-  const NAV_LINKS = getNavLinks(!!demoUser, routeVersion);
+  const dashboardHome =
+    enrollmentStatus === "completed" ? "/dashboard/post-enrollment" : "/dashboard/pre-enrollment";
+  const NAV_LINKS = getNavLinks(!!demoUser, routeVersion, dashboardHome);
   const [dash, retirement, trans, invest, account] = NAV_LINKS;
 
   const isActive = (to: string) => {
     if (to === "/dashboard/investment-portfolio") return location.pathname === "/dashboard/investment-portfolio";
     if (to === "/demo") return location.pathname === "/demo";
-    if (to.endsWith("/dashboard"))
+    if (to === "/dashboard/pre-enrollment" || to === "/dashboard/post-enrollment")
       return (
         location.pathname === to ||
+        location.pathname === "/dashboard/pre-enrollment" ||
+        location.pathname === "/dashboard/post-enrollment" ||
         location.pathname === "/dashboard" ||
-        location.pathname === "/v1/dashboard" ||
-        location.pathname === "/v2/dashboard" ||
-        location.pathname === "/dashboard/classic" ||
-        location.pathname === "/dashboard/post-enrollment"
+        /^\/v\d+\/dashboard$/.test(location.pathname) ||
+        location.pathname === "/dashboard/classic"
       );
     if (stripRoutingVersionPrefix(to) === "/transactions")
       return stripRoutingVersionPrefix(location.pathname).startsWith("/transactions");
@@ -342,10 +340,6 @@ export const DashboardHeader = () => {
   const avatarLetter = demoUser?.name?.charAt(0) ?? profile?.name?.charAt(0) ?? "U";
 
   const handleHeaderSearch = () => {
-    if (location.pathname === CONTEXTUAL_SEARCH_PATH) {
-      requestHeroSearchFocus();
-      return;
-    }
     requestOpenGlobalSearch();
   };
 
@@ -359,7 +353,7 @@ export const DashboardHeader = () => {
           {/* Logo */}
           <div className="flex min-w-0 shrink-0 items-center gap-2">
             <Link
-              to={isAuthenticated ? withVersion(routeVersion, "/dashboard") : "/"}
+              to={isAuthenticated ? dashboardHome : "/"}
               className="flex min-w-0 items-center rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
               aria-label={branding.authAppName}
             >

@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 import { Stepper } from "./Stepper";
 
 export interface EnrollmentHeaderWithStepperProps {
@@ -15,6 +16,10 @@ export interface EnrollmentHeaderWithStepperProps {
   dense?: boolean;
   /** Override inner width/padding (e.g. `max-w-full px-0` when nested in a narrow column). */
   innerClassName?: string;
+  /** Desktop stepper layout (Figma wizard: inline numbers + labels). */
+  desktopVariant?: "default" | "wizard";
+  /** Outer wrapper (e.g. `mb-0 py-2` inside modal card). */
+  className?: string;
 }
 
 const DEFAULT_STEP_LABEL_KEYS = [
@@ -37,6 +42,8 @@ export function EnrollmentHeaderWithStepper({
   stepIcons: _stepIcons,
   dense = false,
   innerClassName,
+  desktopVariant = "default",
+  className,
 }: EnrollmentHeaderWithStepperProps) {
   const { t } = useTranslation();
   const stepLabels =
@@ -45,14 +52,25 @@ export function EnrollmentHeaderWithStepper({
   const steps = stepLabels.slice(0, totalSteps);
 
   return (
-    <div className={`bg-transparent ${dense ? "mb-3 py-3" : "mb-4 py-4"}`}>
+    <div
+      className={cn(
+        "bg-transparent",
+        dense ? "mb-3 py-3" : "mb-4 py-4",
+        className,
+      )}
+    >
       <div
         className={
           innerClassName ??
           "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         }
       >
-        <Stepper currentStepIndex={activeStep} steps={steps} dense={dense} />
+        <Stepper
+          currentStepIndex={activeStep}
+          steps={steps}
+          dense={dense}
+          desktopStepVariant={desktopVariant}
+        />
       </div>
     </div>
   );
