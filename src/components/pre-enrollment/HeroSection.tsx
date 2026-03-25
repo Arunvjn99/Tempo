@@ -9,7 +9,7 @@ export function HeroSection() {
   const heroImage = useResolvedUIAsset("dashboardHero");
 
   return (
-    <section className="relative w-full overflow-visible bg-[var(--color-background)] py-16 md:py-20 lg:py-24">
+    <section className="relative w-full overflow-x-hidden bg-[var(--color-background)] py-16 md:py-20 lg:py-24">
       {/* Ambient light layers — all derived from --color-primary-rgb */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         {/* Primary focus glow — centered on content area */}
@@ -46,10 +46,14 @@ export function HeroSection() {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-2 md:gap-5 lg:gap-6 lg:grid-cols-[1fr_1fr]">
-          <HeroContent />
-          <HeroIllustration imageSrc={heroImage} />
+      <div className="relative z-10 mx-auto max-w-7xl overflow-hidden px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col items-center gap-6 md:gap-8 lg:flex-row lg:items-center lg:gap-12">
+          <div className="w-full min-w-0 max-w-xl">
+            <HeroContent />
+          </div>
+          <div className="flex w-full min-w-0 justify-center lg:w-auto lg:justify-start lg:-ml-6 xl:-ml-10">
+            <HeroIllustration imageSrc={heroImage} />
+          </div>
         </div>
       </div>
     </section>

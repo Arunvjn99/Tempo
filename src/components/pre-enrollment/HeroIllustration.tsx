@@ -1,7 +1,5 @@
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { isVideoAssetUrl } from "@/lib/isVideoAssetUrl";
-import { cn } from "@/lib/utils";
-
 interface HeroIllustrationProps {
   imageSrc: string;
   /** Decorative hero art; empty string omits alt for screen readers when appropriate. */
@@ -9,17 +7,17 @@ interface HeroIllustrationProps {
 }
 
 const HERO_IMAGE_CLASS =
-  "mx-auto h-auto w-full max-h-[min(40vh,17.5rem)] object-contain object-center sm:max-h-[min(42vh,19rem)] md:mx-0 md:max-h-[min(46vh,22rem)] md:object-right lg:max-h-[min(48vh,25rem)] xl:max-h-[min(50vh,27rem)] 2xl:max-h-[min(52vh,29rem)]";
+  "mx-auto h-auto w-full max-h-[min(40vh,17.5rem)] object-contain object-center sm:max-h-[min(42vh,19rem)] md:max-h-[min(46vh,22rem)] lg:mx-0 lg:max-h-[min(48vh,25rem)] lg:object-left xl:max-h-[min(50vh,27rem)] 2xl:max-h-[min(52vh,29rem)]";
 
 /** Larger caps for hero video so it matches the visual weight of the prior PNG illustration (+3px on rem caps). */
 const HERO_VIDEO_CLASS =
-  "mx-auto h-auto w-full max-h-[min(60vh,calc(28rem+3px))] object-contain object-center sm:max-h-[min(62vh,calc(30rem+3px))] md:mx-0 md:max-h-[min(66vh,calc(35rem+3px))] md:object-left lg:max-h-[min(68vh,calc(39rem+3px))] xl:max-h-[min(70vh,calc(43rem+3px))] 2xl:max-h-[min(72vh,calc(47rem+3px))]";
+  "mx-auto h-auto w-full max-h-[min(60vh,calc(28rem+3px))] object-contain object-center sm:max-h-[min(62vh,calc(30rem+3px))] md:max-h-[min(66vh,calc(35rem+3px))] lg:mx-0 lg:max-h-[min(68vh,calc(39rem+3px))] lg:object-left xl:max-h-[min(70vh,calc(43rem+3px))] 2xl:max-h-[min(72vh,calc(47rem+3px))]";
 
 const HERO_IMAGE_WRAP =
-  "w-full max-w-[16rem] sm:max-w-[18rem] md:max-w-[22rem] lg:max-w-[26rem] xl:max-w-[30rem] 2xl:max-w-[32rem]";
+  "w-full max-w-[280px] md:max-w-[340px] lg:max-w-[380px] xl:max-w-[420px]";
 
 const HERO_VIDEO_WRAP =
-  "w-full max-w-[calc(24rem+3px)] sm:max-w-[calc(28rem+3px)] md:max-w-[calc(34rem+3px)] lg:max-w-[calc(40rem+3px)] xl:max-w-[calc(44rem+3px)] 2xl:max-w-[calc(50rem+3px)]";
+  "w-full max-w-[min(100%,320px)] md:max-w-[min(100%,380px)] lg:max-w-[min(100%,420px)] xl:max-w-[min(100%,460px)]";
 
 /**
  * Hero art stays within the grid column with capped width/height so large raster
@@ -33,12 +31,7 @@ export function HeroIllustration({ imageSrc, alt = "" }: HeroIllustrationProps) 
   const wrapClass = isVideo ? HERO_VIDEO_WRAP : HERO_IMAGE_WRAP;
 
   return (
-    <div
-      className={cn(
-        "relative z-10 flex min-w-0 w-full justify-center",
-        isVideo ? "md:justify-start md:-translate-x-1 lg:-translate-x-2" : "md:justify-end",
-      )}
-    >
+    <div className="relative z-10 flex min-w-0 w-full justify-center lg:justify-start">
       <div className={wrapClass}>
         {trimmed && isVideo ? (
           <video

@@ -46,10 +46,15 @@ export function HeroContent() {
           <button
             type="button"
             onClick={() => setIsWizardOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-[var(--color-text-on-primary)] transition-colors hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background md:px-6 md:py-3 md:text-base"
+            className="group flex w-full flex-col items-center justify-center rounded-xl bg-primary px-6 py-4 text-[var(--color-text-on-primary)] shadow-md transition-all duration-200 hover:bg-primary-hover hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background motion-safe:hover:scale-[1.02] sm:w-auto sm:min-w-[220px]"
           >
-            {safeT(t, "dashboard.startEnrollment", "Start My Enrolment")}
-            <ArrowRight className="size-4 shrink-0" aria-hidden />
+            <span className="flex items-center justify-center gap-2 text-base font-semibold leading-tight">
+              {safeT(t, "dashboard.startEnrollment", "Start My Enrolment")}
+              <ArrowRight className="size-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+            </span>
+            <span className="mt-1 text-center text-xs leading-snug text-[var(--color-text-on-primary)]/80">
+              {safeT(t, "dashboard.takesMinutes", "It only takes 4 minutes")}
+            </span>
           </button>
 
           <button
@@ -61,10 +66,6 @@ export function HeroContent() {
             <span aria-hidden> →</span>
           </button>
         </div>
-
-        <p className="mt-3 text-xs text-muted-foreground">
-          {safeT(t, "dashboard.takesMinutes", "It only takes 4 minutes")}
-        </p>
       </div>
 
       <PersonalizePlanModal

@@ -22,7 +22,7 @@ interface HeroEnrollmentCardProps {
   enrollmentBadge?: string;
   /** Primary CTA button label (e.g. "Start My Enrollment"). */
   primaryCtaLabel?: string;
-  /** Chip text below CTA (e.g. "It only takes 4 minutes"). Hidden if empty. */
+  /** Second line inside the primary CTA (e.g. "It only takes 4 minutes"). Hidden if empty. */
   ctaChip?: string;
   /** Floating insight card: plan name */
   insightPlanName?: string;
@@ -91,16 +91,16 @@ export const HeroEnrollmentCard = ({
               {description}
             </p>
             <Button
-              className="rounded-2xl px-8 py-3.5 font-semibold text-white bg-[var(--color-primary)] hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2 transition-colors shadow-md hover:shadow-lg"
+              className="group flex w-full max-w-md flex-col items-center justify-center rounded-xl px-6 py-4 font-semibold text-white bg-[var(--color-primary)] transition-all duration-200 hover:opacity-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2 shadow-md hover:shadow-lg motion-safe:hover:scale-[1.01] sm:w-auto sm:min-w-[220px]"
               onClick={handleEnrollClick}
             >
-              {primaryCtaLabel ?? "Enroll Now"}
+              <span className="text-base leading-tight">{primaryCtaLabel ?? "Enroll Now"}</span>
+              {ctaChip ? (
+                <span className="mt-1 text-center text-xs font-medium leading-snug text-white/80">
+                  {ctaChip}
+                </span>
+              ) : null}
             </Button>
-            {ctaChip && (
-              <span className="inline-flex w-fit items-center rounded-full border border-[var(--color-border)] bg-[var(--color-background-secondary)] px-4 py-1.5 text-sm font-medium text-[var(--color-textSecondary)]">
-                {ctaChip}
-              </span>
-            )}
           </motion.div>
 
           {/* Right: illustration - stagger second */}
