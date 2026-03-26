@@ -106,7 +106,7 @@ export default function WithdrawEligibilityPage() {
       <FlowNavButtons
         backLabel="Cancel"
         nextLabel="Select Withdrawal Type"
-        onBack={() => go("transactions")}
+        onBack={() => go("")}
         onNext={() => go("withdraw/type")}
       />
     </div>

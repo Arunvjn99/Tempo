@@ -354,10 +354,15 @@ export const router = createBrowserRouter([
             element: <Navigate to="withdraw" replace />,
           },
           {
+            path: "withdrawal/start",
+            element: <Navigate to="../withdraw" replace />,
+          },
+          {
             path: "withdraw",
             element: <WithdrawTransactionLayout />,
             children: [
               { index: true, element: <WithdrawEligibilityPage /> },
+              { path: "eligibility", element: <WithdrawEligibilityPage /> },
               { path: "type", element: <WithdrawTypePage /> },
               { path: "source", element: <WithdrawSourcePage /> },
               { path: "fees", element: <WithdrawFeesPage /> },
