@@ -157,6 +157,9 @@ export function EnrollmentV1Layout() {
     <StepFooter
       onBack={handleBack}
       onNext={handleNext}
+      backLabel={t("enrollment.footerBack")}
+      nextLabel={t("enrollment.footerNext")}
+      finishLabel={t("enrollment.footerFinish")}
       nextDisabled={!stepValid}
       isFirstStep={isFirst}
       isLastStep={isLast}

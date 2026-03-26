@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import type { TFunction } from "i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { DollarSign } from "lucide-react";
 import type { IncrementCycle, RiskLevel } from "../store/useEnrollmentStore";
 import { GROWTH, useAutoIncreaseFinancialImpact, formatAutoIncreaseCurrency } from "../lib/autoIncreaseShared";
@@ -29,12 +31,15 @@ function formatAnnualShort(n: number): string {
   return `$${n.toLocaleString()}`;
 }
 
+const I = "enrollment.v1.autoIncreaseInsights.";
+
 function buildTimelineRows(
   currentPercent: number,
   increasePerCycle: number,
   maxContribution: number,
   incrementCycle: IncrementCycle,
   salary: number,
+  t: TFunction,
 ): AutoIncreaseTimelineRow[] {
   if (increasePerCycle <= 0 || currentPercent >= maxContribution) return [];
   const out: AutoIncreaseTimelineRow[] = [];
@@ -43,7 +48,7 @@ function buildTimelineRows(
   const push = () => {
     out.push({
       yearKey: yr,
-      yearLabel: yr === 0 ? "Now" : `Y${yr}`,
+      yearLabel: yr === 0 ? t(`${I}timelineNow`) : t(`${I}timelineY`, { n: yr }),
       dateStr: formatIncrementDate(incrementCycle, yr),
       percent: Math.round(pct * 10) / 10,
       annual: Math.round((salary * pct) / 100),
@@ -85,6 +90,7 @@ export function AutoIncreaseInsights({
   retirementAge,
   currentAge,
 }: AutoIncreaseInsightsProps) {
+  const { t } = useTranslation();
   const growthRate = GROWTH[riskLevel ?? "balanced"];
 
   const yearsToMax =
@@ -111,8 +117,9 @@ export function AutoIncreaseInsights({
         maxContribution,
         incrementCycle,
         salary,
+        t,
       ),
-    [currentPercent, increasePerCycle, maxContribution, incrementCycle, salary],
+    [currentPercent, increasePerCycle, maxContribution, incrementCycle, salary, t],
   );
 
   const showImpact =
@@ -121,23 +128,21 @@ export function AutoIncreaseInsights({
   return (
     <aside
       className="auto-increase-insights-panel lg:sticky lg:top-4 lg:self-start"
-      aria-label="Auto increase impact and timeline"
+      aria-label={t(`${I}aria`)}
     >
       <div className="auto-increase-insights-panel__section">
         <p className="auto-increase-insights-panel__summary">
           {currentPercent >= maxContribution ? (
-            <>Your contribution rate is already at or above your selected maximum.</>
+            t(`${I}atMax`)
           ) : increasePerCycle <= 0 ? (
-            <>Select an increase amount per cycle to see how your contribution grows over time.</>
+            t(`${I}selectIncrease`)
           ) : (
-            <>
-              Your contribution will grow from <strong>{currentPercent}%</strong> to{" "}
-              <strong>{maxContribution}%</strong> over approximately{" "}
-              <strong>
-                {yearsToMax} {yearsToMax === 1 ? "year" : "years"}
-              </strong>
-              .
-            </>
+            <Trans
+              i18nKey={`${I}growthSummary`}
+              values={{ from: currentPercent, to: maxContribution, count: yearsToMax }}
+              count={yearsToMax}
+              components={{ from: <strong />, to: <strong />, y: <strong /> }}
+            />
           )}
         </p>
       </div>
@@ -148,17 +153,17 @@ export function AutoIncreaseInsights({
             className="mb-2.5 text-sm font-semibold"
             style={{ color: "var(--text-primary)" }}
           >
-            Savings impact
+            {t(`${I}savingsImpact`)}
           </p>
           <div className="auto-increase-insights-impact-grid">
             <div className="auto-increase-insights-impact-card">
-              <p className="auto-increase-insights-impact-label">Without increases</p>
+              <p className="auto-increase-insights-impact-label">{t(`${I}withoutIncreases`)}</p>
               <p className="auto-increase-insights-impact-value">
                 {formatAutoIncreaseCurrency(financialImpact.withoutIncrease)}
               </p>
             </div>
             <div className="auto-increase-insights-impact-card auto-increase-insights-impact-card--highlight">
-              <p className="auto-increase-insights-impact-label">With increases</p>
+              <p className="auto-increase-insights-impact-label">{t(`${I}withIncreases`)}</p>
               <p className="auto-increase-insights-impact-value">
                 {formatAutoIncreaseCurrency(financialImpact.withIncrease)}
               </p>
@@ -167,8 +172,9 @@ export function AutoIncreaseInsights({
           <div className="auto-increase-insights-banner">
             <DollarSign className="h-4 w-4 shrink-0" style={{ color: "var(--success)" }} aria-hidden />
             <p className="m-0">
-              Automatic increases could add approximately{" "}
-              <strong>{formatAutoIncreaseCurrency(financialImpact.difference)}</strong> more to your retirement savings.
+              {t(`${I}bannerBefore`)}
+              <strong>{formatAutoIncreaseCurrency(financialImpact.difference)}</strong>
+              {t(`${I}bannerAfter`)}
             </p>
           </div>
         </div>
@@ -177,16 +183,16 @@ export function AutoIncreaseInsights({
       {timelineRows.length > 0 && (
         <div className="auto-increase-insights-panel__section">
           <h3 className="mb-2.5 text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-            Growth timeline
+            {t(`${I}timelineTitle`)}
           </h3>
           <div className="auto-increase-insights-table-wrap">
             <table className="auto-increase-insights-table">
               <thead>
                 <tr>
-                  <th scope="col">Year</th>
-                  <th scope="col">Date</th>
-                  <th scope="col">%</th>
-                  <th scope="col">Annual</th>
+                  <th scope="col">{t(`${I}colYear`)}</th>
+                  <th scope="col">{t(`${I}colDate`)}</th>
+                  <th scope="col">{t(`${I}colPct`)}</th>
+                  <th scope="col">{t(`${I}colAnnual`)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -197,7 +203,7 @@ export function AutoIncreaseInsights({
                     <td>
                       <span className="auto-increase-insights-table__pct">{row.percent}%</span>
                       {row.percent === maxContribution && (
-                        <span className="auto-increase-insights-table__max-pill">MAX</span>
+                        <span className="auto-increase-insights-table__max-pill">{t(`${I}maxPill`)}</span>
                       )}
                     </td>
                     <td className="auto-increase-insights-table__pct">{formatAnnualShort(row.annual)}</td>
@@ -208,9 +214,13 @@ export function AutoIncreaseInsights({
           </div>
           <p className="mt-2.5 border-t border-[var(--border-subtle)] pt-2.5 text-[0.7rem]" style={{ color: "var(--text-secondary)" }}>
             <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-              Timeline:
-            </span>{" "}
-            {currentPercent}% → {maxContribution}% over {yearsToMax} {yearsToMax === 1 ? "yr" : "yrs"}
+              {t(`${I}timelineLabel`)}{" "}
+            </span>
+            {t(`${I}timelineFooter`, {
+              count: yearsToMax,
+              from: currentPercent,
+              to: maxContribution,
+            })}
           </p>
         </div>
       )}

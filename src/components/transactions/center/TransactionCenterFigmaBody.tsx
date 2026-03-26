@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   DollarSign,
   HandCoins,
@@ -64,44 +65,48 @@ export function TransactionCenterFigmaBody({
   loanQuickActionRecommended = true,
   withdrawQuickActionMostUsed = true,
 }: TransactionCenterFigmaBodyProps) {
+  const { t } = useTranslation();
+  const TC = "transactions.center.";
+
   const quickActionItems = useMemo<QuickActionAdvancedItem[]>(
     () => [
       {
         id: "loan",
         icon: <HandCoins className="h-5 w-5" strokeWidth={2} aria-hidden />,
-        title: "Take a Loan",
-        keyValue: "Borrow up to $10,000",
-        supporting: "Typical approval: 1–3 days",
+        title: t(`${TC}qaLoanTitle`),
+        keyValue: t(`${TC}qaLoanKey`),
+        supporting: t(`${TC}qaLoanSupporting`),
         onClick: onQuickLoan,
         badge: loanQuickActionRecommended ? "recommended" : undefined,
       },
       {
         id: "withdraw",
         icon: <DollarSign className="h-5 w-5" strokeWidth={2} aria-hidden />,
-        title: "Withdraw Money",
-        keyValue: "Available: $5,000",
-        supporting: "Tax impact: 10–20%",
+        title: t(`${TC}qaWithdrawTitle`),
+        keyValue: t(`${TC}qaWithdrawKey`),
+        supporting: t(`${TC}qaWithdrawSupporting`),
         onClick: onQuickWithdraw,
         badge: withdrawQuickActionMostUsed ? "most_used" : undefined,
       },
       {
         id: "transfer",
         icon: <ArrowLeftRight className="h-5 w-5" strokeWidth={2} aria-hidden />,
-        title: "Transfer Funds",
-        keyValue: "Reallocate balance",
-        supporting: "No fees or penalties",
+        title: t(`${TC}qaTransferTitle`),
+        keyValue: t(`${TC}qaTransferKey`),
+        supporting: t(`${TC}qaTransferSupporting`),
         onClick: onQuickTransfer,
       },
       {
         id: "rollover",
         icon: <RefreshCcw className="h-5 w-5" strokeWidth={2} aria-hidden />,
-        title: "Roll Over",
-        keyValue: "Consolidate savings",
-        supporting: "No tax penalty",
+        title: t(`${TC}qaRolloverTitle`),
+        keyValue: t(`${TC}qaRolloverKey`),
+        supporting: t(`${TC}qaRolloverSupporting`),
         onClick: onQuickRollover,
       },
     ],
     [
+      t,
       onQuickLoan,
       onQuickWithdraw,
       onQuickTransfer,
@@ -116,39 +121,39 @@ export function TransactionCenterFigmaBody({
     const base: AttentionTimelineItem[] = [
       {
         id: "1",
-        title: "Loan Request — Action Required",
-        description: "Upload required documents to continue processing your loan request.",
+        title: t(`${TC}attn1Title`),
+        description: t(`${TC}attn1Desc`),
         amount: "$5,000",
-        actionLabel: "Resolve issue",
+        actionLabel: t(`${TC}resolveIssue`),
         onAction: onResolveAttention,
       },
       {
         id: "2",
-        title: "Withdrawal — Verification",
-        description: "Additional documentation needed for hardship review.",
+        title: t(`${TC}attn2Title`),
+        description: t(`${TC}attn2Desc`),
         amount: "$1,200",
-        actionLabel: "Resolve issue",
+        actionLabel: t(`${TC}resolveIssue`),
         onAction: onResolveAttention,
       },
       {
         id: "3",
-        title: "Rollover — In progress",
-        description: "Awaiting custodian transfer confirmation.",
+        title: t(`${TC}attn3Title`),
+        description: t(`${TC}attn3Desc`),
         amount: "$18,500",
-        actionLabel: "Resolve issue",
+        actionLabel: t(`${TC}resolveIssue`),
         onAction: onResolveAttention,
       },
       {
         id: "4",
-        title: "Transfer — Review",
-        description: "Large transfer flagged for secondary approval.",
+        title: t(`${TC}attn4Title`),
+        description: t(`${TC}attn4Desc`),
         amount: "$4,000",
-        actionLabel: "Resolve issue",
+        actionLabel: t(`${TC}resolveIssue`),
         onAction: onResolveAttention,
       },
     ];
     return base;
-  }, [attentionItems, onResolveAttention]);
+  }, [attentionItems, onResolveAttention, t]);
 
   const attentionCount = attention.length;
 
@@ -173,8 +178,8 @@ export function TransactionCenterFigmaBody({
         >
           <TransactionCenterSectionHeader
             icon={<Sparkles className="w-4 h-4" />}
-            title="Quick Actions"
-            subtitle="Start a new transaction"
+            title={t(`${TC}quickActionsTitle`)}
+            subtitle={t(`${TC}quickActionsSubtitle`)}
           />
           <QuickActionsAdvanced items={quickActionItems} />
         </motion.div>
@@ -188,9 +193,9 @@ export function TransactionCenterFigmaBody({
           >
             <TransactionCenterSectionHeader
               icon={<AlertTriangle className="w-4 h-4" />}
-              title="Attention Required"
+              title={t(`${TC}attentionTitle`)}
               badge={{
-                text: `${attentionCount} items`,
+                text: t(`${TC}attentionBadge`, { count: attentionCount }),
                 color: "bg-amber-500/15 text-amber-900 dark:bg-amber-950/50 dark:text-amber-100",
               }}
             />
@@ -205,12 +210,12 @@ export function TransactionCenterFigmaBody({
           >
             <TransactionCenterSectionHeader
               icon={<FilePen className="w-4 h-4" />}
-              title="Draft Transactions"
+              title={t(`${TC}draftsTitle`)}
               badge={{
-                text: "2 drafts",
+                text: t(`${TC}draftsBadge`),
                 color: "bg-[color-mix(in srgb, var(--color-primary) 14%, var(--background))] text-[var(--color-primary)]",
               }}
-              subtitle="Resume where you left off"
+              subtitle={t(`${TC}draftsSubtitle`)}
             />
             <div
               style={{
@@ -234,8 +239,8 @@ export function TransactionCenterFigmaBody({
           >
             <TransactionCenterSectionHeader
               icon={<ChartBar className="w-4 h-4" />}
-              title="Recent Transactions"
-              subtitle="Last 90 days"
+              title={t(`${TC}recentTitle`)}
+              subtitle={t(`${TC}recentSubtitle`)}
             />
             <div
               style={{
@@ -252,8 +257,8 @@ export function TransactionCenterFigmaBody({
           <div className="w-full md:w-[40%]">
             <TransactionCenterSectionHeader
               icon={<ChartBar className="w-4 h-4" />}
-              title="Retirement Outlook"
-              subtitle="Projected growth"
+              title={t(`${TC}outlookTitle`)}
+              subtitle={t(`${TC}outlookSubtitle`)}
             />
             <TransactionCenterRetirementWidget delay={0.36} />
           </div>
@@ -267,11 +272,11 @@ export function TransactionCenterFigmaBody({
         >
           <TransactionCenterSectionHeader
             icon={<Sparkles className="w-4 h-4" />}
-            title="Financial Guidance"
-            subtitle="Personalized insights"
+            title={t(`${TC}guidanceTitle`)}
+            subtitle={t(`${TC}guidanceSubtitle`)}
             variant="ai"
             badge={{
-              text: "AI Insights",
+              text: t(`${TC}guidanceAiBadge`),
               color: "bg-violet-500/15 text-violet-700 dark:bg-violet-950/50 dark:text-violet-200",
             }}
           />

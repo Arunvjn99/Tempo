@@ -1,4 +1,5 @@
-import { useEffect, useId, useState, type CSSProperties } from "react";
+import { useEffect, useId, useMemo, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { Info, Minus, Plus, Sparkles } from "lucide-react";
 import {
   Area,
@@ -14,18 +15,24 @@ import { generateContributionProjectionData } from "../flow/contributionProjecti
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
 
-const QUICK_OPTIONS = [
-  { label: "4% Start", value: 4, icon: null as string | null },
-  { label: "6% Employer match", value: 6, icon: "✅" },
-  { label: "10% Strong start", value: 10, icon: null },
-  { label: "15% Fast track", value: 15, icon: "🚀" },
-];
+const S = "enrollment.v1.contributionSetup.";
 
 export function ContributionSetup() {
+  const { t } = useTranslation();
   const contribution = useEnrollmentStore((s) => s.contribution);
   const salary = useEnrollmentStore((s) => s.salary);
   const retirementAge = useEnrollmentStore((s) => s.retirementAge);
   const updateField = useEnrollmentStore((s) => s.updateField);
+
+  const quickOptions = useMemo(
+    () => [
+      { label: t(`${S}quick4`), value: 4, icon: null as string | null },
+      { label: t(`${S}quick6`), value: 6, icon: "✅" },
+      { label: t(`${S}quick10`), value: 10, icon: null },
+      { label: t(`${S}quick15`), value: 15, icon: "🚀" },
+    ],
+    [t],
+  );
 
   const [compareMode, setCompareMode] = useState(false);
   const [comparePercent, setComparePercent] = useState(12);
@@ -92,20 +99,26 @@ export function ContributionSetup() {
 
   const rangePct = `${((percent - 1) / 24) * 100}%`;
 
+  const tooltipFormatter = (val: number, name: string) => {
+    const formatted = `$${val.toLocaleString()}`;
+    if (name === "value") return [formatted, t(`${S}chartTotalSavings`)];
+    if (name === "contributions") return [formatted, t(`${S}chartYourContributions`)];
+    if (name === "marketGain") return [formatted, t(`${S}chartMarketGains`)];
+    return [formatted, name];
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-foreground md:text-2xl">Set your retirement savings</h1>
-        <p className="mt-1 text-sm text-muted-foreground md:text-base">
-          We&apos;ll guide you to the right contribution for your future
-        </p>
+        <h1 className="text-xl font-semibold text-foreground md:text-2xl">{t(`${S}title`)}</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">{t(`${S}subtitle`)}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card space-y-6">
           <div className="card-highlight">
             <p className="text-center text-[0.75rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              Monthly Paycheck
+              {t(`${S}monthlyPaycheck`)}
             </p>
             <p className="mt-1 text-center text-2xl font-bold text-foreground">
               ${monthlyPaycheck.toLocaleString()}
@@ -114,14 +127,14 @@ export function ContributionSetup() {
 
           <div className="text-center">
             <p className="mb-3 text-[0.8rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              Your Contribution
+              {t(`${S}yourContribution`)}
             </p>
             <div className="contribution-control">
               <button
                 type="button"
                 onClick={() => adjustPercent(-1)}
                 className="control-btn"
-                aria-label="Decrease percentage"
+                aria-label={t(`${S}decreasePctAria`)}
               >
                 <Minus className="h-5 w-5" aria-hidden />
               </button>
@@ -130,7 +143,7 @@ export function ContributionSetup() {
                 type="button"
                 onClick={() => adjustPercent(1)}
                 className="control-btn"
-                aria-label="Increase percentage"
+                aria-label={t(`${S}increasePctAria`)}
               >
                 <Plus className="h-5 w-5" aria-hidden />
               </button>
@@ -140,7 +153,7 @@ export function ContributionSetup() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-2 block text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                Percentage
+                {t(`${S}percentage`)}
               </label>
               <div className="relative">
                 <input
@@ -159,7 +172,7 @@ export function ContributionSetup() {
             </div>
             <div>
               <label className="mb-2 block text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                Annual $
+                {t(`${S}annualDollar`)}
               </label>
               <div className="relative">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
@@ -177,10 +190,10 @@ export function ContributionSetup() {
 
           <div>
             <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              Quick Select
+              {t(`${S}quickSelect`)}
             </p>
             <div className="flex flex-wrap gap-2">
-              {QUICK_OPTIONS.map((opt) => (
+              {quickOptions.map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
@@ -213,9 +226,9 @@ export function ContributionSetup() {
             <div className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
               <div>
-                <p className="text-[0.7rem] font-bold text-foreground">Pro Tip</p>
+                <p className="text-[0.7rem] font-bold text-foreground">{t(`${S}proTipTitle`)}</p>
                 <p className="text-[0.75rem] leading-snug text-muted-foreground">
-                  Increasing just 1% could add ~${onePercentImpact.toLocaleString()} to your retirement
+                  {t(`${S}proTipBody`, { amount: `$${onePercentImpact.toLocaleString()}` })}
                 </p>
               </div>
             </div>
@@ -225,11 +238,13 @@ export function ContributionSetup() {
         <div className="card space-y-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-foreground md:text-base">Retirement Savings Projection</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">Growth over 30 years at 7% annual return</p>
+              <h3 className="text-sm font-semibold text-foreground md:text-base">{t(`${S}projectionTitle`)}</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t(`${S}projectionSub`)}</p>
             </div>
             <div className="text-right">
-              <p className="success-inline-label">{Math.round(progressPercentage)}% on track</p>
+              <p className="success-inline-label">
+                {t(`${S}onTrack`, { percent: Math.round(progressPercentage) })}
+              </p>
               <div className="success-progress-track">
                 <div className="success-progress-fill" style={{ width: `${progressPercentage}%` }} />
               </div>
@@ -239,24 +254,26 @@ export function ContributionSetup() {
           <div className="grid grid-cols-2 gap-4">
             <div className="success-card">
               <p className="text-center text-[0.7rem] font-semibold uppercase tracking-wide success-card-muted-label">
-                Projected at Age {retirementAge}
+                {t(`${S}projectedAtAge`, { age: retirementAge })}
               </p>
               <p className="success-card-value">${(projectedTotal / 1_000_000).toFixed(1)}M</p>
-              <p className="success-card-caption">≈ ${monthlyRetirementIncome.toLocaleString()}/mo</p>
+              <p className="success-card-caption">
+                {t(`${S}approxPerMo`, { amount: `$${monthlyRetirementIncome.toLocaleString()}` })}
+              </p>
             </div>
 
             <div className="card-soft space-y-2.5">
               <p className="text-center text-[0.7rem] font-bold uppercase tracking-wide text-foreground">
-                Monthly Impact
+                {t(`${S}monthlyImpact`)}
               </p>
               <div>
-                <p className="text-center text-[0.7rem] text-muted-foreground">You contribute</p>
+                <p className="text-center text-[0.7rem] text-muted-foreground">{t(`${S}youContribute`)}</p>
                 <p className="mt-0.5 text-center text-base font-bold text-foreground">
                   ${monthlyContribution.toLocaleString()}
                 </p>
               </div>
               <div className="success-card success-card--compact">
-                <p className="success-card-emphasis">Employer adds</p>
+                <p className="success-card-emphasis">{t(`${S}employerAdds`)}</p>
                 <p className="success-card-emphasis-lg">+${monthlyMatch.toLocaleString()}</p>
               </div>
             </div>
@@ -290,12 +307,7 @@ export function ContributionSetup() {
                   tickFormatter={(val) => `$${(val / 1_000_000).toFixed(1)}M`}
                 />
                 <Tooltip
-                  formatter={(val: number, name: string) => {
-                    if (name === "value") return [`$${val.toLocaleString()}`, "Total Savings"];
-                    if (name === "contributions") return [`$${val.toLocaleString()}`, "Your Contributions"];
-                    if (name === "marketGain") return [`$${val.toLocaleString()}`, "Market Gains"];
-                    return [val, name];
-                  }}
+                  formatter={tooltipFormatter}
                   contentStyle={{
                     borderRadius: 12,
                     fontSize: 11,
@@ -340,37 +352,34 @@ export function ContributionSetup() {
           <div className="flex flex-wrap items-center justify-center gap-4 text-[0.7rem] text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <span className="chart-legend-swatch chart-legend-swatch--primary" />
-              Total Savings
+              {t(`${S}chartTotalSavings`)}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="chart-legend-swatch chart-legend-swatch--success" />
-              Market Gains
+              {t(`${S}chartMarketGains`)}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="chart-legend-dash" />
-              Your Contributions
+              {t(`${S}chartYourContributions`)}
             </div>
           </div>
 
           <div className="flex items-start gap-2">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <p className="text-[0.7rem] leading-snug text-muted-foreground">
-              Projection assumes 7% annual return. Actual results may vary. Monthly income uses 4% withdrawal
-              rule.
-            </p>
+            <p className="text-[0.7rem] leading-snug text-muted-foreground">{t(`${S}disclaimer`)}</p>
           </div>
 
           <div className="card-soft space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-[0.7rem] font-bold uppercase tracking-wide text-foreground">
-                Compare Scenarios
+                {t(`${S}compareScenarios`)}
               </p>
               <button
                 type="button"
                 onClick={() => setCompareMode(!compareMode)}
                 className={cn("chip", compareMode && "chip-active")}
               >
-                {compareMode ? "Hide" : "Show"}
+                {compareMode ? t(`${S}hide`) : t(`${S}show`)}
               </button>
             </div>
             {compareMode ? (
@@ -407,7 +416,8 @@ export function ContributionSetup() {
                       difference < 0 ? "difference-sub--negative" : "difference-sub--positive",
                     )}
                   >
-                    {difference >= 0 ? "more" : "less"} with {comparePercent}% vs {percent}%
+                    {difference >= 0 ? t(`${S}compareMore`) : t(`${S}compareLess`)}{" "}
+                    {t(`${S}compareVs`, { compare: comparePercent, current: percent })}
                   </p>
                 </div>
               </div>

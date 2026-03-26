@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ArrowRight, Minus, TrendingUp } from "lucide-react";
 import { saveAutoIncreasePreference } from "@/services/enrollmentService";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
@@ -11,6 +12,7 @@ import { ENROLLMENT_STEPS } from "../flow/steps";
 import { GROWTH, useAutoIncreaseFinancialImpact, formatAutoIncreaseCurrency } from "../lib/autoIncreaseShared";
 
 const AUTO_INCREASE_STEP_INDEX = ENROLLMENT_STEPS.indexOf("autoIncrease");
+const A = "enrollment.v1.autoIncreaseDecision.";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +24,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 /** Decision-only: two comparison cards + bottom CTAs (no merged config UI). */
 export function AutoIncreaseDecisionScreen() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
@@ -68,12 +71,10 @@ export function AutoIncreaseDecisionScreen() {
         <div>
           <button type="button" onClick={goPreviousEnrollmentStep} className="enrollment-auto-increase-back">
             <ArrowLeft className="h-4 w-4" aria-hidden />
-            Back
+            {t(`${A}back`)}
           </button>
-          <h1 className="text-xl font-semibold text-foreground md:text-2xl">Increase your savings automatically</h1>
-          <p className="mt-1 text-sm text-muted-foreground md:text-base">
-            Small increases today can grow your retirement savings over time.
-          </p>
+          <h1 className="text-xl font-semibold text-foreground md:text-2xl">{t(`${A}title`)}</h1>
+          <p className="mt-1 text-sm text-muted-foreground md:text-base">{t(`${A}subtitle`)}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -82,26 +83,26 @@ export function AutoIncreaseDecisionScreen() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                 <Minus className="h-5 w-5 text-muted-foreground" aria-hidden />
               </div>
-              <h3 className="font-semibold text-foreground">Keep Contributions Fixed</h3>
+              <h3 className="font-semibold text-foreground">{t(`${A}cardFixedTitle`)}</h3>
             </div>
-            <p className="text-sm text-muted-foreground">Your contribution stays at {currentPercent}% throughout.</p>
+            <p className="text-sm text-muted-foreground">{t(`${A}cardFixedDesc`, { percent: currentPercent })}</p>
             <div className="mt-4 flex-1">
-              <p className="auto-increase-eyebrow">Projected in 10 years</p>
+              <p className="auto-increase-eyebrow">{t(`${A}projected10y`)}</p>
               <p className="auto-increase-gate-projection">${fixedProjection.toLocaleString()}</p>
             </div>
           </div>
 
           <div className="auto-increase-card auto-increase-card--featured">
-            <span className="badge-floating">Recommended</span>
+            <span className="badge-floating">{t(`${A}recommended`)}</span>
             <div className="mb-3 mt-1 flex items-center gap-2">
               <div className="success-icon-soft">
                 <TrendingUp className="h-5 w-5" aria-hidden />
               </div>
-              <h3 className="font-semibold text-foreground">Enable Auto Increase</h3>
+              <h3 className="font-semibold text-foreground">{t(`${A}cardAutoTitle`)}</h3>
             </div>
-            <p className="text-sm text-muted-foreground">Gradually raise your rate each year up to your chosen cap.</p>
+            <p className="text-sm text-muted-foreground">{t(`${A}cardAutoDesc`)}</p>
             <div className="mt-4 flex-1">
-              <p className="auto-increase-eyebrow">Projected in 10 years</p>
+              <p className="auto-increase-eyebrow">{t(`${A}projected10y`)}</p>
               <p className="auto-increase-gate-projection auto-increase-gate-projection--success">
                 ${autoProjection.toLocaleString()}
               </p>
@@ -111,21 +112,21 @@ export function AutoIncreaseDecisionScreen() {
 
         <div className="enrollment-insight-banner enrollment-insight-banner--row">
           <p className="enrollment-insight-banner__body">
-            Automatic increases could add approximately{" "}
+            {t(`${A}insightBefore`)}
             <span className="enrollment-insight-banner__emphasis">
               {formatAutoIncreaseCurrency(financialImpact.difference)}
-            </span>{" "}
-            compared to keeping contributions fixed.
+            </span>
+            {t(`${A}insightAfter`)}
           </p>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <button type="button" onClick={handleEnableAutoIncrease} className="btn-enroll-success sm:flex-1">
-            Enable Auto Increase
+            {t(`${A}ctaEnable`)}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </button>
           <button type="button" onClick={handleSkipForNow} className="btn btn-outline sm:flex-1">
-            Skip for now
+            {t(`${A}ctaSkip`)}
           </button>
         </div>
       </div>

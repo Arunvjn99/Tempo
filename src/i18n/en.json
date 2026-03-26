@@ -6,6 +6,8 @@
     "learningTitleBefore": "How much is",
     "learningTitleHighlight": "enough?",
     "learningDescription": "Finding the right contribution rate for your goals.",
+    "learningSimpleTitle": "How much is enough for retirement?",
+    "learningKnowMore": "Know more",
     "learningCtaPrimary": "Start learning",
     "learningCtaSave": "Save for later",
     "learningCtaSaved": "Saved for later",
@@ -23,6 +25,7 @@
     "assistanceAiInputLabel": "Message for Core AI",
     "assistanceAiInputPlaceholder": "Ask anything about your plan…",
     "assistanceAiSubmit": "Ask",
+    "assistanceAiCta": "Start chatting",
     "heroLearnMoreCta": "Learn about the plan"
   }
 }

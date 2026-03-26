@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { US_STATES } from "@/constants/usStates";
 import { getStateLocationInsight } from "@/constants/stateLocationInsights";
@@ -11,25 +12,25 @@ const FEATURED = [
     name: "Florida" as const,
     emoji: "🌴",
     title: "Florida",
-    description: "Warm weather, beaches, and retiree-friendly communities.",
+    descKey: "featuredFloridaDesc" as const,
   },
   {
     name: "Arizona" as const,
     emoji: "🌵",
     title: "Arizona",
-    description: "Dry climate, golf, and strong snowbird appeal.",
+    descKey: "featuredArizonaDesc" as const,
   },
   {
     name: "North Carolina" as const,
     emoji: "🏔️",
     title: "North Carolina",
-    description: "Mountains to coast with a moderate cost of living.",
+    descKey: "featuredNorthCarolinaDesc" as const,
   },
   {
     name: "South Carolina" as const,
     emoji: "🌊",
     title: "South Carolina",
-    description: "Coastal charm and lower taxes than many peers.",
+    descKey: "featuredSouthCarolinaDesc" as const,
   },
 ] as const;
 
@@ -44,6 +45,8 @@ export interface EnrollmentLocationStepProps {
  * Location step — guided layout: card (search, picks, not sure) + suggestion + insight.
  */
 export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationStepProps) {
+  const { t } = useTranslation();
+  const pw = "preEnrollment.personalizeWizard.";
   const [query, setQuery] = useState("");
   const isSearching = query.length > 0;
   const unknownSelected = value === RETIREMENT_LOCATION_UNKNOWN;
@@ -54,7 +57,7 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
     return US_STATES.filter((s) => s.toLowerCase().includes(q));
   }, [query]);
 
-  const insightText = getStateLocationInsight(value);
+  const insightText = getStateLocationInsight(value, t);
 
   const selectState = (name: string, currentlySelected: boolean) => {
     onChange(currentlySelected ? "" : name);
@@ -66,15 +69,11 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
     <>
       <OnboardingStepCard>
         <div>
-          <h3 className="premium-wizard__question text-center">Where do you imagine retiring?</h3>
-          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            Your location helps us estimate cost of living and plan smarter.
-          </p>
+          <h3 className="premium-wizard__question text-center">{t(`${pw}locationQuestion`)}</h3>
+          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">{t(`${pw}locationSubtitle`)}</p>
         </div>
 
-        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">
-          I&apos;m planning to retire in
-        </p>
+        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">{t(`${pw}locationPlanningIn`)}</p>
 
         <div>
           <div className="relative">
@@ -95,25 +94,23 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
             </div>
             <input
               type="text"
-              placeholder="Search all U.S. states…"
+              placeholder={t(`${pw}locationSearchPlaceholder`)}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="premium-wizard__search-input"
-              aria-label="Search U.S. states and District of Columbia"
+              aria-label={t(`${pw}locationSearchAria`)}
               autoComplete="off"
             />
           </div>
           {isSearching ? (
-            <p className="mt-1.5 text-center text-xs text-[var(--color-text-tertiary,var(--color-text-secondary))]">
-              All 50 states and D.C. — type to narrow the list, or scroll to pick one.
-            </p>
+            <p className="mt-1.5 text-center text-xs text-[var(--color-text-tertiary,var(--color-text-secondary))]">{t(`${pw}locationSearchHint`)}</p>
           ) : null}
         </div>
 
         {!isSearching ? (
           <div>
             <p className="mb-1.5 text-center text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
-              Popular destinations
+              {t(`${pw}locationPopularDestinations`)}
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {FEATURED.map((loc) => {
@@ -137,7 +134,7 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
                       {loc.emoji}
                     </span>
                     <p className="mt-1 text-sm font-semibold leading-snug text-[var(--color-text)]">{loc.title}</p>
-                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-text-secondary)]">{loc.description}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-text-secondary)]">{t(`${pw}${loc.descKey}`)}</p>
                   </motion.button>
                 );
               })}
@@ -158,7 +155,7 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
               : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-secondary)] hover:border-[var(--color-border)]",
           )}
         >
-          Not sure yet
+          {t(`${pw}locationNotSure`)}
         </motion.button>
 
         {isSearching ? (
@@ -197,26 +194,23 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
               })}
             </div>
             {filteredStates.length === 0 && (
-              <p className="px-3 py-8 text-center text-sm text-[var(--color-text-secondary)]">
-                No states match &quot;{query.trim()}&quot;
-              </p>
+              <p className="px-3 py-8 text-center text-sm text-[var(--color-text-secondary)]">{t(`${pw}locationNoMatch`, { query: query.trim() })}</p>
             )}
           </div>
         ) : null}
 
         <SuggestionCard
-          title={`${SUGGEST_STATE} is a top pick`}
-          subtitle="Many participants start with a Sun Belt state — you can change this anytime."
-          badge="Popular"
-          actionLabel="Apply"
+          title={t(`${pw}locationSuggestTitle`, { state: SUGGEST_STATE })}
+          subtitle={t(`${pw}locationSuggestSubtitle`)}
+          badge={t(`${pw}badgePopular`)}
+          actionLabel={t(`${pw}apply`)}
           onAction={() => onChange(SUGGEST_STATE)}
           disabled={suggestApplyDisabled}
         />
       </OnboardingStepCard>
 
       <WizardGuideInsight key={value || "none"}>
-        {insightText ??
-          "Choose a state, try a popular pick, or select \"Not sure yet\" — you can refine this later."}
+        {insightText ?? t(`${pw}locationInsightFallback`)}
       </WizardGuideInsight>
     </>
   );

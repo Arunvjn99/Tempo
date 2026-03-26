@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { HeroSkeleton } from "@/components/pre-enrollment";
@@ -23,6 +24,7 @@ function MainContentSkeleton() {
 
 export const PreEnrollment = () => {
   const { loading } = useUser();
+  const { i18n } = useTranslation();
 
   return (
     <DashboardLayout header={<DashboardHeader />} fullWidthChildren allowMainOverflowX>
@@ -34,6 +36,7 @@ export const PreEnrollment = () => {
           </>
         ) : (
           <div
+            key={i18n.language}
             className="relative"
             style={{
               backgroundImage: `

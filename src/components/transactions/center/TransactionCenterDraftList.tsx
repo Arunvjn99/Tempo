@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { FileEdit, Clock, HandCoins, DollarSign, Trash2, ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 export type TransactionCenterDraft = {
   id: string;
@@ -11,44 +13,52 @@ export type TransactionCenterDraft = {
   resumeRelativePath: string;
 };
 
-const MOCK_DRAFTS: TransactionCenterDraft[] = [
-  {
-    id: "draft-1",
-    icon: <HandCoins className="w-[13px] h-[13px]" />,
-    description: "General Purpose Loan — $3,500",
-    savedDate: "March 7, 2026",
-    progress: 40,
-    resumeRelativePath: "loan/configuration",
-  },
-  {
-    id: "draft-2",
-    icon: <DollarSign className="w-[13px] h-[13px]" />,
-    description: "Hardship Withdrawal — Medical",
-    savedDate: "March 4, 2026",
-    progress: 20,
-    resumeRelativePath: "withdraw/type",
-  },
-];
-
 export function TransactionCenterDraftList({
-  drafts = MOCK_DRAFTS,
+  drafts,
   onResume,
 }: {
   drafts?: TransactionCenterDraft[];
   onResume: (relativePath: string) => void;
 }) {
-  if (drafts.length === 0) {
+  const { t } = useTranslation();
+  const TC = "transactions.center.";
+
+  const defaultDrafts = useMemo<TransactionCenterDraft[]>(
+    () => [
+      {
+        id: "draft-1",
+        icon: <HandCoins className="w-[13px] h-[13px]" />,
+        description: t(`${TC}draftLoanDesc`),
+        savedDate: "March 7, 2026",
+        progress: 40,
+        resumeRelativePath: "loan/configuration",
+      },
+      {
+        id: "draft-2",
+        icon: <DollarSign className="w-[13px] h-[13px]" />,
+        description: t(`${TC}draftWithdrawDesc`),
+        savedDate: "March 4, 2026",
+        progress: 20,
+        resumeRelativePath: "withdraw/type",
+      },
+    ],
+    [t],
+  );
+
+  const resolved = drafts ?? defaultDrafts;
+
+  if (resolved.length === 0) {
     return (
       <div className="text-center py-6">
         <FileEdit className="w-8 h-8 mx-auto mb-2" style={{ color: "var(--border)" }} />
-        <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", fontWeight: 500 }}>No draft transactions</p>
+        <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", fontWeight: 500 }}>{t(`${TC}draftEmpty`)}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-3">
-      {drafts.map((draft, idx) => (
+      {resolved.map((draft, idx) => (
         <motion.div
           key={draft.id}
           initial={{ opacity: 0, y: 8 }}
@@ -97,13 +107,15 @@ export function TransactionCenterDraftList({
                   color: "var(--color-primary)",
                 }}
               >
-                Draft
+                {t(`${TC}draftBadge`)}
               </span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Clock className="w-3 h-3" style={{ color: "var(--color-text-tertiary)" }} />
               <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontWeight: 500 }}>{draft.savedDate}</span>
-              <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontWeight: 500 }}>· {draft.progress}% complete</span>
+              <span style={{ fontSize: 11, color: "var(--color-text-tertiary)", fontWeight: 500 }}>
+                · {t(`${TC}draftProgress`, { progress: draft.progress })}
+              </span>
             </div>
 
             <div className="mt-2.5 overflow-hidden" style={{ height: 6, borderRadius: 3, background: "var(--border)" }}>
@@ -123,7 +135,7 @@ export function TransactionCenterDraftList({
               type="button"
               onClick={() => onResume(draft.resumeRelativePath)}
               className="flex items-center justify-center transition-all duration-200"
-              title="Resume"
+              title={t(`${TC}resumeAria`)}
               style={{
                 width: 32,
                 height: 32,
@@ -138,7 +150,7 @@ export function TransactionCenterDraftList({
             <button
               type="button"
               className="flex items-center justify-center transition-all duration-200"
-              title="Delete"
+              title={t(`${TC}deleteAria`)}
               style={{
                 width: 32,
                 height: 32,

@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Modal } from "../ui/Modal";
 import { cn } from "@/lib/utils";
@@ -32,10 +32,15 @@ function getAgeFromDOB(isoDate: string): number {
   return Math.max(18, Math.min(74, age));
 }
 
-function formatDOBDisplay(isoDate: string): string {
+function resolveLocaleTag(i18nLanguage: string): string {
+  const base = i18nLanguage.split("-")[0]?.toLowerCase() ?? "en";
+  return base === "es" ? "es-ES" : "en-US";
+}
+
+function formatDOBDisplay(isoDate: string, i18nLanguage: string): string {
   const d = new Date(isoDate + "T12:00:00");
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return d.toLocaleDateString(resolveLocaleTag(i18nLanguage), { month: "long", day: "numeric", year: "numeric" });
 }
 
 function getDOBFromAge(age: number): string {
@@ -67,9 +72,12 @@ export interface PersonalizePlanModalProps {
   userName?: string;
 }
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number, i18nLanguage: string): string {
   if (value === 0) return "";
-  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat(resolveLocaleTag(i18nLanguage), {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 function parseCurrencyInput(value: string): number {
@@ -79,22 +87,27 @@ function parseCurrencyInput(value: string): number {
 
 const stepTransition = { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] };
 
-const STEP_LABELS = ["Age", "Location", "Savings", "Comfort"] as const;
-
 function WizardStepProgress({ currentStep }: { currentStep: number }) {
+  const { t } = useTranslation();
+  const stepLabels = [
+    t("preEnrollment.personalizeWizard.stepAge"),
+    t("preEnrollment.personalizeWizard.stepLocation"),
+    t("preEnrollment.personalizeWizard.stepSavings"),
+    t("preEnrollment.personalizeWizard.stepComfort"),
+  ] as const;
   return (
     <div className="py-1">
       <p className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">
-        Step {currentStep} of {TOTAL_STEPS}
+        {t("preEnrollment.personalizeWizard.stepOf", { current: currentStep, total: TOTAL_STEPS })}
       </p>
       <div className="flex items-stretch gap-1.5 sm:gap-2">
-        {STEP_LABELS.map((label, i) => {
+        {stepLabels.map((label, i) => {
           const stepNum = i + 1;
           const isCompleted = stepNum < currentStep;
           const isCurrent = stepNum === currentStep;
           const isUpcoming = stepNum > currentStep;
           return (
-            <div key={label} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+            <div key={i} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
               <div
                 className={cn(
                   "h-1.5 w-full rounded-full transition-colors",
@@ -141,18 +154,23 @@ function WizardStepProgress({ currentStep }: { currentStep: number }) {
   );
 }
 
-function ExitConfirmation({ onConfirm, onCancel }: { isOpen: boolean; onConfirm: () => void; onCancel: () => void }) {
+function ExitConfirmation({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  const { t } = useTranslation();
   return (
     <motion.div className="premium-wizard__exit-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
       <motion.div className="premium-wizard__exit-dialog" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}>
         <div className="flex justify-center mb-4">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
         </div>
-        <h3 className="text-lg font-bold text-[var(--color-text)] text-center mb-1">Are you sure you want to exit setup?</h3>
-        <p className="text-sm text-[var(--color-text-secondary)] text-center mb-6">Your progress will be saved. You can pick up where you left off anytime.</p>
+        <h3 className="text-lg font-bold text-[var(--color-text)] text-center mb-1">{t("preEnrollment.personalizeWizard.exitTitle")}</h3>
+        <p className="text-sm text-[var(--color-text-secondary)] text-center mb-6">{t("preEnrollment.personalizeWizard.exitBody")}</p>
         <div className="flex gap-3">
-          <button type="button" onClick={onCancel} className="premium-wizard__exit-btn premium-wizard__exit-btn--cancel">Keep Going</button>
-          <button type="button" onClick={onConfirm} className="premium-wizard__exit-btn premium-wizard__exit-btn--confirm">Exit Setup</button>
+          <button type="button" onClick={onCancel} className="premium-wizard__exit-btn premium-wizard__exit-btn--cancel">
+            {t("preEnrollment.personalizeWizard.exitKeepGoing")}
+          </button>
+          <button type="button" onClick={onConfirm} className="premium-wizard__exit-btn premium-wizard__exit-btn--confirm">
+            {t("preEnrollment.personalizeWizard.exitExit")}
+          </button>
         </div>
       </motion.div>
     </motion.div>
@@ -182,6 +200,7 @@ function Step1RetirementAge({
   onApplySuggestedAge: () => void;
   canApplySuggestedAge: boolean;
 }) {
+  const { t, i18n } = useTranslation();
   const max = 75;
   const min = Math.min(max, Math.max(22, currentAge + 1));
   const sliderValue = Math.min(max, Math.max(min, retirementAge));
@@ -192,26 +211,32 @@ function Step1RetirementAge({
   const estimatedRetirementYear = currentYear + yearsToGrow;
 
   const ageInsightText = useMemo(() => {
-    const growth =
+    const pw = "preEnrollment.personalizeWizard.";
+    const yearsLabel = yearsToGrow === 1 ? t(`${pw}yearOne`) : t(`${pw}yearsOther`);
+    const growthKey =
       yearsToGrow >= 30
-        ? "a long runway for compounding and a powerful advantage for your nest egg."
+        ? "ageInsightGrowth30"
         : yearsToGrow >= 20
-          ? "a strong runway to build wealth before you tap your savings."
+          ? "ageInsightGrowth20"
           : yearsToGrow >= 10
-            ? "Every extra year in the market can meaningfully boost your outcome."
-            : "We'll help you make the most of the time you have.";
+            ? "ageInsightGrowth10"
+            : "ageInsightGrowthShort";
+    const growth = t(`${pw}${growthKey}`);
     return (
       <>
         <span className="font-medium text-[var(--color-text)]">
-          You have {yearsToGrow} {yearsToGrow === 1 ? "year" : "years"} until retirement. Estimated year:{" "}
-          <span className="text-[var(--color-primary)]">{estimatedRetirementYear}</span>.
+          {t(`${pw}ageInsightLead`, {
+            count: yearsToGrow,
+            yearsLabel,
+            year: estimatedRetirementYear,
+          })}
         </span>{" "}
         <span className="mt-2 block text-xs opacity-90">
-          Retiring at {sliderValue} gives you {yearsToGrow} years of growth — {growth}
+          {t(`${pw}ageInsightTail`, { retireAge: sliderValue, count: yearsToGrow, growth })}
         </span>
       </>
     );
-  }, [sliderValue, yearsToGrow, estimatedRetirementYear]);
+  }, [sliderValue, yearsToGrow, estimatedRetirementYear, t]);
 
   return (
     <>
@@ -227,7 +252,7 @@ function Step1RetirementAge({
               className="premium-wizard__info-card"
             >
               <label htmlFor="wizard-dob-input" className="mb-2 block text-sm font-semibold text-[var(--color-text)]">
-                Date of birth
+                {t("preEnrollment.personalizeWizard.dobLabel")}
               </label>
               <div className="relative">
                 <input
@@ -250,7 +275,7 @@ function Step1RetirementAge({
                 </span>
               </div>
               <p id="wizard-dob-helper" className="mt-2 text-xs text-[var(--color-text-secondary)]">
-                Your age updates automatically based on this date.
+                {t("preEnrollment.personalizeWizard.dobHelper")}
               </p>
             </motion.div>
           ) : (
@@ -264,15 +289,19 @@ function Step1RetirementAge({
             >
               <div className="flex items-center gap-4">
                 <div className="premium-wizard__info-icon">
-                  <span className="text-xl" role="img" aria-label="celebration">
+                  <span className="text-xl" role="img" aria-label={t("preEnrollment.personalizeWizard.celebrationAria")}>
                     🎉
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-semibold text-[var(--color-text)]">You&apos;re {currentAge} years old 🎉</p>
-                  <p className="mt-0.5 text-sm text-[var(--color-text-secondary)]">Born on {formatDOBDisplay(dateOfBirth)}</p>
+                  <p className="text-base font-semibold text-[var(--color-text)]">
+                    {t("preEnrollment.personalizeWizard.youreYearsOld", { age: currentAge })}
+                  </p>
+                  <p className="mt-0.5 text-sm text-[var(--color-text-secondary)]">
+                    {t("preEnrollment.personalizeWizard.bornOn", { date: formatDOBDisplay(dateOfBirth, i18n.language) })}
+                  </p>
                   <button type="button" onClick={onEdit} className="premium-wizard__edit-link">
-                    Edit date of birth
+                    {t("preEnrollment.personalizeWizard.editDob")}
                   </button>
                 </div>
               </div>
@@ -281,10 +310,12 @@ function Step1RetirementAge({
         </AnimatePresence>
 
         <div>
-          <h3 className="premium-wizard__question text-center">At what age would you like to retire?</h3>
+          <h3 className="premium-wizard__question text-center">{t("preEnrollment.personalizeWizard.retireQuestion")}</h3>
         </div>
 
-        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">I plan to retire at</p>
+        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">
+          {t("preEnrollment.personalizeWizard.planRetireAt")}
+        </p>
 
         <div className="flex flex-col items-center gap-4">
           <div className="premium-wizard__slider-container w-full max-w-md">
@@ -296,8 +327,8 @@ function Step1RetirementAge({
               disabled={isRangeLocked}
               onChange={(e) => onRetirementAgeChange(parseInt(e.target.value, 10))}
               className="premium-wizard__slider"
-              style={{ "--slider-percent": `${sliderPercent}%` } as React.CSSProperties}
-              aria-label="Retirement age"
+              style={{ "--slider-percent": `${sliderPercent}%` } as CSSProperties}
+              aria-label={t("preEnrollment.personalizeWizard.retirementAgeAria")}
             />
             <div className="mt-1.5 flex justify-between px-0.5">
               <span className="text-[11px] font-medium text-[var(--color-text-tertiary,var(--color-text-secondary))]">{min}</span>
@@ -311,7 +342,7 @@ function Step1RetirementAge({
                 disabled={isRangeLocked || sliderValue <= min}
                 onClick={() => onRetirementAgeChange(Math.max(min, sliderValue - 1))}
                 className="premium-wizard__stepper-btn"
-                aria-label="Decrease retirement age"
+                aria-label={t("preEnrollment.personalizeWizard.decreaseRetirementAge")}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="5" y1="12" x2="19" y2="12" />
@@ -327,14 +358,16 @@ function Step1RetirementAge({
                 >
                   {sliderValue}
                 </motion.span>
-                <span className="mt-0.5 text-xs font-medium text-[var(--color-text-secondary)]">years old</span>
+                <span className="mt-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
+                  {t("preEnrollment.personalizeWizard.yearsOldSuffix")}
+                </span>
               </div>
               <button
                 type="button"
                 disabled={isRangeLocked || sliderValue >= max}
                 onClick={() => onRetirementAgeChange(Math.min(max, sliderValue + 1))}
                 className="premium-wizard__stepper-btn"
-                aria-label="Increase retirement age"
+                aria-label={t("preEnrollment.personalizeWizard.increaseRetirementAge")}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -346,10 +379,10 @@ function Step1RetirementAge({
         </div>
 
         <SuggestionCard
-          title={`Most people retire at ${POPULAR_RETIREMENT_AGE}`}
-          subtitle="Based on typical retirement timelines across similar plans."
-          badge="Popular"
-          actionLabel="Apply"
+          title={t("preEnrollment.personalizeWizard.popularRetireTitle", { age: POPULAR_RETIREMENT_AGE })}
+          subtitle={t("preEnrollment.personalizeWizard.popularRetireSubtitle")}
+          badge={t("preEnrollment.personalizeWizard.badgePopular")}
+          actionLabel={t("preEnrollment.personalizeWizard.apply")}
           onAction={onApplySuggestedAge}
           disabled={!canApplySuggestedAge}
         />
@@ -362,60 +395,57 @@ function Step1RetirementAge({
   );
 }
 
-const SAVINGS_QUICK_CHIPS: { label: string; amount: number }[] = [
-  { label: "$0", amount: 0 },
-  { label: "$5K", amount: 5000 },
-  { label: "$10K", amount: 10000 },
-  { label: "$50K+", amount: 50000 },
-];
-
 const SUGGESTED_SAVINGS = 10_000;
 
 function Step3Savings({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const display = value > 0 ? formatCurrency(value) : "";
+  const { t, i18n } = useTranslation();
+  const pw = "preEnrollment.personalizeWizard.";
+  const chips = useMemo(
+    () =>
+      [
+        { amount: 0, label: t(`${pw}chip0`) },
+        { amount: 5000, label: t(`${pw}chip5k`) },
+        { amount: 10000, label: t(`${pw}chip10k`) },
+        { amount: 50000, label: t(`${pw}chip50k`) },
+      ] as const,
+    [t],
+  );
+  const display = value > 0 ? formatCurrency(value, i18n.language) : "";
   const [isFocused, setIsFocused] = useState(false);
   const hasValue = value > 0;
 
   const savingsInsight = useMemo(() => {
     if (value <= 0) {
-      return (
-        <>
-          Starting from $0 is common — your plan contributions will build your balance over time. Even small amounts
-          compound meaningfully over the years ahead.
-        </>
-      );
+      return <>{t(`${pw}savingsInsightZero`)}</>;
     }
+    const amount = `$${formatCurrency(value, i18n.language)}`;
     return (
-      <>
-        Including about <span className="font-semibold text-[var(--color-text)]">${formatCurrency(value)}</span>{" "}
-        elsewhere helps us show a fuller retirement picture. At typical growth assumptions, extra savings can
-        materially boost your ending balance — we&apos;ll reflect this in your outlook.
-      </>
+      <Trans
+        i18nKey={`${pw}savingsInsightHasValue`}
+        values={{ amount }}
+        components={{ strong: <strong className="font-semibold text-[var(--color-text)]" /> }}
+      />
     );
-  }, [value]);
+  }, [value, t, i18n.language]);
 
   return (
     <>
       <OnboardingStepCard>
         <div>
-          <h3 className="premium-wizard__question text-center">Have you built retirement savings elsewhere?</h3>
-          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            This won&apos;t affect your enrollment — it simply helps us create a more complete retirement outlook.
-          </p>
+          <h3 className="premium-wizard__question text-center">{t(`${pw}savingsQuestion`)}</h3>
+          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">{t(`${pw}savingsSubtitle`)}</p>
         </div>
 
-        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">
-          I currently have saved
-        </p>
+        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">{t(`${pw}savingsIntro`)}</p>
 
         <div>
-          <p className="mb-2 text-center text-xs font-medium text-[var(--color-text-secondary)]">Quick select</p>
-          <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Quick savings amounts">
-            {SAVINGS_QUICK_CHIPS.map((chip) => {
+          <p className="mb-2 text-center text-xs font-medium text-[var(--color-text-secondary)]">{t(`${pw}quickSelect`)}</p>
+          <div className="flex flex-wrap justify-center gap-2" role="group" aria-label={t(`${pw}quickSelect`)}>
+            {chips.map((chip) => {
               const selected = value === chip.amount;
               return (
                 <motion.button
-                  key={chip.label}
+                  key={chip.amount}
                   type="button"
                   onClick={() => onChange(chip.amount)}
                   whileHover={{ scale: 1.03 }}
@@ -448,20 +478,20 @@ function Step3Savings({ value, onChange }: { value: number; onChange: (v: number
             onChange={(e) => onChange(parseCurrencyInput(e.target.value))}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder="Enter total balance (optional)"
+            placeholder={t(`${pw}savingsPlaceholder`)}
             className="premium-wizard__currency-input"
             aria-describedby="step3-helper"
           />
         </div>
         <p id="step3-helper" className="text-center text-sm text-[var(--color-text-secondary)]">
-          {hasValue ? "Great — we'll include this in your long-term projection." : "No problem — we'll plan based on this account alone."}
+          {hasValue ? t(`${pw}savingsHelperHasValue`) : t(`${pw}savingsHelperEmpty`)}
         </p>
 
         <SuggestionCard
-          title="$10K is a common starting point"
-          subtitle="Many participants enter a rough rollover or savings estimate — you can update later."
-          badge="Popular"
-          actionLabel="Apply"
+          title={t(`${pw}savingsSuggestTitle`)}
+          subtitle={t(`${pw}savingsSuggestSubtitle`)}
+          badge={t(`${pw}badgePopular`)}
+          actionLabel={t(`${pw}apply`)}
           onAction={() => onChange(SUGGESTED_SAVINGS)}
           disabled={value === SUGGESTED_SAVINGS}
         />
@@ -475,6 +505,7 @@ function Step3Savings({ value, onChange }: { value: number; onChange: (v: number
 }
 
 export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: PersonalizePlanModalProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const version = getRoutingVersion(pathname);
@@ -633,7 +664,12 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
 
   const isLastStep = step === TOTAL_STEPS;
   const isFirstStep = step === 1;
-  const ctaLabel = step === 1 ? "Continue" : isLastStep ? "Start Enrollment" : "Next";
+  const ctaLabel =
+    step === 1
+      ? t("preEnrollment.personalizeWizard.footerContinue")
+      : isLastStep
+        ? t("preEnrollment.personalizeWizard.footerStartEnrollment")
+        : t("preEnrollment.personalizeWizard.footerNext");
   const nextDisabled = !canProceedFromStep(step);
 
   return (
@@ -709,13 +745,13 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
         <div className="premium-wizard__footer">
           <button type="button" onClick={handleSaveAndExit} className="premium-wizard__ghost-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
-            Save & Exit
+            {t("preEnrollment.personalizeWizard.footerSaveExit")}
           </button>
           <div className="flex items-center gap-2.5">
             {!isFirstStep && (
               <motion.button type="button" onClick={handlePrevious} className="premium-wizard__back-btn" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
-                Back
+                {t("preEnrollment.personalizeWizard.footerBack")}
               </motion.button>
             )}
             <motion.button
@@ -733,7 +769,7 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
             </motion.button>
           </div>
         </div>
-        {showExitConfirm && <ExitConfirmation isOpen={showExitConfirm} onConfirm={handleConfirmExit} onCancel={() => setShowExitConfirm(false)} />}
+        {showExitConfirm && <ExitConfirmation onConfirm={handleConfirmExit} onCancel={() => setShowExitConfirm(false)} />}
       </motion.div>
     </Modal>
   );

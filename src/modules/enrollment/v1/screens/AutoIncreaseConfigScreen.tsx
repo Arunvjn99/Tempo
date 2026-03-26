@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Calendar, Info, Target, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { saveAutoIncreasePreference } from "@/services/enrollmentService";
@@ -9,11 +10,13 @@ import { isEnrollmentStepValid } from "../flow/stepValidation";
 import { AutoIncreaseInsights } from "../components/AutoIncreaseInsights";
 
 const AUTO_INCREASE_STEP_INDEX = ENROLLMENT_STEPS.indexOf("autoIncrease");
+const C = "enrollment.v1.autoIncreaseConfig.";
 
 /**
  * V1 Auto Increase setup — 8/4 grid (Figma `auto-increase-setup`), insights rail + timeline.
  */
 export function AutoIncreaseConfigScreen() {
+  const { t } = useTranslation();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
 
@@ -78,9 +81,9 @@ export function AutoIncreaseConfigScreen() {
 
   const cycleOptions = (
     [
-      { id: "calendar" as const, title: "Calendar Year", sub: "Every Jan 1st" },
-      { id: "participant" as const, title: "Participant Date", sub: "On enrollment date" },
-      { id: "plan" as const, title: "Plan Year", sub: "Every April 1" },
+      { id: "calendar" as const, title: t(`${C}cycleCalendarTitle`), sub: t(`${C}cycleCalendarSub`) },
+      { id: "participant" as const, title: t(`${C}cycleParticipantTitle`), sub: t(`${C}cycleParticipantSub`) },
+      { id: "plan" as const, title: t(`${C}cyclePlanTitle`), sub: t(`${C}cyclePlanSub`) },
     ] satisfies { id: IncrementCycle; title: string; sub: string }[]
   ).map((opt) => (
     <label
@@ -121,7 +124,7 @@ export function AutoIncreaseConfigScreen() {
       disabled={!valid || increaseAmount <= 0}
       className="btn-enroll-success flex w-full items-center justify-center gap-2 py-3.5 text-base font-semibold disabled:pointer-events-none disabled:opacity-45"
     >
-      Save Auto Increase
+      {t(`${C}saveCta`)}
       <ArrowRight className="h-4 w-4" aria-hidden />
     </button>
   );
@@ -136,11 +139,11 @@ export function AutoIncreaseConfigScreen() {
                 <TrendingUp className="h-5 w-5" aria-hidden />
               </div>
               <h1 className="text-xl font-semibold md:text-2xl" style={{ color: "var(--text-primary)" }}>
-                Configure your automatic increases
+                {t(`${C}title`)}
               </h1>
             </div>
             <p className="text-sm md:text-base" style={{ color: "var(--text-muted)" }}>
-              Your contribution will gradually increase over time.
+              {t(`${C}subtitle`)}
             </p>
           </div>
           <div
@@ -152,13 +155,13 @@ export function AutoIncreaseConfigScreen() {
                 className="mb-0.5 text-[0.65rem] font-bold uppercase tracking-wider"
                 style={{ color: "var(--primary)" }}
               >
-                Current
+                {t(`${C}current`)}
               </p>
               <p className="text-2xl font-extrabold leading-none" style={{ color: "var(--text-primary)" }}>
                 {currentPercent}%
               </p>
               <p className="mt-1 text-[0.7rem]" style={{ color: "var(--text-muted)" }}>
-                ${currentMonthlyContribution.toLocaleString()}/mo
+                {t(`${C}perMo`, { amount: `$${currentMonthlyContribution.toLocaleString()}` })}
               </p>
             </div>
             <div className="min-h-[2.5rem] border-l pl-6" style={{ borderColor: "var(--border-subtle)" }}>
@@ -166,7 +169,7 @@ export function AutoIncreaseConfigScreen() {
                 className="mb-0.5 text-[0.65rem] font-bold uppercase tracking-wider"
                 style={{ color: "var(--primary)" }}
               >
-                Target max
+                {t(`${C}targetMax`)}
               </p>
               <p className="text-2xl font-extrabold leading-none" style={{ color: "var(--text-primary)" }}>
                 {maxContribution}%
@@ -179,7 +182,7 @@ export function AutoIncreaseConfigScreen() {
           <div className="col-span-12 space-y-4 lg:col-span-8">
             <div className="auto-increase-config-card p-4">
               <h3 className="mb-2.5 text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                Increment cycle
+                {t(`${C}incrementCycle`)}
               </h3>
               <div className="grid gap-3 sm:grid-cols-3">{cycleOptions}</div>
             </div>
@@ -191,15 +194,15 @@ export function AutoIncreaseConfigScreen() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                    Increase per cycle
+                    {t(`${C}increasePerCycle`)}
                   </span>
                   <div className="mt-2">
                     <div className="mb-1 flex items-center justify-between text-[0.65rem]" style={{ color: "var(--text-muted)" }}>
-                      <span>0%</span>
+                      <span>{t(`${C}range0`)}</span>
                       <span className="text-sm font-bold tabular-nums" style={{ color: "var(--primary)" }}>
-                        {increaseAmount}% per cycle
+                        {t(`${C}perCycleValue`, { value: increaseAmount })}
                       </span>
-                      <span>3%</span>
+                      <span>{t(`${C}range3`)}</span>
                     </div>
                     <input
                       type="range"
@@ -235,20 +238,16 @@ export function AutoIncreaseConfigScreen() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                    Stop limit
+                    {t(`${C}stopLimit`)}
                   </span>
                   <p className="mt-0.5 text-[0.78rem]" style={{ color: "var(--text-muted)" }}>
-                    Stop increasing when contributions reach — your rate will not exceed{" "}
-                    <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                      {maxContribution}%
-                    </span>
-                    .
+                    {t(`${C}stopLimitDesc`, { max: maxContribution })}
                   </p>
                   <div className="mt-4">
                     <div className="mb-1.5 flex items-center justify-between text-[0.7rem]" style={{ color: "var(--text-muted)" }}>
-                      <span>10%</span>
+                      <span>{t(`${C}range10`)}</span>
                       <span className="text-base font-bold tabular-nums text-accent-chart5-lg">{maxContribution}%</span>
-                      <span>15%</span>
+                      <span>{t(`${C}range15`)}</span>
                     </div>
                     <input
                       type="range"
@@ -268,20 +267,18 @@ export function AutoIncreaseConfigScreen() {
             <div className="flex items-start gap-2.5 rounded-xl border px-3 py-2.5" style={{ borderColor: "var(--border-subtle)", background: "var(--bg-secondary)" }}>
               <Info className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "var(--text-muted)" }} aria-hidden />
               <div className="min-w-0 space-y-2 text-[0.78rem]" style={{ color: "var(--text-muted)" }}>
-                <p>
-                  Automatic increases apply once per year. Your contribution will rise by the selected percentage each
-                  year until it reaches your maximum. You can change or disable automatic increases at any time.
-                </p>
+                <p>{t(`${C}infoP1`)}</p>
                 <p className="font-medium" style={{ color: "var(--text-primary)" }}>
                   {currentPercent >= maxContribution ? (
-                    <>Your contribution rate is already at or above your selected maximum.</>
+                    t(`${C}atMax`)
                   ) : increaseAmount <= 0 ? (
-                    <>Choose an increase per cycle above 0% to see how your rate grows.</>
+                    t(`${C}chooseIncrease`)
                   ) : (
-                    <>
-                      Your contribution will grow from {currentPercent}% to {maxContribution}% over approximately{" "}
-                      {yearsToMax} {yearsToMax === 1 ? "year" : "years"}.
-                    </>
+                    t(`${C}growthYears`, {
+                      count: yearsToMax,
+                      from: currentPercent,
+                      to: maxContribution,
+                    })
                   )}
                 </p>
               </div>
@@ -306,11 +303,6 @@ export function AutoIncreaseConfigScreen() {
         </div>
 
         <div className="mt-4 lg:hidden">{saveButton}</div>
-
-        <p className="mt-4 text-center text-sm" style={{ color: "var(--text-muted)" }}>
-          Use <strong style={{ color: "var(--text-primary)" }}>Next</strong> below to continue when your settings are
-          valid.
-        </p>
       </div>
     </div>
   );

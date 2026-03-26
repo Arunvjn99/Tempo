@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { DollarSign, ShieldCheck, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
 import type { EnrollmentV1Snapshot, RiskLevel } from "../store/useEnrollmentStore";
 import {
@@ -38,6 +39,8 @@ function formatDeltaPortfolio(delta: number): string {
   return `+${Math.abs(k)}K`;
 }
 
+const REC = "enrollment.v1.readiness.rec.";
+
 /**
  * Builds AI-style recommendations from enrollment snapshot (mock / heuristic engine).
  */
@@ -49,6 +52,7 @@ export function generateRecommendations(
     projectedBalance: number;
     yearsToRetirement: number;
   },
+  t: TFunction,
 ): GeneratedRecommendation[] {
   const { score, projectedBalance, yearsToRetirement } = ctx;
   const growthRate = getGrowthRate(data.riskLevel);
@@ -82,9 +86,8 @@ export function generateRecommendations(
     const addAnnual =
       Math.round(((bumpPct - data.contribution) * data.salary) / 100) + Math.max(0, empAfter - empBefore);
     pushIf("increase-contribution", {
-      title: "Increase Contributions by 3%",
-      description:
-        "Raising your contribution rate could add significant growth to your retirement savings over time due to compound interest.",
+      title: t(`${REC}increaseContributionTitle`),
+      description: t(`${REC}increaseContributionDesc`),
       impact: "High",
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
@@ -118,8 +121,11 @@ export function generateRecommendations(
     const deltaBal = futureBal - projectedBalance;
     const addAnnual = Math.max(0, Math.round((data.salary * data.autoIncreaseRate) / 100));
     pushIf("auto-increase", {
-      title: "Enable automatic contribution increases",
-      description: `Automatically increase your contribution by ${data.autoIncreaseRate}% each year up to ${data.autoIncreaseMax}%.`,
+      title: t(`${REC}autoIncreaseTitle`),
+      description: t(`${REC}autoIncreaseDesc`, {
+        rate: data.autoIncreaseRate,
+        max: data.autoIncreaseMax,
+      }),
       impact: "Medium",
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
@@ -154,9 +160,8 @@ export function generateRecommendations(
       Math.round(((targetMatch - data.contribution) * data.salary) / 100) +
       Math.round(((Math.min(targetMatch, 6) - Math.min(data.contribution, 6)) * data.salary) / 100);
     pushIf("employer-match", {
-      title: "Maximize Employer Match",
-      description:
-        "Don't leave free money on the table—capture the full employer match available to you immediately.",
+      title: t(`${REC}employerMatchTitle`),
+      description: t(`${REC}employerMatchDesc`),
       impact: "Medium",
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
@@ -188,9 +193,8 @@ export function generateRecommendations(
     );
     const dScore = newScore - score;
     pushIf("strategy-balanced", {
-      title: "Shift toward balanced growth",
-      description:
-        "A modest increase in equity exposure may improve long-term outcomes while keeping diversification.",
+      title: t(`${REC}strategyBalancedTitle`),
+      description: t(`${REC}strategyBalancedDesc`),
       impact: "Medium",
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
@@ -209,9 +213,8 @@ export function generateRecommendations(
     return [
       {
         id: "review-plan",
-        title: "Review your retirement plan",
-        description:
-          "Walk through contributions and investment strategy with your goals in mind before you enroll.",
+        title: t(`${REC}reviewPlanTitle`),
+        description: t(`${REC}reviewPlanDesc`),
         impact: "Medium" as const,
         projectedGain: "+$0",
         scoreImpact: "+0 pts",

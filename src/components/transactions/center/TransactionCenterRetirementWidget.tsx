@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { TrendingUp, CheckCircle2, AlertTriangle, Target } from "lucide-react";
 import { useId } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface TransactionCenterRetirementWidgetProps {
@@ -113,6 +114,8 @@ export function TransactionCenterRetirementWidget({
   compact = false,
   delay = 0,
 }: TransactionCenterRetirementWidgetProps) {
+  const { t } = useTranslation();
+  const TC = "transactions.center.";
   const contributionPercent = Math.round((contributionsThisYear / contributionLimit) * 1000) / 10;
   const showImpact = impactAmount !== undefined && impactAmount !== 0;
   const projectedBalance = Math.round(estimatedValue * (1 + growthRate / 100) ** yearsToRetire);
@@ -161,7 +164,7 @@ export function TransactionCenterRetirementWidget({
                 marginBottom: 4,
               }}
             >
-              Projected at Age {targetAge}
+              {t(`${TC}retirementProjectedAtAge`, { age: targetAge })}
             </div>
             <div
               style={{
@@ -176,7 +179,9 @@ export function TransactionCenterRetirementWidget({
             </div>
             <div className="mt-1 flex items-center gap-1.5">
               <TrendingUp className="h-[13px] w-[13px] text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">{growthRate}% avg. annual growth</span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                {t(`${TC}retirementAvgGrowth`, { rate: growthRate })}
+              </span>
             </div>
           </div>
 
@@ -193,7 +198,7 @@ export function TransactionCenterRetirementWidget({
                   letterSpacing: "0.5px",
                 }}
               >
-                Goal Progress
+                {t(`${TC}retirementGoalProgress`)}
               </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--foreground)" }}>{goalProgress}%</span>
             </div>
@@ -217,7 +222,9 @@ export function TransactionCenterRetirementWidget({
                 }}
               />
             </div>
-            <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 3 }}>${retirementGoal.toLocaleString()} retirement goal</div>
+            <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 3 }}>
+              {t(`${TC}retirementGoalLine`, { amount: `$${retirementGoal.toLocaleString()}` })}
+            </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
@@ -232,7 +239,7 @@ export function TransactionCenterRetirementWidget({
                   marginBottom: 3,
                 }}
               >
-                2026 Contributions
+                {t(`${TC}retirementContribYear`)}
               </div>
               <div style={{ fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}>{contributionPercent}%</div>
               <div style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>
@@ -250,11 +257,11 @@ export function TransactionCenterRetirementWidget({
                   marginBottom: 3,
                 }}
               >
-                Years to Retire
+                {t(`${TC}retirementYearsToRetire`)}
               </div>
               <div style={{ fontSize: 16, fontWeight: 700, color: "var(--foreground)" }}>{yearsToRetire}</div>
               <div style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>
-                Age {currentAge} → {targetAge}
+                {t(`${TC}retirementAgeRange`, { from: currentAge, to: targetAge })}
               </div>
             </div>
           </div>
@@ -302,7 +309,7 @@ export function TransactionCenterRetirementWidget({
             <div className="flex items-center gap-2 rounded-lg border border-emerald-200/90 bg-gradient-to-br from-emerald-50 to-green-50/95 p-2 dark:border-emerald-600/35 dark:from-emerald-950/40 dark:to-green-950/30">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">
-                You&apos;re on track to meet your goal
+                {t(`${TC}retirementOnTrack`)}
               </span>
             </div>
           ) : null}
@@ -310,7 +317,9 @@ export function TransactionCenterRetirementWidget({
           {!onTrack && !showImpact ? (
             <div className="flex items-center gap-2 rounded-lg border border-amber-200/90 bg-gradient-to-br from-amber-50 to-orange-50/95 p-2 dark:border-amber-500/30 dark:from-amber-950/45 dark:to-orange-950/35">
               <Target className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-              <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">Consider increasing contributions</span>
+              <span className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                {t(`${TC}retirementIncreaseContrib`)}
+              </span>
             </div>
           ) : null}
         </div>

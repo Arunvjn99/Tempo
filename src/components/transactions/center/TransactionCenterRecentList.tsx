@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Eye,
   Download,
@@ -20,46 +21,9 @@ export type RecentListRow = {
   date: string;
   description: string;
   transactionId: string;
+  typeDisplay?: string;
+  statusDisplay?: string;
 };
-
-const FALLBACK_ROWS: RecentListRow[] = [
-  {
-    id: "4",
-    type: "Transfer",
-    amount: "$1,500",
-    status: "Completed",
-    date: "March 5, 2026",
-    description: "Reallocation from Conservative to Growth Fund",
-    transactionId: "TRX-2026-0305-001",
-  },
-  {
-    id: "5",
-    type: "Loan",
-    amount: "$2,000",
-    status: "Completed",
-    date: "February 28, 2026",
-    description: "General Purpose Loan - 12 month term",
-    transactionId: "LN-2026-0228-045",
-  },
-  {
-    id: "6",
-    type: "Withdrawal",
-    amount: "$1,000",
-    status: "Completed",
-    date: "February 15, 2026",
-    description: "Hardship withdrawal for medical expenses",
-    transactionId: "WD-2026-0215-023",
-  },
-  {
-    id: "7",
-    type: "Rebalance",
-    amount: "—",
-    status: "Completed",
-    date: "January 20, 2026",
-    description: "Quarterly portfolio rebalance to target allocation",
-    transactionId: "RB-2026-0120-012",
-  },
-];
 
 const typeIcons: Record<RecentListRow["type"], ReactNode> = {
   Loan: <HandCoins className="w-[13px] h-[13px]" />,
@@ -94,6 +58,20 @@ function getStatusBadge(status: RecentListRow["status"]) {
   }
 }
 
+const TYPE_I18N: Record<RecentListRow["type"], string> = {
+  Loan: "typeLoan",
+  Withdrawal: "typeWithdrawal",
+  Transfer: "typeTransfer",
+  Rebalance: "typeRebalance",
+  Rollover: "typeRollover",
+};
+
+const STATUS_I18N: Record<RecentListRow["status"], string> = {
+  Completed: "statusCompleted",
+  Processing: "statusProcessing",
+  Cancelled: "statusCancelled",
+};
+
 export function TransactionCenterRecentList({
   rows,
   maxItems = 4,
@@ -103,11 +81,76 @@ export function TransactionCenterRecentList({
   maxItems?: number;
   onRowClick?: (id: string) => void;
 }) {
-  const source = rows && rows.length > 0 ? rows : FALLBACK_ROWS;
+  const { t } = useTranslation();
+  const TC = "transactions.center.";
+  const recentTableHeaders = useMemo(
+    () =>
+      (["recentColType", "recentColDescription", "recentColAmount", "recentColStatus", "recentColDate"] as const).map(
+        (k) => t(`${TC}${k}`),
+      ),
+    [t],
+  );
+
+  const fallbackRows = useMemo<RecentListRow[]>(
+    () => [
+      {
+        id: "4",
+        type: "Transfer",
+        amount: "$1,500",
+        status: "Completed",
+        date: "March 5, 2026",
+        description: t(`${TC}fallbackTx1Desc`),
+        transactionId: "TRX-2026-0305-001",
+      },
+      {
+        id: "5",
+        type: "Loan",
+        amount: "$2,000",
+        status: "Completed",
+        date: "February 28, 2026",
+        description: t(`${TC}fallbackTxLoanDesc`),
+        transactionId: "LN-2026-0228-045",
+      },
+      {
+        id: "6",
+        type: "Withdrawal",
+        amount: "$1,000",
+        status: "Completed",
+        date: "February 15, 2026",
+        description: t(`${TC}fallbackTx2Desc`),
+        transactionId: "WD-2026-0215-023",
+      },
+      {
+        id: "7",
+        type: "Rebalance",
+        amount: "—",
+        status: "Completed",
+        date: "January 20, 2026",
+        description: t(`${TC}fallbackTx3Desc`),
+        transactionId: "RB-2026-0120-012",
+      },
+    ],
+    [t],
+  );
+
+  const source = rows && rows.length > 0 ? rows : fallbackRows;
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("All");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const filters: FilterType[] = ["All", "Loans", "Withdrawals", "Transfers", "Rebalance", "Rollovers"];
+
+  const filterLabel = (f: FilterType) =>
+    ({
+      All: t(`${TC}filterAll`),
+      Loans: t(`${TC}filterLoans`),
+      Withdrawals: t(`${TC}filterWithdrawals`),
+      Transfers: t(`${TC}filterTransfers`),
+      Rebalance: t(`${TC}filterRebalance`),
+      Rollovers: t(`${TC}filterRollovers`),
+    })[f];
+
+  const typeLabel = (row: RecentListRow) => row.typeDisplay ?? t(`${TC}${TYPE_I18N[row.type]}`);
+  const statusLabel = (row: RecentListRow) => row.statusDisplay ?? t(`${TC}${STATUS_I18N[row.status]}`);
 
   const filtered = source.filter((transaction) => {
     if (selectedFilter === "All") return true;
@@ -149,7 +192,7 @@ export function TransactionCenterRecentList({
                 border: selectedFilter === filter ? "1px solid var(--border)" : "1px solid transparent",
               }}
             >
-              {filter}
+              {filterLabel(filter)}
             </button>
           ))}
         </div>
@@ -169,7 +212,9 @@ export function TransactionCenterRecentList({
               color: "var(--color-text-secondary)",
             }}
           >
-            <span>Filter: {selectedFilter}</span>
+            <span>
+              {t(`${TC}filterMobilePrefix`)} {filterLabel(selectedFilter)}
+            </span>
             <ChevronDown
               className={`w-3.5 h-3.5 transition-transform ${mobileFilterOpen ? "rotate-180" : ""}`}
               style={{ color: "var(--color-text-tertiary)" }}
@@ -204,7 +249,7 @@ export function TransactionCenterRecentList({
                     color: selectedFilter === filter ? "var(--color-primary)" : "var(--color-text-secondary)",
                   }}
                 >
-                  {filter}
+                  {filterLabel(filter)}
                 </button>
               ))}
             </motion.div>
@@ -212,7 +257,7 @@ export function TransactionCenterRecentList({
         </div>
 
         <span className="hidden sm:block" style={{ fontSize: 12, color: "var(--color-text-tertiary)", fontWeight: 500 }}>
-          Showing {filtered.length} transaction{filtered.length !== 1 ? "s" : ""}
+          {t(`${TC}showingCount`, { count: filtered.length })}
         </span>
       </div>
 
@@ -251,7 +296,7 @@ export function TransactionCenterRecentList({
                     {typeIcons[transaction.type]}
                   </span>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: "var(--foreground)" }}>{transaction.type}</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "var(--foreground)" }}>{typeLabel(transaction)}</p>
                     <p className="font-mono" style={{ fontSize: 10, color: "var(--color-text-tertiary)", fontWeight: 500 }}>
                       {transaction.transactionId}
                     </p>
@@ -274,7 +319,7 @@ export function TransactionCenterRecentList({
                       className={`rounded-full ${transaction.status === "Processing" ? "animate-pulse" : ""}`}
                       style={{ width: 5, height: 5, background: badge.dot }}
                     />
-                    {transaction.status}
+                    {statusLabel(transaction)}
                   </span>
                 </div>
               </div>
@@ -317,7 +362,7 @@ export function TransactionCenterRecentList({
         })}
         {filtered.length === 0 ? (
           <div className="text-center py-8">
-            <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", fontWeight: 500 }}>No transactions found</p>
+            <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", fontWeight: 500 }}>{t(`${TC}recentEmpty`)}</p>
           </div>
         ) : null}
       </div>
@@ -337,7 +382,7 @@ export function TransactionCenterRecentList({
                 borderBottom: "1px solid var(--border)",
               }}
             >
-              {["Type", "Description", "Amount", "Status", "Date"].map((header) => (
+              {recentTableHeaders.map((header) => (
                 <th
                   key={header}
                   className="text-left uppercase"
@@ -388,7 +433,7 @@ export function TransactionCenterRecentList({
                       >
                         {typeIcons[transaction.type]}
                       </span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{transaction.type}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--foreground)" }}>{typeLabel(transaction)}</span>
                     </div>
                   </td>
                   <td style={{ padding: "14px 16px", maxWidth: 220 }}>
@@ -415,7 +460,7 @@ export function TransactionCenterRecentList({
                         className={`rounded-full ${transaction.status === "Processing" ? "animate-pulse" : ""}`}
                         style={{ width: 6, height: 6, background: badge.dot }}
                       />
-                      {transaction.status}
+                      {statusLabel(transaction)}
                     </span>
                   </td>
                   <td style={{ padding: "14px 16px" }}>
@@ -428,7 +473,7 @@ export function TransactionCenterRecentList({
         </table>
         {filtered.length === 0 ? (
           <div className="text-center py-12">
-            <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", fontWeight: 500 }}>No transactions found</p>
+            <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", fontWeight: 500 }}>{t(`${TC}recentEmpty`)}</p>
           </div>
         ) : null}
       </div>

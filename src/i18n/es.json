@@ -6,6 +6,8 @@
     "learningTitleBefore": "¿Cuánto es",
     "learningTitleHighlight": "suficiente?",
     "learningDescription": "Encontrar la tasa de aportación adecuada para tus objetivos.",
+    "learningSimpleTitle": "¿Cuánto es suficiente para tu jubilación?",
+    "learningKnowMore": "Saber más",
     "learningCtaPrimary": "Empezar a aprender",
     "learningCtaSave": "Guardar para después",
     "learningCtaSaved": "Guardado para después",
@@ -23,6 +25,7 @@
     "assistanceAiInputLabel": "Mensaje para Core AI",
     "assistanceAiInputPlaceholder": "Pregunta lo que quieras sobre tu plan…",
     "assistanceAiSubmit": "Preguntar",
+    "assistanceAiCta": "Empezar a chatear",
     "heroLearnMoreCta": "Conocer el plan"
   }
 }

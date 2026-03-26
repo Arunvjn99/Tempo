@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import svgPaths from "@/imports/transaction-center-figma-svg";
 
 function ShieldIcon({ className }: { className?: string }) {
@@ -43,6 +44,9 @@ export function TransactionCenterPlanOverview({
   vestedBalanceLabel: string;
   vestedPctLabel: string;
 }) {
+  const { t } = useTranslation();
+  const TC = "transactions.center.";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -12 }}
@@ -84,7 +88,7 @@ export function TransactionCenterPlanOverview({
                   lineHeight: "14px",
                 }}
               >
-                Plan Name
+                {t(`${TC}planNameLabel`)}
               </p>
               <p
                 style={{
@@ -108,7 +112,7 @@ export function TransactionCenterPlanOverview({
                     fontWeight: 600,
                   }}
                 >
-                  Plan Balance :
+                  {t(`${TC}planBalanceLabel`)}
                 </span>
                 <span
                   style={{
@@ -151,7 +155,7 @@ export function TransactionCenterPlanOverview({
                   lineHeight: "14px",
                 }}
               >
-                Vested Balance
+                {t(`${TC}vestedBalanceLabel`)}
               </p>
               <div className="flex items-baseline gap-2.5" style={{ marginTop: 2 }}>
                 <span

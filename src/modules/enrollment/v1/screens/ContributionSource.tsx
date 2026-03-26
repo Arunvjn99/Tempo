@@ -1,4 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Check,
   ChevronDown,
@@ -14,16 +15,27 @@ import type { ContributionSources } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
 
+const A = "enrollment.v1.sourceAllocation.";
+
 const PLAN_DEFAULT: ContributionSources = { preTax: 60, roth: 40, afterTax: 0 };
 const RECOMMENDED: ContributionSources = { preTax: 40, roth: 60, afterTax: 0 };
 
+function asStringArray(v: unknown): string[] {
+  return Array.isArray(v) ? v.map(String) : [];
+}
+
 export function ContributionSource() {
+  const { t } = useTranslation();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
   const sources = data.contributionSources;
   const salary = data.salary;
   const percent = data.contribution;
   const supportsAfterTax = data.supportsAfterTax;
+
+  const explainPreTax = useMemo(() => asStringArray(t(`${A}explainPreTaxItems`, { returnObjects: true })), [t]);
+  const explainRoth = useMemo(() => asStringArray(t(`${A}explainRothItems`, { returnObjects: true })), [t]);
+  const explainAfterTax = useMemo(() => asStringArray(t(`${A}explainAfterTaxItems`, { returnObjects: true })), [t]);
 
   const [showAdvanced, setShowAdvanced] = useState(sources.afterTax > 0);
 
@@ -96,15 +108,16 @@ export function ContributionSource() {
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">How do you want to pay taxes?</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">
-            Choose when you want to pay taxes on your savings.
-          </p>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">{t(`${A}title`)}</h1>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">{t(`${A}subtitle`)}</p>
         </div>
         <div className="enroll-inline-highlight shrink-0">
           <Wallet className="h-5 w-5 text-primary" aria-hidden />
           <p className="text-sm font-bold text-foreground">
-            You&apos;re contributing {percent}% (${monthlyTotal.toLocaleString()}/month)
+            {t(`${A}contributingSummary`, {
+              percent,
+              amount: `$${monthlyTotal.toLocaleString()}`,
+            })}
           </p>
         </div>
       </div>
@@ -114,11 +127,13 @@ export function ContributionSource() {
           <div>
             <div className="mb-2 flex items-center gap-2">
               <div className="rounded-md bg-secondary px-2.5 py-1">
-                <p className="text-[0.65rem] font-bold uppercase tracking-wide text-muted-foreground">Default</p>
+                <p className="text-[0.65rem] font-bold uppercase tracking-wide text-muted-foreground">
+                  {t(`${A}defaultBadge`)}
+                </p>
               </div>
             </div>
-            <h3 className="text-base font-bold text-foreground">Plan Default</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Applied if no changes are made</p>
+            <h3 className="text-base font-bold text-foreground">{t(`${A}planDefaultTitle`)}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t(`${A}planDefaultHint`)}</p>
           </div>
           <div className="alloc-bar-plain">
             <div className="flex h-full w-full">
@@ -130,23 +145,27 @@ export function ContributionSource() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="alloc-dot alloc-dot--md alloc-dot--pretax" />
-                <p className="text-sm text-foreground">Pre-Tax ({PLAN_DEFAULT.preTax}%)</p>
+                <p className="text-sm text-foreground">
+                  {t(`${A}preTaxLabel`)} ({PLAN_DEFAULT.preTax}%)
+                </p>
               </div>
               <p className="text-sm font-semibold">${planDefaultPreTax.toLocaleString()}</p>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="alloc-dot alloc-dot--md alloc-dot--roth" />
-                <p className="text-sm text-foreground">Roth ({PLAN_DEFAULT.roth}%)</p>
+                <p className="text-sm text-foreground">
+                  {t(`${A}rothLabel`)} ({PLAN_DEFAULT.roth}%)
+                </p>
               </div>
               <p className="text-sm font-semibold">${planDefaultRoth.toLocaleString()}</p>
             </div>
           </div>
           <p className="flex-1 pt-3 text-center text-[0.7rem] leading-snug text-muted-foreground">
-            Your employer&apos;s default allocation balances tax benefits.
+            {t(`${A}planDefaultFootnote`)}
           </p>
           <button type="button" onClick={() => setSources({ ...PLAN_DEFAULT })} className="btn btn-primary w-full">
-            Use plan default allocation
+            {t(`${A}usePlanDefaultCta`)}
           </button>
         </div>
 
@@ -154,12 +173,14 @@ export function ContributionSource() {
           <div className="min-w-0 flex-1 space-y-4">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="text-lg font-bold text-foreground">Your Tax Strategy</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">Total allocation: {total}%</p>
+                <h3 className="text-lg font-bold text-foreground">{t(`${A}yourTaxStrategy`)}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t(`${A}totalAllocation`, { total })}</p>
               </div>
               <div className="badge-recommended-enroll">
                 <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-foreground">Recommended</p>
+                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-foreground">
+                  {t(`${A}recommendedBadge`)}
+                </p>
               </div>
             </div>
 
@@ -178,16 +199,16 @@ export function ContributionSource() {
               <div className="flex flex-wrap gap-3 text-xs">
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="alloc-dot alloc-dot--pretax" />
-                  {sources.preTax}% Pre-Tax
+                  {sources.preTax}% {t(`${A}preTaxLabel`)}
                 </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="alloc-dot alloc-dot--roth" />
-                  {sources.roth}% Roth
+                  {sources.roth}% {t(`${A}rothLabel`)}
                 </span>
                 {sources.afterTax > 0 ? (
                   <span className="flex items-center gap-1.5 text-muted-foreground">
                     <span className="alloc-dot alloc-dot--aftertax" />
-                    {sources.afterTax}% After-Tax
+                    {sources.afterTax}% {t(`${A}afterTaxLabel`)}
                   </span>
                 ) : null}
               </div>
@@ -195,16 +216,16 @@ export function ContributionSource() {
 
             <div className="space-y-4">
               <SliderRow
-                label="Pre-Tax"
-                sub="Lower taxes today"
+                label={t(`${A}preTaxLabel`)}
+                sub={t(`${A}preTaxSub`)}
                 color="blue"
                 value={sources.preTax}
                 monthly={monthlyPreTax}
                 onChange={handlePreTaxChange}
               />
               <SliderRow
-                label="Roth"
-                sub="Tax-free withdrawals later"
+                label={t(`${A}rothLabel`)}
+                sub={t(`${A}rothSub`)}
                 color="purple"
                 value={sources.roth}
                 monthly={monthlyRoth}
@@ -213,11 +234,11 @@ export function ContributionSource() {
               {showAdvanced && supportsAfterTax ? (
                 <div className="space-y-2 border-t border-border pt-4">
                   <div className="enroll-advanced-tag">
-                    <p className="enroll-advanced-tag__text">Advanced</p>
+                    <p className="enroll-advanced-tag__text">{t(`${A}advancedTag`)}</p>
                   </div>
                   <SliderRow
-                    label="After-Tax"
-                    sub="For advanced strategies (e.g., backdoor Roth)"
+                    label={t(`${A}afterTaxLabel`)}
+                    sub={t(`${A}afterTaxSub`)}
                     color="orange"
                     value={sources.afterTax}
                     monthly={monthlyAfterTax}
@@ -234,7 +255,7 @@ export function ContributionSource() {
                 className="flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
               >
                 <ChevronDown className="h-4 w-4" aria-hidden />
-                Show advanced options
+                {t(`${A}showAdvanced`)}
               </button>
             ) : (
               <button
@@ -252,7 +273,7 @@ export function ContributionSource() {
                 className="flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
               >
                 <ChevronUp className="h-4 w-4" aria-hidden />
-                Hide advanced options
+                {t(`${A}hideAdvanced`)}
               </button>
             )}
 
@@ -260,19 +281,19 @@ export function ContributionSource() {
               <div className="mb-2 flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" aria-hidden />
-                  <p className="text-sm font-bold text-foreground">Recommended for You</p>
+                  <p className="text-sm font-bold text-foreground">{t(`${A}recommendedForYou`)}</p>
                 </div>
-                <div className="badge-score">Score: 72</div>
+                <div className="badge-score">{t(`${A}scoreLabel`)}</div>
               </div>
               <p className="text-sm leading-snug text-foreground/90">
-                {RECOMMENDED.preTax}% Pre-Tax / {RECOMMENDED.roth}% Roth — optimized for your profile
+                {t(`${A}recommendedMix`, { preTax: RECOMMENDED.preTax, roth: RECOMMENDED.roth })}
               </p>
             </div>
 
             <div className="tip-callout">
               <div className="flex items-start gap-2.5">
                 <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <p className="tip-callout__text">Roth may be better — tax-free income later</p>
+                <p className="tip-callout__text">{t(`${A}tipRothBetter`)}</p>
               </div>
               <button
                 type="button"
@@ -280,34 +301,34 @@ export function ContributionSource() {
                 disabled={Math.abs(total - 100) > 0.001}
                 className="btn btn-outline mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Apply recommended allocation
+                {t(`${A}applyRecommendedCta`)}
               </button>
             </div>
           </div>
 
           <div className="flex flex-col justify-between border-t border-border pt-5 lg:w-[32%] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
             <div className="space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">Your monthly impact</h4>
+              <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">{t(`${A}yourMonthlyImpact`)}</h4>
               <div>
-                <p className="text-xs text-muted-foreground">You contribute:</p>
+                <p className="text-xs text-muted-foreground">{t(`${A}youContributeColon`)}</p>
                 <p className="text-xl font-extrabold text-foreground">${monthlyTotal.toLocaleString()}</p>
                 <div className="mt-2 space-y-1.5 border-l-2 border-border pl-3">
-                  <RowMini label="Pre-Tax" amount={monthlyPreTax} variant="pretax" />
-                  <RowMini label="Roth" amount={monthlyRoth} variant="roth" />
+                  <RowMini label={t(`${A}preTaxLabel`)} amount={monthlyPreTax} variant="pretax" />
+                  <RowMini label={t(`${A}rothLabel`)} amount={monthlyRoth} variant="roth" />
                   {monthlyAfterTax > 0 ? (
-                    <RowMini label="After-Tax" amount={monthlyAfterTax} variant="aftertax" />
+                    <RowMini label={t(`${A}afterTaxLabel`)} amount={monthlyAfterTax} variant="aftertax" />
                   ) : null}
                 </div>
               </div>
               <div className="success-card success-card--compact">
-                <p className="success-card-emphasis">Employer match</p>
+                <p className="success-card-emphasis">{t(`${A}employerMatch`)}</p>
                 <p className="success-card-emphasis-lg">+${monthlyMatch.toLocaleString()}/month</p>
-                <p className="success-card-footnote">100% on first {matchPercent}%</p>
+                <p className="success-card-footnote">{t(`${A}employerMatchFootnote`, { percent: matchPercent })}</p>
               </div>
               <div className="card-soft card-soft--tight">
-                <p className="text-[0.7rem] font-semibold text-muted-foreground">Total investment</p>
+                <p className="text-[0.7rem] font-semibold text-muted-foreground">{t(`${A}totalInvestment`)}</p>
                 <p className="text-2xl font-extrabold text-foreground">${totalMonthlyInvestment.toLocaleString()}</p>
-                <p className="text-[0.65rem] text-muted-foreground">per month</p>
+                <p className="text-[0.65rem] text-muted-foreground">{t(`${A}perMonth`)}</p>
               </div>
             </div>
           </div>
@@ -315,31 +336,29 @@ export function ContributionSource() {
       </div>
 
       {Math.abs(total - 100) > 0.001 ? (
-        <p className="text-center text-sm font-medium text-destructive">
-          Allocations must total 100% (currently {total}%).
-        </p>
+        <p className="text-center text-sm font-medium text-destructive">{t(`${A}allocMustTotal`, { total })}</p>
       ) : null}
 
       <div className="space-y-3 opacity-95">
-        <h2 className="text-xl font-bold text-foreground">Understanding the Difference</h2>
+        <h2 className="text-xl font-bold text-foreground">{t(`${A}understandingTitle`)}</h2>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           <ExplainCard
-            title="Pre-Tax"
+            title={t(`${A}preTaxLabel`)}
             icon={<TrendingUp className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
             variant="pretax"
-            items={["Lower taxes today", "Reduces current taxable income", "Pay taxes when you withdraw"]}
+            items={explainPreTax}
           />
           <ExplainCard
-            title="Roth"
+            title={t(`${A}rothLabel`)}
             icon={<Shield className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
             variant="roth"
-            items={["Tax-free withdrawals later", "Pay taxes now at current rate", "Growth is tax-free"]}
+            items={explainRoth}
           />
           <ExplainCard
-            title="After-Tax"
+            title={t(`${A}afterTaxLabel`)}
             icon={<DollarSign className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
             variant="aftertax"
-            items={["For high earners", "Mega backdoor Roth option", "Advanced tax strategy"]}
+            items={explainAfterTax}
             className="md:col-span-2 lg:col-span-1"
           />
         </div>
@@ -462,10 +481,10 @@ function ExplainCard({
         <h3 className="text-sm font-bold text-foreground">{title}</h3>
       </div>
       <div className="space-y-1.5">
-        {items.map((t) => (
-          <div key={t} className="flex items-start gap-2">
+        {items.map((line) => (
+          <div key={line} className="flex items-start gap-2">
             <Check className="explain-card__check" aria-hidden />
-            <p className="text-sm text-foreground/90">{t}</p>
+            <p className="text-sm text-foreground/90">{line}</p>
           </div>
         ))}
       </div>

@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { TransactionSuccessPanel } from "@/components/transactions/TransactionSuccessPanel";
@@ -13,7 +14,7 @@ function formatMoney(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 }
 
-function mapTxToRecentRow(t: Transaction): RecentListRow {
+function mapTxToRecentRow(tx: Transaction, translate: (k: string) => string): RecentListRow {
   const typeMap: Record<Transaction["type"], RecentListRow["type"]> = {
     loan: "Loan",
     withdrawal: "Withdrawal",
@@ -23,20 +24,36 @@ function mapTxToRecentRow(t: Transaction): RecentListRow {
     rollover: "Rollover",
   };
   const status: RecentListRow["status"] =
-    t.status === "completed" || t.status === "funded"
+    tx.status === "completed" || tx.status === "funded"
       ? "Completed"
-      : t.status === "rejected" || t.status === "cancelled"
+      : tx.status === "rejected" || tx.status === "cancelled"
         ? "Cancelled"
         : "Processing";
 
   return {
-    id: t.id,
-    type: typeMap[t.type] ?? "Transfer",
-    amount: t.type === "rebalance" && !t.amount ? "—" : formatMoney(t.amount),
+    id: tx.id,
+    type: typeMap[tx.type] ?? "Transfer",
+    amount: tx.type === "rebalance" && !tx.amount ? "—" : formatMoney(tx.amount),
     status,
-    date: t.dateInitiated,
-    description: t.displayName ?? t.type,
-    transactionId: t.id,
+    date: tx.dateInitiated,
+    description: tx.displayName ?? tx.type,
+    transactionId: tx.id,
+    statusDisplay: translate(
+      status === "Completed"
+        ? "transactions.center.statusCompleted"
+        : status === "Cancelled"
+          ? "transactions.center.statusCancelled"
+          : "transactions.center.statusProcessing",
+    ),
+    typeDisplay: translate(
+      {
+        Loan: "transactions.center.typeLoan",
+        Withdrawal: "transactions.center.typeWithdrawal",
+        Transfer: "transactions.center.typeTransfer",
+        Rebalance: "transactions.center.typeRebalance",
+        Rollover: "transactions.center.typeRollover",
+      }[typeMap[tx.type] ?? "Transfer"],
+    ),
   };
 }
 
@@ -44,12 +61,13 @@ function mapTxToRecentRow(t: Transaction): RecentListRow {
  * Transaction center — Figma “Implement Current Design (Copy)” layout + versioned flow routes.
  */
 export function TransactionsPage() {
+  const { t } = useTranslation();
   const location = useLocation();
   const go = useVersionedTxNavigate();
   const navigate = useNavigate();
   const version = getRoutingVersion(location.pathname);
   const successState = (location.state as { success?: unknown } | null)?.success;
-  const apiRecent = listTransactions().map(mapTxToRecentRow);
+  const apiRecent = listTransactions().map((tx) => mapTxToRecentRow(tx, t));
 
   return (
     <DashboardLayout header={<DashboardHeader />}>
@@ -58,7 +76,7 @@ export function TransactionsPage() {
         planName={MOCK_PLAN_SUMMARY.planName}
         planBalanceLabel={formatMoney(MOCK_PLAN_SUMMARY.planBalance)}
         vestedBalanceLabel={formatMoney(MOCK_PLAN_SUMMARY.vestedBalance)}
-        vestedPctLabel={`${MOCK_PLAN_SUMMARY.vestedPct} vested`}
+        vestedPctLabel={t("transactions.center.vestedPct", { pct: MOCK_PLAN_SUMMARY.vestedPct })}
         onQuickLoan={() => go("loan/eligibility")}
         onQuickWithdraw={() => go("withdraw")}
         onQuickTransfer={() => go("transfer")}

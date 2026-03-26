@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { TFunction } from "i18next";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
   ArrowRight,
@@ -62,24 +64,6 @@ interface PerSourceAllocations {
 
 /* ─── Labels ─── */
 
-const sourceLabels: Record<SourceKey, string> = {
-  roth: "Roth",
-  preTax: "Pre-Tax",
-  afterTax: "After-Tax",
-};
-
-const sourceFullLabels: Record<SourceKey, string> = {
-  roth: "Roth Contributions",
-  preTax: "Pre-Tax Contributions",
-  afterTax: "After-Tax Contributions",
-};
-
-const sourceTaxLabels: Record<SourceKey, string> = {
-  roth: "Tax Free",
-  preTax: "Tax Deferred",
-  afterTax: "Taxable",
-};
-
 const sourceColors: Record<SourceKey, string> = {
   roth: "#8b5cf6",
   preTax: "#3b82f6",
@@ -127,33 +111,54 @@ const ALLOCATION_BY_RISK: Record<RiskLevel, AllocationEntry[]> = {
   ],
 };
 
-const STYLE_TITLE: Record<RiskLevel, string> = {
-  conservative: "Conservative Investor",
-  balanced: "Balanced Investor",
-  growth: "Growth-Oriented Investor",
-  aggressive: "Aggressive Investor",
+const STYLE_TITLE_KEYS: Record<RiskLevel, string> = {
+  conservative: "styleTitleConservative",
+  balanced: "styleTitleBalanced",
+  growth: "styleTitleGrowth",
+  aggressive: "styleTitleAggressive",
 };
 
-const STYLE_DESCRIPTION: Record<RiskLevel, string> = {
-  conservative: "A focus on capital preservation with steady, predictable returns.",
-  balanced: "A mix of growth and stability designed for long-term retirement investing.",
-  growth: "Emphasizes long-term capital appreciation while accepting higher short-term volatility.",
-  aggressive: "Maximizes growth potential through equity-heavy allocations for longer time horizons.",
+const STYLE_DESC_KEYS: Record<RiskLevel, string> = {
+  conservative: "styleDescConservative",
+  balanced: "styleDescBalanced",
+  growth: "styleDescGrowth",
+  aggressive: "styleDescAggressive",
 };
 
-const WHY_COPY: Record<RiskLevel, string> = {
-  conservative: "This mix tilts toward bonds and stability, which can smooth returns as you approach retirement.",
-  balanced: "Balanced for growth with your retirement timeline — diversified across stocks, bonds, and other assets.",
-  growth: "More equity exposure aims for higher growth while still holding bonds and diversifiers.",
-  aggressive: "Heavier in stocks for long horizons; best when you can stay invested through market cycles.",
+const WHY_KEYS: Record<RiskLevel, string> = {
+  conservative: "whyConservative",
+  balanced: "whyBalanced",
+  growth: "whyGrowth",
+  aggressive: "whyAggressive",
 };
 
-const RISK_OPTIONS: { key: RiskLevel; label: string; sub: string }[] = [
-  { key: "conservative", label: "Conservative", sub: "Stability first" },
-  { key: "balanced", label: "Balanced", sub: "Growth + balance" },
-  { key: "growth", label: "Growth", sub: "More equity" },
-  { key: "aggressive", label: "Aggressive", sub: "Max growth focus" },
+const RISK_DEF: { key: RiskLevel; labelKey: string; subKey: string }[] = [
+  { key: "conservative", labelKey: "riskConservative", subKey: "riskSubConservative" },
+  { key: "balanced", labelKey: "riskBalanced", subKey: "riskSubBalanced" },
+  { key: "growth", labelKey: "riskGrowth", subKey: "riskSubGrowth" },
+  { key: "aggressive", labelKey: "riskAggressive", subKey: "riskSubAggressive" },
 ];
+
+const IV = "enrollment.v1.investment.";
+
+function sourceShort(t: TFunction, k: SourceKey) {
+  const m: Record<SourceKey, string> = { roth: "sourceRoth", preTax: "sourcePreTax", afterTax: "sourceAfterTax" };
+  return t(`${IV}${m[k]}`);
+}
+
+function sourceFull(t: TFunction, k: SourceKey) {
+  const m: Record<SourceKey, string> = {
+    roth: "sourceRothFull",
+    preTax: "sourcePreTaxFull",
+    afterTax: "sourceAfterTaxFull",
+  };
+  return t(`${IV}${m[k]}`);
+}
+
+function sourceTax(t: TFunction, k: SourceKey) {
+  const m: Record<SourceKey, string> = { roth: "taxFree", preTax: "taxDeferred", afterTax: "taxable" };
+  return t(`${IV}${m[k]}`);
+}
 
 const ADVISOR_CONTACT_HREF = "mailto:support@yourplan.com?subject=Investment%20guidance";
 
@@ -187,21 +192,44 @@ function getSourceTotal(funds: SourceFundAllocation[]): number {
   return funds.reduce((s, f) => s + f.allocation, 0);
 }
 
-function computeRiskLevel(funds: SourceFundAllocation[]): { label: string; color: string } {
+function translateAllocName(t: TFunction, name: string) {
+  const m: Record<string, string> = {
+    Bonds: "allocBonds",
+    "US Stocks": "allocUsStocks",
+    "International Stocks": "allocIntlStocks",
+    "Real Estate": "allocRealEstate",
+  };
+  const k = m[name];
+  return k ? t(`${IV}${k}`) : name;
+}
+
+function assetClassLabelInv(t: TFunction, cls: string) {
+  const m: Record<string, string> = {
+    Equity: "assetEquity",
+    "Fixed Income": "assetFixedIncome",
+    International: "assetInternational",
+    "Real Estate": "assetRealEstate",
+  };
+  const k = m[cls];
+  return k ? t(`${IV}${k}`) : cls;
+}
+
+function computeRiskLevel(funds: SourceFundAllocation[], t: TFunction): { label: string; color: string } {
   const total = funds.reduce((s, f) => s + f.allocation, 0);
-  if (total === 0) return { label: "Not Set", color: "text-muted-foreground" };
+  if (total === 0) return { label: t(`${IV}riskNotSet`), color: "text-muted-foreground" };
   const equityPct = funds
     .filter((f) => f.assetClass === "Equity" || f.assetClass === "International")
     .reduce((s, f) => s + f.allocation, 0);
-  if (equityPct >= 70) return { label: "Aggressive", color: "text-red-600" };
-  if (equityPct >= 50) return { label: "Growth", color: "text-orange-600" };
-  if (equityPct >= 30) return { label: "Balanced", color: "text-blue-600" };
-  return { label: "Conservative", color: "text-green-600" };
+  if (equityPct >= 70) return { label: t(`${IV}riskAggressive`), color: "text-red-600" };
+  if (equityPct >= 50) return { label: t(`${IV}riskGrowth`), color: "text-orange-600" };
+  if (equityPct >= 30) return { label: t(`${IV}riskBalanced`), color: "text-blue-600" };
+  return { label: t(`${IV}riskConservative`), color: "text-green-600" };
 }
 
 /* ─── Allocation indicator ─── */
 
 function AllocationIndicator({ total, label }: { total: number; label?: string }) {
+  const { t } = useTranslation();
   const isValid = total === 100;
   const diff = total - 100;
   return (
@@ -212,7 +240,11 @@ function AllocationIndicator({ total, label }: { total: number; label?: string }
           : <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
         <span className={cn(isValid ? "text-green-700" : "text-amber-700")} style={{ fontSize: "0.78rem", fontWeight: 500 }}>
           {label ? `${label}: ` : ""}
-          {isValid ? "Balanced" : diff > 0 ? `${diff}% over` : `${Math.abs(diff)}% remaining`}
+          {isValid
+            ? t(`${IV}allocBalanced`)
+            : diff > 0
+              ? t(`${IV}allocOver`, { diff })
+              : t(`${IV}allocRemaining`, { diff: Math.abs(diff) })}
         </span>
       </div>
       <span className={cn("tabular-nums", isValid ? "text-green-800" : "text-amber-800")} style={{ fontSize: "0.9rem", fontWeight: 700 }}>
@@ -225,6 +257,7 @@ function AllocationIndicator({ total, label }: { total: number; label?: string }
 /* ─── Fund picker dropdown ─── */
 
 function FundPicker({ existingTickers, onAdd }: { existingTickers: string[]; onAdd: (f: SourceFundAllocation) => void }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -253,14 +286,14 @@ function FundPicker({ existingTickers, onAdd }: { existingTickers: string[]; onA
         className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors py-1.5 px-2 rounded-lg hover:bg-blue-50"
         style={{ fontSize: "0.8rem", fontWeight: 500 }}
       >
-        <Plus className="w-3.5 h-3.5" /> Add Fund
+        <Plus className="w-3.5 h-3.5" /> {t(`${IV}addFund`)}
       </button>
       {open && (
         <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-72 max-h-64 overflow-y-auto">
           {Object.entries(grouped).map(([cls, funds]) => (
             <div key={cls}>
               <p className="px-3 pt-2.5 pb-1 text-gray-400 sticky top-0 bg-white" style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                {cls}
+                {assetClassLabelInv(t, cls)}
               </p>
               {funds.map((fund) => (
             <button
@@ -271,7 +304,9 @@ function FundPicker({ existingTickers, onAdd }: { existingTickers: string[]; onA
                 >
                   <div>
                     <p className="text-gray-800" style={{ fontSize: "0.8rem" }}>{fund.name}</p>
-                    <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>{fund.ticker} · ER: {fund.expense}</p>
+                    <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>
+                      {fund.ticker} · {t(`${IV}erLabel`)} {fund.expense}
+                    </p>
                   </div>
                   <Plus className="w-3.5 h-3.5 text-gray-400" />
                 </button>
@@ -292,6 +327,7 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
   onRemove: (ticker: string) => void;
   onAdd: (fund: SourceFundAllocation) => void;
 }) {
+  const { t } = useTranslation();
   const grouped = funds.reduce<Record<string, SourceFundAllocation[]>>((acc, f) => {
     if (!acc[f.assetClass]) acc[f.assetClass] = [];
     acc[f.assetClass].push(f);
@@ -305,7 +341,7 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: classFunds[0].color }} />
             <p className="text-gray-400" style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              {assetClass}
+              {assetClassLabelInv(t, assetClass)}
             </p>
           </div>
           <div className="space-y-2">
@@ -317,7 +353,9 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-gray-400" style={{ fontSize: "0.68rem" }}>{fund.ticker}</span>
                       <span className="text-gray-300">·</span>
-                      <span className="text-gray-400" style={{ fontSize: "0.68rem" }}>ER: {fund.expense}</span>
+                      <span className="text-gray-400" style={{ fontSize: "0.68rem" }}>
+                        {t(`${IV}erLabel`)} {fund.expense}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
@@ -368,6 +406,7 @@ function CopyPortfolioMenu({ currentSource, activeSources, contributionSources, 
   contributionSources: { preTax: number; roth: number; afterTax: number };
   onCopy: (from: SourceKey) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -385,7 +424,7 @@ function CopyPortfolioMenu({ currentSource, activeSources, contributionSources, 
   return (
     <div className="relative" ref={ref}>
       <button type="button" onClick={() => setOpen(!open)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors py-1 px-2 rounded-lg hover:bg-gray-100" style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-        <Copy className="w-3 h-3" /> Copy from
+        <Copy className="w-3 h-3" /> {t(`${IV}copyFrom`)}
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-52 py-1">
@@ -393,7 +432,9 @@ function CopyPortfolioMenu({ currentSource, activeSources, contributionSources, 
             <button key={src} type="button" onClick={() => { onCopy(src); setOpen(false); }} className="w-full px-3 py-2 hover:bg-gray-50 text-left flex items-center justify-between transition-colors">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[src] }} />
-                <span className="text-gray-700" style={{ fontSize: "0.78rem" }}>{sourceLabels[src]} ({contributionSources[src]}%)</span>
+                <span className="text-gray-700" style={{ fontSize: "0.78rem" }}>
+                  {sourceShort(t, src)} ({contributionSources[src]}%)
+                </span>
               </div>
               <ArrowRight className="w-3 h-3 text-gray-400" />
             </button>
@@ -414,6 +455,7 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
   activeTab: SourceKey;
   setActiveTab: (tab: SourceKey) => void;
 }) {
+  const { t } = useTranslation();
   const updateUnifiedFund = useCallback((ticker: string, value: number) => {
     setAllocs((prev) => ({ ...prev, unified: prev.unified.map((f) => f.ticker === ticker ? { ...f, allocation: value } : f) }));
   }, [setAllocs]);
@@ -468,13 +510,19 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
         <button type="button" onClick={toggleSameForAll} className={cn("w-full flex items-center gap-3 rounded-xl px-4 py-3 border transition-all", allocs.sameForAll ? "border-blue-200 bg-blue-50" : "border-gray-200 bg-gray-50")}>
           {allocs.sameForAll ? <ToggleRight className="w-5 h-5 text-blue-600 shrink-0" /> : <ToggleLeft className="w-5 h-5 text-gray-400 shrink-0" />}
           <div className="text-left flex-1">
-            <p className={cn(allocs.sameForAll ? "text-blue-800" : "text-gray-700")} style={{ fontSize: "0.82rem", fontWeight: 500 }}>Same portfolio for all sources</p>
-            <p className="text-gray-400" style={{ fontSize: "0.7rem" }}>{allocs.sameForAll ? "One allocation applies to all contribution sources." : "Customize each source independently."}</p>
+            <p className={cn(allocs.sameForAll ? "text-blue-800" : "text-gray-700")} style={{ fontSize: "0.82rem", fontWeight: 500 }}>
+              {t(`${IV}sameForAllTitle`)}
+            </p>
+            <p className="text-gray-400" style={{ fontSize: "0.7rem" }}>
+              {allocs.sameForAll ? t(`${IV}sameForAllOn`) : t(`${IV}sameForAllOff`)}
+            </p>
           </div>
           {!allocs.sameForAll && (
             <div className="flex items-center gap-1 shrink-0">
               <Layers className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-gray-500" style={{ fontSize: "0.72rem" }}>{activeSources.length} sources</span>
+              <span className="text-gray-500" style={{ fontSize: "0.72rem" }}>
+                {t(`${IV}sourcesCount`, { count: activeSources.length })}
+              </span>
             </div>
           )}
         </button>
@@ -497,13 +545,20 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
               {chartData.map((d) => (
                 <div key={d.name} className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                  <span className="text-gray-600" style={{ fontSize: "0.72rem" }}>{d.name}: <span className="text-gray-900" style={{ fontWeight: 600 }}>{d.value}%</span></span>
+                  <span className="text-gray-600" style={{ fontSize: "0.72rem" }}>
+                    {assetClassLabelInv(t, d.name)}: <span className="text-gray-900" style={{ fontWeight: 600 }}>{d.value}%</span>
+                  </span>
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-1.5 mt-1.5">
               <Gauge className="w-3 h-3 text-gray-400" />
-              <span className="text-gray-500" style={{ fontSize: "0.68rem" }}>Risk: <span className={computeRiskLevel(currentFunds || []).color} style={{ fontWeight: 600 }}>{computeRiskLevel(currentFunds || []).label}</span></span>
+              <span className="text-gray-500" style={{ fontSize: "0.68rem" }}>
+                {t(`${IV}riskLabel`)}{" "}
+                <span className={computeRiskLevel(currentFunds || [], t).color} style={{ fontWeight: 600 }}>
+                  {computeRiskLevel(currentFunds || [], t).label}
+                </span>
+              </span>
             </div>
           </div>
         </div>
@@ -513,13 +568,15 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
         <div>
           {allocs.unified.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400" style={{ fontSize: "0.85rem" }}>No funds selected. Add funds to build your portfolio.</p>
+              <p className="text-gray-400" style={{ fontSize: "0.85rem" }}>{t(`${IV}noFunds`)}</p>
               <div className="mt-3 flex justify-center"><FundPicker existingTickers={[]} onAdd={addUnifiedFund} /></div>
             </div>
           ) : (
             <SourceFundList funds={allocs.unified} onUpdate={updateUnifiedFund} onRemove={removeUnifiedFund} onAdd={addUnifiedFund} />
           )}
-          <div className="mt-4 space-y-2"><AllocationIndicator total={unifiedTotal} label="Total Allocation" /></div>
+          <div className="mt-4 space-y-2">
+            <AllocationIndicator total={unifiedTotal} label={t(`${IV}totalAllocation`)} />
+          </div>
         </div>
       ) : (
         <div>
@@ -531,7 +588,9 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
               return (
                 <button key={src} type="button" onClick={() => setActiveTab(src)} className={cn("flex-1 rounded-lg py-2 px-3 transition-all flex items-center justify-center gap-2", activeTab === src ? "bg-white shadow-sm" : "hover:bg-gray-50")}>
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[src] }} />
-                  <span className={cn(activeTab === src ? "text-gray-900" : "text-gray-500")} style={{ fontSize: "0.8rem", fontWeight: activeTab === src ? 600 : 400 }}>{sourceLabels[src]}</span>
+                  <span className={cn(activeTab === src ? "text-gray-900" : "text-gray-500")} style={{ fontSize: "0.8rem", fontWeight: activeTab === src ? 600 : 400 }}>
+                    {sourceShort(t, src)}
+                  </span>
                   {srcTotal > 0 && (
                     <span className={cn("shrink-0", srcValid ? "text-green-600" : "text-amber-600")}>
                       {srcValid ? <CheckCircle2 className="w-3 h-3" /> : <span style={{ fontSize: "0.65rem", fontWeight: 600 }}>{srcTotal}%</span>}
@@ -546,7 +605,9 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: sourceColors[activeTab] }} />
-                <p className="text-gray-800" style={{ fontSize: "0.88rem", fontWeight: 600 }}>{sourceLabels[activeTab]} Portfolio</p>
+                <p className="text-gray-800" style={{ fontSize: "0.88rem", fontWeight: 600 }}>
+                  {t(`${IV}sourcePortfolio`, { source: sourceShort(t, activeTab) })}
+                </p>
               </div>
               {activeSources.length > 1 && (
                 <CopyPortfolioMenu
@@ -560,7 +621,9 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
 
             {allocs.sources[activeTab].length === 0 ? (
               <div className="text-center py-6 bg-gray-50 rounded-xl">
-                <p className="text-gray-400 mb-2" style={{ fontSize: "0.82rem" }}>No funds selected for {sourceLabels[activeTab]}.</p>
+                <p className="text-gray-400 mb-2" style={{ fontSize: "0.82rem" }}>
+                  {t(`${IV}noFundsForSource`, { source: sourceShort(t, activeTab) })}
+                </p>
                 <div className="flex justify-center"><FundPicker existingTickers={[]} onAdd={(fund) => addSourceFund(activeTab, fund)} /></div>
               </div>
             ) : (
@@ -573,18 +636,25 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
             )}
 
             <div className="mt-3 space-y-2">
-              <AllocationIndicator total={getSourceTotal(allocs.sources[activeTab])} label={`${sourceLabels[activeTab]} Allocation`} />
+              <AllocationIndicator
+                total={getSourceTotal(allocs.sources[activeTab])}
+                label={t(`${IV}sourceAllocationLabel`, { source: sourceShort(t, activeTab) })}
+              />
             </div>
           </div>
 
           {/* All-source summary */}
           <div className="border-t border-gray-100 pt-3 mt-4 space-y-1.5">
-            <p className="text-gray-400 mb-1" style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>All Sources</p>
+            <p className="text-gray-400 mb-1" style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              {t(`${IV}allSources`)}
+            </p>
             {sourceTotals.map((s) => (
               <div key={s.key} className={cn("flex items-center justify-between px-3 py-1.5 rounded-lg", s.total === 100 ? "bg-green-50" : "bg-amber-50")}>
                 <div className="flex items-center gap-2">
                   {s.total === 100 ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : <AlertTriangle className="w-3 h-3 text-amber-600" />}
-                  <span className={cn(s.total === 100 ? "text-green-700" : "text-amber-700")} style={{ fontSize: "0.75rem", fontWeight: 500 }}>{sourceLabels[s.key]}</span>
+                  <span className={cn(s.total === 100 ? "text-green-700" : "text-amber-700")} style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+                    {sourceShort(t, s.key)}
+                  </span>
                 </div>
                 <span className={cn("tabular-nums", s.total === 100 ? "text-green-800" : "text-amber-800")} style={{ fontSize: "0.8rem", fontWeight: 600 }}>{s.total}%</span>
               </div>
@@ -605,6 +675,7 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
   isCustomized: boolean;
   onEditPortfolio: () => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const activeFunds = funds.filter((f) => f.allocation > 0);
 
@@ -623,20 +694,32 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[sourceKey] }} />
-              <p className="text-gray-900" style={{ fontSize: "0.9rem", fontWeight: 600 }}>{sourceFullLabels[sourceKey]}</p>
+              <p className="text-gray-900" style={{ fontSize: "0.9rem", fontWeight: 600 }}>{sourceFull(t, sourceKey)}</p>
               <span className={cn(sourceBgColors[sourceKey], "px-1.5 py-0.5 rounded")} style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.03em" }}>
-                <span style={{ color: sourceColors[sourceKey] }}>{sourceTaxLabels[sourceKey]}</span>
+                <span style={{ color: sourceColors[sourceKey] }}>{sourceTax(t, sourceKey)}</span>
                   </span>
             </div>
             <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-gray-700" style={{ fontSize: "0.82rem", fontWeight: 500 }}>${Math.round(monthlyAmount).toLocaleString()}/mo</span>
+              <span className="text-gray-700" style={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                {t(`${IV}perMo`, { amount: `$${Math.round(monthlyAmount).toLocaleString()}` })}
+              </span>
               <span className="text-gray-300">·</span>
-              <span className="text-gray-500" style={{ fontSize: "0.78rem" }}>{activeFunds.length} {activeFunds.length === 1 ? "fund" : "funds"}</span>
-              {isCustomized && <><span className="text-gray-300">·</span><span className="text-blue-600" style={{ fontSize: "0.72rem", fontWeight: 500 }}>Customized</span></>}
+              <span className="text-gray-500" style={{ fontSize: "0.78rem" }}>
+                {t(`${IV}fund`, { count: activeFunds.length })}
+              </span>
+              {isCustomized && (
+                <>
+                  <span className="text-gray-300">·</span>
+                  <span className="text-blue-600" style={{ fontSize: "0.72rem", fontWeight: 500 }}>
+                    {t(`${IV}customized`)}
+                  </span>
+                </>
+              )}
             </div>
           </div>
           <button type="button" onClick={onEditPortfolio} className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors" style={{ fontSize: "0.82rem", fontWeight: 500 }}>
-            <Pencil className="w-3.5 h-3.5 inline mr-1.5" />Edit
+            <Pencil className="w-3.5 h-3.5 inline mr-1.5" />
+            {t(`${IV}edit`)}
           </button>
         </div>
 
@@ -649,7 +732,9 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
               {assetSummary.map((a) => (
                 <div key={a.name} className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
-                  <span className="text-gray-500" style={{ fontSize: "0.68rem" }}>{a.name} <span className="text-gray-700" style={{ fontWeight: 600 }}>{a.value}%</span></span>
+                  <span className="text-gray-500" style={{ fontSize: "0.68rem" }}>
+                    {assetClassLabelInv(t, a.name)} <span className="text-gray-700" style={{ fontWeight: 600 }}>{a.value}%</span>
+                  </span>
                 </div>
               ))}
             </div>
@@ -659,7 +744,11 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
         {activeFunds.length > 0 && (
           <div className="mt-2.5 space-y-0.5">
             {activeFunds.slice(0, 2).map((fund) => <p key={fund.ticker} className="text-gray-500 truncate" style={{ fontSize: "0.72rem" }}>{fund.name}</p>)}
-            {activeFunds.length > 2 && <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>+{activeFunds.length - 2} more {activeFunds.length - 2 === 1 ? "fund" : "funds"}</p>}
+            {activeFunds.length > 2 && (
+              <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>
+                {t(`${IV}moreFunds`, { count: activeFunds.length - 2 })}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -667,7 +756,7 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
       {activeFunds.length > 0 && (
         <>
           <button type="button" onClick={() => setExpanded(!expanded)} className="w-full border-t border-gray-100 px-4 py-2 flex items-center justify-center gap-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors" style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-            {expanded ? "Hide" : "View"} funds
+            {expanded ? t(`${IV}hideFunds`) : t(`${IV}viewFunds`)}
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           {expanded && (
@@ -676,7 +765,9 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
                 <div key={fund.ticker} className="flex items-center justify-between py-1">
                   <div>
                     <p className="text-gray-700" style={{ fontSize: "0.78rem" }}>{fund.name}</p>
-                    <p className="text-gray-400" style={{ fontSize: "0.65rem" }}>{fund.ticker} · ER: {fund.expense}</p>
+                    <p className="text-gray-400" style={{ fontSize: "0.65rem" }}>
+                      {fund.ticker} · {t(`${IV}erLabel`)} {fund.expense}
+                    </p>
                   </div>
                   <span className="text-gray-900 tabular-nums" style={{ fontSize: "0.82rem", fontWeight: 600 }}>{fund.allocation}%</span>
                 </div>
@@ -690,12 +781,13 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
 }
 
 function InactiveSourceCard({ sourceKey }: { sourceKey: SourceKey }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-gray-50 rounded-2xl border border-gray-200 px-4 py-3.5 flex items-center gap-3 opacity-60">
       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[sourceKey] }} />
       <div>
-        <p className="text-gray-500" style={{ fontSize: "0.85rem", fontWeight: 500 }}>{sourceFullLabels[sourceKey]}</p>
-        <p className="text-gray-400" style={{ fontSize: "0.72rem" }}>Not currently used</p>
+        <p className="text-gray-500" style={{ fontSize: "0.85rem", fontWeight: 500 }}>{sourceFull(t, sourceKey)}</p>
+        <p className="text-gray-400" style={{ fontSize: "0.72rem" }}>{t(`${IV}inactiveSource`)}</p>
       </div>
     </div>
   );
@@ -713,6 +805,7 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
   monthlyTotal: number;
   onSave: (allocs: PerSourceAllocations) => void;
 }) {
+  const { t } = useTranslation();
   const [allocs, setAllocs] = useState<PerSourceAllocations>({
     sameForAll: activeSources.length === 1,
     unified: defaultFunds.map((f) => ({ ...f })),
@@ -764,10 +857,14 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <h2 className="text-gray-900" style={{ fontSize: "1.25rem", fontWeight: 700 }}>Build Custom Portfolio</h2>
+              <h2 className="text-gray-900" style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+                {t(`${IV}modalTitle`)}
+              </h2>
             </div>
             <p className="text-gray-500" style={{ fontSize: "0.85rem" }}>
-              {editingSource ? `Customizing ${sourceFullLabels[editingSource]} allocation` : "Select a source to customize its investment allocation"}
+              {editingSource
+                ? t(`${IV}modalSubtitleEdit`, { source: sourceFull(t, editingSource) })
+                : t(`${IV}modalSubtitlePick`)}
             </p>
           </div>
           <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
@@ -779,7 +876,9 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
           {/* Left — source cards */}
           <div className={cn(editingSource ? "md:w-2/5" : "w-full", "border-r border-gray-200 overflow-y-auto px-6 py-5 transition-all")}>
-            <p className="text-gray-900 mb-4" style={{ fontSize: "0.95rem", fontWeight: 600 }}>Your Contribution Sources</p>
+            <p className="text-gray-900 mb-4" style={{ fontSize: "0.95rem", fontWeight: 600 }}>
+              {t(`${IV}yourSources`)}
+            </p>
             <div className="space-y-3">
               {activeSources.map((src) => (
                 <SourceCard
@@ -801,7 +900,9 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
               <div className="px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: sourceColors[editingSource] }} />
-                  <h3 className="text-gray-900" style={{ fontSize: "1rem", fontWeight: 600 }}>Customize {sourceFullLabels[editingSource]}</h3>
+                  <h3 className="text-gray-900" style={{ fontSize: "1rem", fontWeight: 600 }}>
+                    {t(`${IV}customizeSource`, { source: sourceFull(t, editingSource) })}
+                  </h3>
                 </div>
                 <button type="button" onClick={() => { setEditingSource(null); setInlineAllocs(null); }} className="text-gray-400 hover:text-gray-600 transition-colors">
                   <X className="w-4 h-4" />
@@ -818,9 +919,21 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
                 />
               </div>
               <div className="px-6 py-4 border-t border-gray-200 bg-white flex items-center gap-3">
-                <button type="button" onClick={() => { setEditingSource(null); setInlineAllocs(null); }} className="flex-1 px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors" style={{ fontSize: "0.85rem", fontWeight: 500 }}>Cancel</button>
-                <button type="button" onClick={handleSaveInline} className="flex-1 px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all flex items-center justify-center gap-2" style={{ fontSize: "0.85rem", fontWeight: 500 }}>
-                  <Check className="w-4 h-4" /> Save Changes
+                <button
+                  type="button"
+                  onClick={() => { setEditingSource(null); setInlineAllocs(null); }}
+                  className="flex-1 px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                  style={{ fontSize: "0.85rem", fontWeight: 500 }}
+                >
+                  {t(`${IV}cancel`)}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveInline}
+                  className="flex-1 px-5 py-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                  style={{ fontSize: "0.85rem", fontWeight: 500 }}
+                >
+                  <Check className="w-4 h-4" /> {t(`${IV}saveChanges`)}
                 </button>
               </div>
             </div>
@@ -835,7 +948,7 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
             style={{ fontSize: "0.9rem", fontWeight: 600 }}
           >
-            Save & Continue <ArrowRight className="w-4 h-4" />
+            {t(`${IV}saveContinue`)} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -846,6 +959,7 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
 /* ─── Main component ─── */
 
 export function InvestmentStrategy() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const riskLevel = useEnrollmentStore((s) => s.riskLevel);
   const updateField = useEnrollmentStore((s) => s.updateField);
@@ -879,6 +993,16 @@ export function InvestmentStrategy() {
 
   const monthlyTotal = (salary * contribution) / 100 / 12;
 
+  const riskOptions = useMemo(
+    () =>
+      RISK_DEF.map((opt) => ({
+        key: opt.key,
+        label: t(`${IV}${opt.labelKey}`),
+        sub: t(`${IV}${opt.subKey}`),
+      })),
+    [t],
+  );
+
   const handleContinueRecommended = () => {
     updateField("useRecommendedPortfolio", true);
     if (riskLevel == null) updateField("riskLevel", "balanced");
@@ -894,8 +1018,8 @@ export function InvestmentStrategy() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Your Investment Strategy</h1>
-        <p className="mt-1 text-sm text-muted-foreground">See how your plan invests your contributions — or adjust when you are ready.</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t(`${IV}pageTitle`)}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}pageSubtitle`)}</p>
       </div>
 
       {/* Investment style card */}
@@ -905,23 +1029,23 @@ export function InvestmentStrategy() {
             <Gauge className="h-5 w-5" aria-hidden />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Investment Style</p>
-            <p className="text-lg font-medium text-foreground">{STYLE_TITLE[activeRisk]}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{STYLE_DESCRIPTION[activeRisk]}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${IV}styleEyebrow`)}</p>
+            <p className="text-lg font-medium text-foreground">{t(`${IV}${STYLE_TITLE_KEYS[activeRisk]}`)}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}${STYLE_DESC_KEYS[activeRisk]}`)}</p>
           </div>
         </div>
         <button type="button" onClick={() => setEditorOpen((o) => !o)} aria-expanded={editorOpen} className="btn btn-outline shrink-0 gap-1 self-start sm:self-center">
           <Pencil className="h-4 w-4" aria-hidden />
-          Edit Investment Strategy
+          {t(`${IV}editStrategy`)}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
       </div>
 
       {editorOpen && (
         <div className="card">
-          <p className="mb-3 text-sm text-muted-foreground">Choose the profile that best describes you.</p>
+          <p className="mb-3 text-sm text-muted-foreground">{t(`${IV}chooseProfile`)}</p>
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {RISK_OPTIONS.map((opt) => (
+            {riskOptions.map((opt) => (
               <button key={opt.key} type="button" onClick={() => { updateField("riskLevel", opt.key); setEditorOpen(false); setCustomAllocations(null); }} className={cn("btn min-h-20 flex-col gap-0.5 py-3 text-center", activeRisk === opt.key ? "btn-primary" : "btn-outline")}>
                 <span className="text-sm font-medium">{opt.label}</span>
                 <span className={cn("text-xs", activeRisk === opt.key ? "opacity-90" : "text-muted-foreground")}>{opt.sub}</span>
@@ -937,10 +1061,12 @@ export function InvestmentStrategy() {
         <div className="card space-y-4 lg:col-span-2">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-1 bg-blue-100 rounded-md text-blue-700 text-xs font-bold uppercase tracking-wide">Recommended</span>
+              <span className="px-2.5 py-1 bg-blue-100 rounded-md text-blue-700 text-xs font-bold uppercase tracking-wide">
+                {t(`${IV}recommendedBadge`)}
+              </span>
             </div>
-            <h2 className="text-lg font-medium text-foreground">Plan Default Investment</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Professionally managed, diversified portfolio aligned to your investment style.</p>
+            <h2 className="text-lg font-medium text-foreground">{t(`${IV}planDefaultTitle`)}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}planDefaultDesc`)}</p>
           </div>
 
           <div className="card-soft space-y-2">
@@ -948,7 +1074,7 @@ export function InvestmentStrategy() {
               <div key={row.name} className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: row.color }} />
-                  <span className="text-foreground">{row.name}</span>
+                  <span className="text-foreground">{translateAllocName(t, row.name)}</span>
                 </div>
                 <span className="font-medium tabular-nums text-foreground">{row.value}%</span>
               </div>
@@ -956,12 +1082,12 @@ export function InvestmentStrategy() {
           </div>
 
           <div className="card-highlight">
-            <p className="text-sm font-medium text-foreground">Why this works for you</p>
-            <p className="mt-1 text-sm text-muted-foreground">{WHY_COPY[activeRisk]}</p>
+            <p className="text-sm font-medium text-foreground">{t(`${IV}whyTitle`)}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}${WHY_KEYS[activeRisk]}`)}</p>
           </div>
 
           <button type="button" onClick={handleContinueRecommended} className="btn btn-primary w-full gap-2">
-            Continue with recommended plan
+            {t(`${IV}continueRecommended`)}
             <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
           </button>
         </div>
@@ -985,22 +1111,22 @@ export function InvestmentStrategy() {
                 "dark:border-purple-400/40 dark:bg-gradient-to-r dark:from-purple-950/95 dark:to-indigo-950/95 dark:text-purple-200",
               )}
             >
-              Advanced User
+              {t(`${IV}advancedUser`)}
             </span>
           </div>
 
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">Customize your portfolio</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">{t(`${IV}customizeTitle`)}</h2>
           <p className="text-sm leading-snug text-slate-600 dark:text-slate-300">
-            Adjust your investment allocation based on your preferences and risk tolerance.
+            {t(`${IV}customizeDesc`)}
           </p>
           <p className="flex-1 text-sm font-medium text-slate-800 dark:text-slate-200">
-            Best for experienced investors who want more control over their portfolio.
+            {t(`${IV}customizeBestFor`)}
           </p>
 
           {customAllocations && (
             <div className="flex items-center gap-1.5 rounded-xl border border-green-200 bg-green-50 px-3 py-2 dark:border-green-600/40 dark:bg-green-950/35">
               <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-300">Custom portfolio saved</span>
+              <span className="text-xs font-medium text-green-700 dark:text-green-300">{t(`${IV}customSaved`)}</span>
             </div>
           )}
 
@@ -1013,7 +1139,7 @@ export function InvestmentStrategy() {
               "dark:border-purple-400/55 dark:text-purple-200 dark:hover:border-purple-300 dark:hover:bg-purple-950/50",
             )}
           >
-            {customAllocations ? "Edit my portfolio" : "Customize my portfolio"}
+            {customAllocations ? t(`${IV}editPortfolioCta`) : t(`${IV}customizeCta`)}
             <ArrowRight className="w-4 h-4 shrink-0" aria-hidden />
           </button>
         </div>
@@ -1023,22 +1149,28 @@ export function InvestmentStrategy() {
       <div className="card card-highlight flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
           <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Expert Help</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${IV}expertHelp`)}</p>
             <div className="icon-box-soft flex h-12 w-12 rounded-xl">
               <Phone className="h-6 w-6" aria-hidden />
             </div>
           </div>
           <div className="min-w-0">
-            <h2 className="text-lg font-medium text-foreground">Need Guidance? Contact Advisor</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Get help from a certified financial advisor to choose the right investment strategy for your goals.</p>
+            <h2 className="text-lg font-medium text-foreground">{t(`${IV}advisorTitle`)}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}advisorDesc`)}</p>
             <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:gap-6">
-              <div className="flex items-center gap-2 text-sm text-foreground"><Check className="h-4 w-4 shrink-0 text-green-600" aria-hidden />Certified professionals</div>
-              <div className="flex items-center gap-2 text-sm text-foreground"><Check className="h-4 w-4 shrink-0 text-green-600" aria-hidden />Custom portfolio analysis</div>
+              <div className="flex items-center gap-2 text-sm text-foreground">
+                <Check className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                {t(`${IV}advisorBullet1`)}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-foreground">
+                <Check className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
+                {t(`${IV}advisorBullet2`)}
+              </div>
             </div>
           </div>
         </div>
         <a href={ADVISOR_CONTACT_HREF} className="btn btn-outline shrink-0 gap-2 self-start sm:self-center">
-          Connect Now <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+          {t(`${IV}connectNow`)} <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
         </a>
       </div>
 

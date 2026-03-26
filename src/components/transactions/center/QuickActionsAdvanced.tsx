@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export type QuickActionBadge = "recommended" | "most_used";
@@ -20,16 +21,15 @@ export type QuickActionsAdvancedProps = {
   className?: string;
 };
 
-const badgeLabel: Record<QuickActionBadge, string> = {
-  recommended: "Recommended",
-  most_used: "Most used",
-};
-
 /**
  * Context-rich financial action cards for the transaction center (Figma-aligned).
  * Horizontal layout: icon | title + key value + supporting | arrow.
  */
 export function QuickActionsAdvanced({ items, className }: QuickActionsAdvancedProps) {
+  const { t } = useTranslation();
+  const badgeLabel = (b: QuickActionBadge) =>
+    b === "recommended" ? t("transactions.center.badgeRecommended") : t("transactions.center.badgeMostUsed");
+
   return (
     <div
       className={cn(
@@ -86,7 +86,7 @@ export function QuickActionsAdvanced({ items, className }: QuickActionsAdvancedP
                     color: "var(--primary)",
                   }}
                 >
-                  {badgeLabel[item.badge]}
+                  {badgeLabel(item.badge)}
                 </span>
               ) : null}
             </div>

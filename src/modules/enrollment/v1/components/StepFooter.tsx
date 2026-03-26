@@ -7,6 +7,7 @@ type StepFooterProps = {
   onNext: () => void;
   nextLabel?: string;
   backLabel?: string;
+  finishLabel?: string;
   nextDisabled?: boolean;
   isFirstStep?: boolean;
   isLastStep?: boolean;
@@ -24,6 +25,7 @@ export function StepFooter({
   onNext,
   nextLabel = "Next",
   backLabel = "Back",
+  finishLabel = "Finish",
   nextDisabled = false,
   isFirstStep = false,
   isLastStep = false,
@@ -66,7 +68,7 @@ export function StepFooter({
             wizardChrome && "btn-enrollment-wizard-continue rounded-[14px]",
           )}
         >
-          {isLastStep ? "Finish" : nextLabel}
+          {isLastStep ? finishLabel : nextLabel}
           {wizardChrome && !isLastStep ? (
             <ChevronRight className="size-5 shrink-0 opacity-95" aria-hidden />
           ) : null}

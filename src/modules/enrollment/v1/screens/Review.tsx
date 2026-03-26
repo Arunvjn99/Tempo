@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Briefcase,
   Clock,
@@ -13,14 +14,21 @@ import { pathForWizardStep } from "../flow/v1WizardPaths";
 import type { RiskLevel } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 
-const RISK_LABELS: Record<RiskLevel, string> = {
-  conservative: "Conservative",
-  balanced: "Balanced",
-  growth: "Growth",
-  aggressive: "Aggressive",
-};
+const R = "enrollment.v1.review.";
+const INV = "enrollment.v1.investment.";
+
+function riskLabelKey(rl: RiskLevel): string {
+  const m: Record<RiskLevel, string> = {
+    conservative: "riskConservative",
+    balanced: "riskBalanced",
+    growth: "riskGrowth",
+    aggressive: "riskAggressive",
+  };
+  return `${INV}${m[rl]}`;
+}
 
 export function Review() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
@@ -54,42 +62,42 @@ export function Review() {
 
   const sourcesParts: string[] = [];
   if (data.contributionSources.preTax > 0) {
-    sourcesParts.push(`Pre-tax ${data.contributionSources.preTax}%`);
+    sourcesParts.push(t(`${R}sourcePreTax`, { pct: data.contributionSources.preTax }));
   }
   if (data.contributionSources.roth > 0) {
-    sourcesParts.push(`Roth ${data.contributionSources.roth}%`);
+    sourcesParts.push(t(`${R}sourceRoth`, { pct: data.contributionSources.roth }));
   }
   if (data.supportsAfterTax && data.contributionSources.afterTax > 0) {
-    sourcesParts.push(`After-tax ${data.contributionSources.afterTax}%`);
+    sourcesParts.push(t(`${R}sourceAfterTax`, { pct: data.contributionSources.afterTax }));
   }
-  const sourcesDisplay = sourcesParts.join(" / ") || "—";
+  const sourcesDisplay = sourcesParts.join(" / ") || t(`${R}placeholder`);
 
   const planSections: { label: string; value: string; editIndex: number }[] = [
     {
-      label: "Plan",
-      value: data.selectedPlan === "traditional" ? "Traditional 401(k)" : "Roth 401(k)",
+      label: t(`${R}rowPlan`),
+      value: data.selectedPlan === "traditional" ? t(`${R}planTraditional`) : t(`${R}planRoth`),
       editIndex: 0,
     },
     {
-      label: "Contribution",
-      value: `${data.contribution}% ($${annualContribution.toLocaleString()}/year)`,
+      label: t(`${R}rowContribution`),
+      value: `${data.contribution}% ($${annualContribution.toLocaleString()}/${t(`${R}perYear`)})`,
       editIndex: 1,
     },
     {
-      label: "Contribution source",
+      label: t(`${R}rowContributionSource`),
       value: sourcesDisplay,
       editIndex: 2,
     },
     {
-      label: "Auto increase",
+      label: t(`${R}rowAutoIncrease`),
       value: data.autoIncrease
-        ? `+${data.autoIncreaseRate}%/yr up to ${data.autoIncreaseMax}%`
-        : "Disabled",
+        ? t(`${R}autoIncreaseOnDetail`, { rate: data.autoIncreaseRate, max: data.autoIncreaseMax })
+        : t(`${R}autoIncreaseOff`),
       editIndex: 3,
     },
     {
-      label: "Investment strategy",
-      value: `${RISK_LABELS[rl]} portfolio`,
+      label: t(`${R}rowInvestmentStrategy`),
+      value: t(`${R}strategyPortfolioPhrase`, { strategy: t(riskLabelKey(rl)) }),
       editIndex: 4,
     },
   ];
@@ -101,54 +109,51 @@ export function Review() {
 
   const confidenceMessage =
     employerContribution >= annualContribution * 0.5
-      ? `Your employer contributes $${employerContribution.toLocaleString()} per year to your retirement savings.`
-      : `You are on track for retirement at age ${data.retirementAge} with your current plan setup.`;
+      ? t(`${R}confidenceEmployer`, { amount: employerContribution.toLocaleString() })
+      : t(`${R}confidenceOnTrack`, { age: data.retirementAge });
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
-        <h1 className="text-xl font-semibold text-foreground md:text-2xl">Review Your Retirement Plan</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Confirm your selections before enrolling.</p>
+        <h1 className="text-xl font-semibold text-foreground md:text-2xl">{t(`${R}pageTitle`)}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t(`${R}pageSubtitle`)}</p>
       </div>
 
       <div className="review-hero">
-        <p className="review-hero__muted--caps">Projected retirement balance</p>
+        <p className="review-hero__muted--caps">{t(`${R}heroProjectedLabel`)}</p>
         <p className="mt-1 text-4xl font-bold tabular-nums">{formatCurrency(projectedBalance)}</p>
-        <p className="review-hero__muted mt-0.5">
-          Based on your current plan setup over {yearsToRetirement} years. Past results do not guarantee future
-          returns.
-        </p>
+        <p className="review-hero__muted mt-0.5">{t(`${R}heroDisclaimer`, { years: yearsToRetirement })}</p>
 
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <Metric
             icon={<DollarSign className="review-hero__icon h-3 w-3" aria-hidden />}
-            label="Your contribution"
+            label={t(`${R}metricYourContribution`)}
             value={`$${annualContribution.toLocaleString()}`}
-            sub="per year"
+            sub={t(`${R}perYear`)}
           />
           <Metric
             icon={<Briefcase className="review-hero__icon h-3 w-3" aria-hidden />}
-            label="Employer match"
+            label={t(`${R}metricEmployerMatch`)}
             value={`$${employerContribution.toLocaleString()}`}
-            sub="per year"
+            sub={t(`${R}perYear`)}
           />
           <Metric
             icon={<TrendingUp className="review-hero__icon h-3 w-3" aria-hidden />}
-            label="Expected growth"
+            label={t(`${R}metricExpectedGrowth`)}
             value={`~${(growthRate * 100).toFixed(1)}%`}
-            sub={`annual (${RISK_LABELS[rl].toLowerCase()})`}
+            sub={t(`${R}annualGrowthSub`, { risk: t(riskLabelKey(rl)).toLowerCase() })}
           />
           <Metric
             icon={<Clock className="review-hero__icon h-3 w-3" aria-hidden />}
-            label="Time horizon"
-            value={`${yearsToRetirement} years`}
-            sub={`retire at age ${data.retirementAge}`}
+            label={t(`${R}metricTimeHorizon`)}
+            value={t(`${R}yearsCount`, { count: yearsToRetirement })}
+            sub={t(`${R}retireAtAge`, { age: data.retirementAge })}
           />
         </div>
       </div>
 
       <div>
-        <p className="mb-3 text-sm font-semibold text-foreground">Your Plan Setup</p>
+        <p className="mb-3 text-sm font-semibold text-foreground">{t(`${R}planSetupTitle`)}</p>
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
           {planSections.map((section) => (
             <div key={section.label} className="card-setup-compact flex flex-col justify-between">
@@ -164,7 +169,7 @@ export function Review() {
                 className="mt-2.5 flex items-center gap-1 self-start text-xs font-medium text-primary hover:underline"
               >
                 <Edit3 className="h-3 w-3" aria-hidden />
-                Edit
+                {t(`${R}edit`)}
               </button>
             </div>
           ))}
@@ -185,9 +190,9 @@ export function Review() {
             className="mt-0.5 h-5 w-5 rounded border-border accent-primary"
           />
           <span className="text-sm text-foreground/90">
-            I confirm my retirement plan enrollment and understand my contributions will begin next pay period.{" "}
+            {t(`${R}termsConfirm`)}{" "}
             <span className="inline-flex items-center gap-0.5 font-medium text-primary">
-              View full plan terms <ExternalLink className="h-3 w-3" aria-hidden />
+              {t(`${R}viewPlanTerms`)} <ExternalLink className="h-3 w-3" aria-hidden />
             </span>
           </span>
         </label>

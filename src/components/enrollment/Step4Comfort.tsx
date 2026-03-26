@@ -1,61 +1,59 @@
+import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BarChart2, Shield, TrendingUp, Zap } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { OnboardingStepCard, SuggestionCard, WizardGuideInsight } from "./onboarding";
 
 export type InvestmentComfort = "conservative" | "balanced" | "growth" | "aggressive";
 
-const COMFORT_INSIGHTS: Record<InvestmentComfort, string> = {
-  conservative:
-    "Conservative options prioritize stability — many near-retirees choose this to sleep better when markets swing.",
-  balanced:
-    "Balanced portfolios are chosen by about 60% of users — a middle path between growth and steadiness.",
-  growth:
-    "Growth-oriented mixes aim for higher long-term returns while accepting more ups and downs along the way.",
-  aggressive:
-    "Aggressive strategies chase maximum growth; they suit long time horizons and higher tolerance for volatility.",
-};
-
-const COMFORT_RETURNS_HINT: Record<InvestmentComfort, string> = {
-  conservative: "Historically, conservative mixes have aimed for steadier, lower-volatility outcomes over long periods.",
-  balanced: "A balanced approach has often targeted moderate long-term growth with managed swings.",
-  growth: "Growth-oriented strategies typically seek higher long-term returns with more market movement.",
-  aggressive: "Aggressive portfolios may offer higher return potential over decades, with deeper drawdowns possible.",
-};
-
-const OPTIONS: {
+const LEVELS: {
   key: InvestmentComfort;
-  label: string;
-  description: string;
   icon: typeof Shield;
+  labelKey: string;
+  descKey: string;
   mostCommon?: boolean;
 }[] = [
   {
     key: "conservative",
-    label: "Conservative",
-    description: "Lower risk, emphasis on preserving what you've built.",
     icon: Shield,
+    labelKey: "comfortOptConservativeLabel",
+    descKey: "comfortOptConservativeDesc",
   },
   {
     key: "balanced",
-    label: "Balanced",
-    description: "Moderate growth with a mix of stocks and steadier assets.",
     icon: BarChart2,
+    labelKey: "comfortOptBalancedLabel",
+    descKey: "comfortOptBalancedDesc",
     mostCommon: true,
   },
   {
     key: "growth",
-    label: "Growth",
-    description: "Higher growth potential with more market movement.",
     icon: TrendingUp,
+    labelKey: "comfortOptGrowthLabel",
+    descKey: "comfortOptGrowthDesc",
   },
   {
     key: "aggressive",
-    label: "Aggressive",
-    description: "Maximum growth focus; expect sharper swings.",
     icon: Zap,
+    labelKey: "comfortOptAggressiveLabel",
+    descKey: "comfortOptAggressiveDesc",
   },
 ];
+
+const INSIGHT_KEYS: Record<InvestmentComfort, string> = {
+  conservative: "comfortInsightConservative",
+  balanced: "comfortInsightBalanced",
+  growth: "comfortInsightGrowth",
+  aggressive: "comfortInsightAggressive",
+};
+
+const RETURNS_KEYS: Record<InvestmentComfort, string> = {
+  conservative: "comfortReturnsConservative",
+  balanced: "comfortReturnsBalanced",
+  growth: "comfortReturnsGrowth",
+  aggressive: "comfortReturnsAggressive",
+};
 
 export interface Step4ComfortProps {
   value: InvestmentComfort;
@@ -66,22 +64,29 @@ export interface Step4ComfortProps {
  * Pre-enrollment wizard Step 4 — risk comfort (guided card + suggestion + insight).
  */
 export function Step4Comfort({ value, onChange }: Step4ComfortProps) {
+  const { t } = useTranslation();
+  const pw = "preEnrollment.personalizeWizard.";
+
+  const insight = useMemo(
+    () => ({
+      main: t(`${pw}${INSIGHT_KEYS[value]}`),
+      returns: t(`${pw}${RETURNS_KEYS[value]}`),
+    }),
+    [t, value],
+  );
+
   return (
     <>
       <OnboardingStepCard>
         <div>
-          <h3 className="premium-wizard__question text-center">How comfortable are you with investment risk?</h3>
-          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
-            This helps us recommend a portfolio that matches your style.
-          </p>
+          <h3 className="premium-wizard__question text-center">{t(`${pw}comfortQuestion`)}</h3>
+          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">{t(`${pw}comfortSubtitle`)}</p>
         </div>
 
-        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">
-          I am comfortable with
-        </p>
+        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">{t(`${pw}comfortIntro`)}</p>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Investment risk comfort">
-          {OPTIONS.map((level) => {
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2" role="radiogroup" aria-label={t(`${pw}comfortRadiogroupAria`)}>
+          {LEVELS.map((level) => {
             const selected = value === level.key;
             const Icon = level.icon;
             return (
@@ -103,7 +108,7 @@ export function Step4Comfort({ value, onChange }: Step4ComfortProps) {
               >
                 {level.mostCommon ? (
                   <span className="absolute -top-2 right-3 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                    Most common
+                    {t(`${pw}comfortMostCommonBadge`)}
                   </span>
                 ) : null}
                 <div className="flex items-center gap-2">
@@ -112,19 +117,19 @@ export function Step4Comfort({ value, onChange }: Step4ComfortProps) {
                     strokeWidth={2}
                     aria-hidden
                   />
-                  <span className="text-sm font-semibold text-[var(--color-text)]">{level.label}</span>
+                  <span className="text-sm font-semibold text-[var(--color-text)]">{t(`${pw}${level.labelKey}`)}</span>
                 </div>
-                <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">{level.description}</p>
+                <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">{t(`${pw}${level.descKey}`)}</p>
               </motion.button>
             );
           })}
         </div>
 
         <SuggestionCard
-          title="Balanced is the most common choice"
-          subtitle="Based on similar participants in your plan"
-          badge="Popular"
-          actionLabel="Apply"
+          title={t(`${pw}comfortSuggestTitle`)}
+          subtitle={t(`${pw}comfortSuggestSubtitle`)}
+          badge={t(`${pw}badgePopular`)}
+          actionLabel={t(`${pw}apply`)}
           onAction={() => onChange("balanced")}
           disabled={value === "balanced"}
         />
@@ -132,8 +137,8 @@ export function Step4Comfort({ value, onChange }: Step4ComfortProps) {
 
       <AnimatePresence mode="wait">
         <WizardGuideInsight key={value}>
-          <span className="block font-medium text-[var(--color-text)]">{COMFORT_INSIGHTS[value]}</span>
-          <span className="mt-2 block text-xs opacity-90">{COMFORT_RETURNS_HINT[value]}</span>
+          <span className="block font-medium text-[var(--color-text)]">{insight.main}</span>
+          <span className="mt-2 block text-xs opacity-90">{insight.returns}</span>
         </WizardGuideInsight>
       </AnimatePresence>
     </>

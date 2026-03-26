@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { ArrowRight, Award, DollarSign, Info, Sparkles } from "lucide-react";
 import { useEnrollmentStore, type EnrollmentV1Store } from "../store/useEnrollmentStore";
 import { computeMockRetirementProjection } from "../flow/projection";
@@ -19,6 +20,7 @@ const READINESS_BENCHMARK = 85;
 
 const RING_R = 58;
 const RING_C = 2 * Math.PI * RING_R;
+const P = "enrollment.v1.readiness.";
 
 function AnimatedScoreRing({
   value,
@@ -29,6 +31,7 @@ function AnimatedScoreRing({
   strokeClass: string;
   displayClass: string;
 }) {
+  const { t } = useTranslation();
   const [displayValue, setDisplayValue] = useState(value);
   const prev = useRef(value);
 
@@ -68,7 +71,7 @@ function AnimatedScoreRing({
       </svg>
       <div className="absolute inset-0 flex rotate-90 flex-col items-center justify-center">
         <span className={cn("text-4xl font-bold tabular-nums sm:text-5xl", displayClass)}>{displayValue}</span>
-        <span className="text-xs text-muted-foreground">out of 100</span>
+        <span className="text-xs text-muted-foreground">{t(`${P}outOf100`)}</span>
       </div>
     </div>
   );
@@ -91,14 +94,8 @@ function applyEnrollmentPatch(patch: ReadinessApplyPatch, updateField: Enrollmen
   }
 }
 
-function statusMessage(score: number): string {
-  if (score >= 80) return "You're on a great track!";
-  if (score >= 60) return "You're building a solid foundation.";
-  if (score >= 40) return "You're getting started — keep going!";
-  return "Every step counts toward your goal.";
-}
-
 export function RetirementReadiness() {
+  const { t } = useTranslation();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
@@ -141,12 +138,17 @@ export function RetirementReadiness() {
 
   const recommendations = useMemo(
     () =>
-      generateRecommendations(data, appliedIds, {
-        score,
-        projectedBalance,
-        yearsToRetirement,
-      }),
-    [appliedIds, data, projectedBalance, score, yearsToRetirement],
+      generateRecommendations(
+        data,
+        appliedIds,
+        {
+          score,
+          projectedBalance,
+          yearsToRetirement,
+        },
+        t,
+      ),
+    [appliedIds, data, projectedBalance, score, yearsToRetirement, t],
   );
 
   const actionableRecs = useMemo(
@@ -171,7 +173,7 @@ export function RetirementReadiness() {
 
   const applyRec = (rec: GeneratedRecommendation) => {
     if (rec.patch.kind === "none") return;
-    if (!window.confirm("Apply this recommendation to your enrollment selections?")) return;
+    if (!window.confirm(t(`${P}confirmApply`))) return;
     applyEnrollmentPatch(rec.patch, updateField);
     setAppliedIds((prev) => (prev.includes(rec.id) ? prev : [...prev, rec.id]));
   };
@@ -188,17 +190,20 @@ export function RetirementReadiness() {
       ? "text-[var(--color-warning)]"
       : "text-[var(--color-success)]";
 
-  const understandingCopy = `Your score of ${score} is based on contributions, timeline, and projected growth — there is room to improve.`;
-
   const targetBarPct = Math.min(100, Math.round((score / READINESS_BENCHMARK) * 100));
+
+  const statusMessage = (s: number) => {
+    if (s >= 80) return t(`${P}statusGreat`);
+    if (s >= 60) return t(`${P}statusSolid`);
+    if (s >= 40) return t(`${P}statusStarted`);
+    return t(`${P}statusEveryStep`);
+  };
 
   return (
     <div className="mx-auto max-w-5xl">
       <header className="mb-5">
-        <h1 className="text-2xl font-semibold text-foreground">Your Retirement Readiness</h1>
-        <p className="mt-1 text-sm text-muted-foreground md:text-base">
-          Here&apos;s how your choices add up before you finalize.
-        </p>
+        <h1 className="text-2xl font-semibold text-foreground">{t(`${P}pageTitle`)}</h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">{t(`${P}pageSubtitle`)}</p>
       </header>
 
       <div className="grid items-start gap-6 md:grid-cols-[1fr_min(22rem,100%)] lg:grid-cols-[1fr_24rem]">
@@ -226,11 +231,14 @@ export function RetirementReadiness() {
 
               <p className="mt-4 text-center text-base font-semibold text-foreground">{statusMessage(score)}</p>
               <p className="mt-1 text-center text-sm text-muted-foreground">
-                You are <span className="font-semibold text-foreground">{score}%</span> on track for your retirement
-                goal.
+                <Trans
+                  i18nKey={`${P}onTrackLine`}
+                  values={{ score }}
+                  components={{ score: <span className="font-semibold text-foreground" /> }}
+                />
               </p>
               <p className="mt-1 max-w-sm text-center text-xs text-muted-foreground">
-                Most participants your age aim for a readiness score of {READINESS_BENCHMARK} or higher.
+                {t(`${P}benchmarkLine`, { benchmark: READINESS_BENCHMARK })}
               </p>
 
               <div className="readiness-target-bar w-full max-w-xs">
@@ -238,7 +246,8 @@ export function RetirementReadiness() {
                   <div className="readiness-target-bar__fill" style={{ width: `${targetBarPct}%` }} />
                 </div>
                 <span className="readiness-target-bar__label">
-                  Target: <span className="font-semibold text-foreground">{READINESS_BENCHMARK}</span>
+                  {t(`${P}target`)}{" "}
+                  <span className="font-semibold text-foreground">{READINESS_BENCHMARK}</span>
                 </span>
               </div>
             </div>
@@ -248,13 +257,13 @@ export function RetirementReadiness() {
             <div className="text-center">
               <div className="mb-1 flex items-center justify-center gap-2">
                 <DollarSign className="h-4 w-4 text-primary" aria-hidden />
-                <p className="text-xs font-medium text-muted-foreground">Projected retirement balance</p>
+                <p className="text-xs font-medium text-muted-foreground">{t(`${P}projectedBalanceLabel`)}</p>
               </div>
               <p className="text-3xl font-bold tabular-nums text-foreground sm:text-[1.8rem]">
                 {formatCurrency(projectedBalance)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                In {yearsToRetirement} years with your current contribution and investment strategy.
+                {t(`${P}projectedBalanceSub`, { years: yearsToRetirement })}
               </p>
             </div>
           </div>
@@ -263,19 +272,19 @@ export function RetirementReadiness() {
             <div className="flex items-start gap-2">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
               <div>
-                <h3 className="text-base font-semibold text-foreground">Understanding Your Score</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{understandingCopy}</p>
+                <h3 className="text-base font-semibold text-foreground">{t(`${P}understandingTitle`)}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t(`${P}understandingBody`, { score })}</p>
               </div>
             </div>
           </div>
 
           <div className="readiness-funding-card">
-            <h3 className="readiness-funding-card__title">Annual Funding Summary</h3>
+            <h3 className="readiness-funding-card__title">{t(`${P}fundingTitle`)}</h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="metric-dot-tertiary h-3 w-3 shrink-0 rounded-full" />
-                  <span className="text-muted-foreground">Retirement Income Goal</span>
+                  <span className="text-muted-foreground">{t(`${P}fundingGoal`)}</span>
                 </div>
                 <span className="shrink-0 font-semibold tabular-nums text-foreground">
                   {formatCurrencyDetailed(retirementIncomeGoalAnnual)}
@@ -284,7 +293,7 @@ export function RetirementReadiness() {
               <div className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="h-3 w-3 shrink-0 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Current Annual Contributions</span>
+                  <span className="text-muted-foreground">{t(`${P}fundingCurrent`)}</span>
                 </div>
                 <span className="shrink-0 font-semibold tabular-nums text-primary">
                   {formatCurrencyDetailed(totalAnnualContributions)}
@@ -294,17 +303,14 @@ export function RetirementReadiness() {
               <div className="flex items-center justify-between gap-3 text-sm">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="metric-dot-danger h-3 w-3 shrink-0 rounded-full" />
-                  <span className="text-muted-foreground">Annual Savings Gap</span>
+                  <span className="text-muted-foreground">{t(`${P}fundingGap`)}</span>
                 </div>
                 <span className="text-danger-token shrink-0 font-semibold tabular-nums">
                   {formatCurrencyDetailed(annualSavingsGap)}
                 </span>
               </div>
             </div>
-            <p className="readiness-funding-card__footer">
-              This shows the gap between your retirement income goal and current annual contributions. Close this gap by
-              increasing contributions or adjusting your retirement timeline.
-            </p>
+            <p className="readiness-funding-card__footer">{t(`${P}fundingFooter`)}</p>
           </div>
         </div>
 
@@ -315,14 +321,21 @@ export function RetirementReadiness() {
               <div className="readiness-recommended-panel__title-row">
                 <p className="readiness-recommended-panel__title">
                   <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-                  Recommended for You
+                  {t(`${P}recommendedTitle`)}
                 </p>
-                <span className="readiness-recommended-panel__score-pill">Score: {bestNewScore}</span>
+                <span className="readiness-recommended-panel__score-pill">
+                  {t(`${P}scorePill`, { score: bestNewScore })}
+                </span>
               </div>
               <p className="readiness-recommended-panel__body">
-                You can reach a score of <span className="font-semibold text-primary">{bestNewScore}</span> — apply the
-                recommendations below to boost your readiness by{" "}
-                <span className="font-semibold text-foreground">+{boostPoints} points</span>.
+                <Trans
+                  i18nKey={`${P}recommendedBody`}
+                  values={{ score: bestNewScore, points: boostPoints }}
+                  components={{
+                    new: <span className="font-semibold text-primary" />,
+                    pts: <span className="font-semibold text-foreground" />,
+                  }}
+                />
               </p>
             </div>
           ) : null}
@@ -330,10 +343,8 @@ export function RetirementReadiness() {
           {actionableRecs.length > 0 ? (
             <div>
               <div className="readiness-rec-list-header mb-3">
-                <p className="readiness-rec-list-header__title">Optional ways to improve your readiness</p>
-                <p className="readiness-rec-list-header__sub">
-                  You can apply one of these improvements to increase your retirement readiness score.
-                </p>
+                <p className="readiness-rec-list-header__title">{t(`${P}optionalTitle`)}</p>
+                <p className="readiness-rec-list-header__sub">{t(`${P}optionalSub`)}</p>
               </div>
               <div className="space-y-2.5">
                 {actionableRecs.map((rec, index) => {
@@ -348,7 +359,7 @@ export function RetirementReadiness() {
                         {isFeatured ? (
                           <div className="readiness-rec-badge">
                             <Award className="h-3 w-3" aria-hidden />
-                            Recommended
+                            {t(`${P}recBadge`)}
                           </div>
                         ) : null}
                         <div className="flex items-start gap-3">
@@ -365,7 +376,7 @@ export function RetirementReadiness() {
                             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{rec.description}</p>
                             <div className="readiness-rec-metrics">
                               <div>
-                                <p className="readiness-rec-metrics__label">Score</p>
+                                <p className="readiness-rec-metrics__label">{t(`${P}metricScore`)}</p>
                                 <div className="readiness-rec-metrics__value-row">
                                   <span className="tabular-nums text-sm font-semibold text-muted-foreground">{score}</span>
                                   <ArrowRight className="h-3 w-3 text-border" aria-hidden />
@@ -375,13 +386,15 @@ export function RetirementReadiness() {
                                 </div>
                               </div>
                               <div>
-                                <p className="readiness-rec-metrics__label">Savings</p>
+                                <p className="readiness-rec-metrics__label">{t(`${P}metricSavings`)}</p>
                                 <p className="readiness-rec-metrics__value-row text-sm font-bold text-primary">
-                                  +${rec.additionalAnnualSavings.toLocaleString()}/yr
+                                  {t(`${P}savingsPerYr`, {
+                                    amount: `$${rec.additionalAnnualSavings.toLocaleString()}`,
+                                  })}
                                 </p>
                               </div>
                               <div>
-                                <p className="readiness-rec-metrics__label">Balance</p>
+                                <p className="readiness-rec-metrics__label">{t(`${P}metricBalance`)}</p>
                                 <p className="readiness-rec-metrics__value-row text-sm font-bold tabular-nums text-foreground">
                                   {formatCurrency(rec.projectedBalanceAfter)}
                                 </p>
@@ -390,7 +403,7 @@ export function RetirementReadiness() {
                           </div>
                         </div>
                         <button type="button" className="readiness-rec-apply" onClick={() => applyRec(rec)}>
-                          Apply Recommendation
+                          {t(`${P}applyRec`)}
                         </button>
                       </div>
                     </div>
@@ -401,8 +414,7 @@ export function RetirementReadiness() {
           ) : (
             <div className="card card--pad-sm">
               <p className="text-sm text-muted-foreground">
-                {recommendations[0]?.description ??
-                  "Walk through contributions and investment strategy with your goals in mind before you enroll."}
+                {recommendations[0]?.description ?? t(`${P}fallbackRec`)}
               </p>
             </div>
           )}

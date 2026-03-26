@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   TrendingUp,
   DollarSign,
@@ -6,39 +7,51 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
-const insights = [
-  {
-    icon: <TrendingUp className="w-4 h-4" />,
-    title: "Employer Match",
-    description: "Contributing 4%. Increase to 6% to unlock $2,400 yearly in employer matches.",
-    type: "opportunity" as const,
-    cta: "Increase Contribution",
-  },
-  {
-    icon: <AlertTriangle className="w-4 h-4" />,
-    title: "Loan Impact",
-    description: "Taking a loan may reduce retirement savings by up to $8,200 over 10 years.",
-    type: "warning" as const,
-    cta: "View Analysis",
-  },
-  {
-    icon: <DollarSign className="w-4 h-4" />,
-    title: "Next Payment",
-    description: "Loan payment of $203 will be deducted on March 15, 2026.",
-    type: "info" as const,
-    cta: "Payment Schedule",
-  },
-];
-
-const typeStyles = {
-  opportunity: { tag: "Opportunity" },
-  warning: { tag: "Heads Up" },
-  info: { tag: "Upcoming" },
-} as const;
-
 export function TransactionCenterFinancialGuidance() {
+  const { t } = useTranslation();
+  const TC = "transactions.center.";
+
+  const insights = useMemo(
+    () =>
+      [
+        {
+          icon: <TrendingUp className="w-4 h-4" />,
+          title: t(`${TC}guidanceMatchTitle`),
+          description: t(`${TC}guidanceMatchDesc`),
+          type: "opportunity" as const,
+          cta: t(`${TC}guidanceMatchCta`),
+        },
+        {
+          icon: <AlertTriangle className="w-4 h-4" />,
+          title: t(`${TC}guidanceLoanTitle`),
+          description: t(`${TC}guidanceLoanDesc`),
+          type: "warning" as const,
+          cta: t(`${TC}guidanceLoanCta`),
+        },
+        {
+          icon: <DollarSign className="w-4 h-4" />,
+          title: t(`${TC}guidancePayTitle`),
+          description: t(`${TC}guidancePayDesc`),
+          type: "info" as const,
+          cta: t(`${TC}guidancePayCta`),
+        },
+      ] as const,
+    [t],
+  );
+
+  const typeStyles = useMemo(
+    () =>
+      ({
+        opportunity: { tag: t(`${TC}guidanceTagOpportunity`) },
+        warning: { tag: t(`${TC}guidanceTagWarning`) },
+        info: { tag: t(`${TC}guidanceTagInfo`) },
+      }) as const,
+    [t],
+  );
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
       {insights.map((insight, idx) => {
