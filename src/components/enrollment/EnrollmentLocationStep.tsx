@@ -112,10 +112,10 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
 
         {!isSearching ? (
           <div>
-            <p className="mb-2 text-center text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
+            <p className="mb-1.5 text-center text-xs font-medium uppercase tracking-wide text-[var(--color-text-secondary)]">
               Popular destinations
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {FEATURED.map((loc) => {
                 const selected = value === loc.name;
                 return (
@@ -127,17 +127,17 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     className={cn(
-                      "rounded-xl border-2 p-3.5 text-left transition-colors",
+                      "rounded-xl border-2 p-2.5 text-left transition-colors",
                       selected
                         ? "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] shadow-sm ring-2 ring-[color-mix(in_srgb,var(--color-primary)_35%,transparent)]"
                         : "border-[var(--color-border)] bg-[var(--color-background)] hover:border-[color-mix(in_srgb,var(--color-primary)_40%,var(--color-border))]",
                     )}
                   >
-                    <span className="text-2xl" aria-hidden>
+                    <span className="text-xl leading-none" aria-hidden>
                       {loc.emoji}
                     </span>
-                    <p className="mt-2 text-sm font-semibold text-[var(--color-text)]">{loc.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">{loc.description}</p>
+                    <p className="mt-1 text-sm font-semibold leading-snug text-[var(--color-text)]">{loc.title}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-[var(--color-text-secondary)]">{loc.description}</p>
                   </motion.button>
                 );
               })}

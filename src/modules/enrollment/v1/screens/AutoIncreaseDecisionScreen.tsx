@@ -128,11 +128,6 @@ export function AutoIncreaseDecisionScreen() {
             Skip for now
           </button>
         </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          After enabling, you&apos;ll set your increase schedule on the next screen. Use <strong>Next</strong> once your
-          choice is saved.
-        </p>
       </div>
     </Shell>
   );

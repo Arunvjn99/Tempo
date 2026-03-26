@@ -171,7 +171,17 @@ export function EnrollmentV1Layout() {
       hideFooter
     >
       <div className="flex h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] w-full min-h-0 flex-col">
-        <EnrollmentContainer stepper={stepper} footer={stepFooter} className="min-h-0 flex-1">
+        <EnrollmentContainer
+          stepper={stepper}
+          footer={stepFooter}
+          className="min-h-0 flex-1"
+          footerTopBorder={
+            stepIndex !== ENROLLMENT_STEPS.indexOf("contribution") &&
+            stepIndex !== ENROLLMENT_STEPS.indexOf("autoIncrease") &&
+            stepIndex !== ENROLLMENT_STEPS.indexOf("investment") &&
+            stepIndex !== ENROLLMENT_STEPS.indexOf("review")
+          }
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}

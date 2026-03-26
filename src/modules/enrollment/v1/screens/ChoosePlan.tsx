@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Check,
   HelpCircle,
-  Info,
   Landmark,
   MessageCircle,
   Sparkles,
@@ -84,13 +83,6 @@ export function ChoosePlan() {
             </p>
           </div>
 
-          <div className="success-callout success-callout--compact">
-            <Info className="success-callout-icon h-4 w-4" aria-hidden />
-            <p className="text-left text-xs text-foreground/90">
-              Your employer matches contributions up to 6%.
-            </p>
-          </div>
-
           <button
             type="button"
             onClick={() => confirmPlan(onlyPlan)}
@@ -99,9 +91,6 @@ export function ChoosePlan() {
             Continue to Contributions
             <ArrowRight className="size-4 shrink-0" aria-hidden />
           </button>
-          <p className="text-xs text-muted-foreground">
-            You can change this plan later from your account settings.
-          </p>
         </div>
       </div>
     );
@@ -115,14 +104,6 @@ export function ChoosePlan() {
         </h1>
         <p className="mt-1 text-sm text-muted-foreground md:text-base">
           Select the retirement plan that fits your tax strategy.
-        </p>
-      </div>
-
-      <div className="callout-bar">
-        <Info className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        <p className="text-xs text-muted-foreground md:text-sm">
-          Your employer matches contributions up to <strong className="text-foreground">6%</strong> of your
-          salary — that&apos;s free money toward your retirement.
         </p>
       </div>
 
@@ -229,12 +210,6 @@ export function ChoosePlan() {
           </button>
         </div>
       </div>
-
-      <p className="text-center text-xs text-muted-foreground md:text-sm">
-        You can change this plan later from your account settings.
-      </p>
-
-      <div className="border-t border-border pt-2" />
 
       <div className="card-soft space-y-3">
         <p className="font-medium text-foreground">Not sure which plan is right for you?</p>

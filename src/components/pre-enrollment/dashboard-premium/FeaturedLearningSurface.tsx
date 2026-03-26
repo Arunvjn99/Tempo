@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { safeT } from "@/lib/safeT";
 
@@ -24,8 +23,10 @@ export function FeaturedLearningSurface({ className }: { className?: string }) {
       className={cn("mx-auto max-w-7xl px-4 sm:px-6 lg:px-8", className)}
       aria-labelledby="premium-featured-learning-title"
     >
-      <Link
-        to="/help"
+      <a
+        href="https://enrich.org/"
+        target="_blank"
+        rel="noopener noreferrer"
         className={cn(
           "flex flex-col gap-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-4 transition-shadow",
           "sm:flex-row sm:items-center sm:gap-5 sm:p-5",
@@ -53,7 +54,7 @@ export function FeaturedLearningSurface({ className }: { className?: string }) {
             <ArrowRight className="h-4 w-4" aria-hidden />
           </span>
         </div>
-      </Link>
+      </a>
     </section>
   );
 }

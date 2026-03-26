@@ -192,10 +192,6 @@ export function Review() {
           </span>
         </label>
       </div>
-
-      <p className="text-center text-sm text-muted-foreground">
-        When ready, tap <strong>Finish</strong> below to complete enrollment.
-      </p>
     </div>
   );
 }

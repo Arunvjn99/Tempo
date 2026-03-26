@@ -174,7 +174,10 @@ export const PostEnrollmentDashboard = () => {
             />
           </div>
 
-          <FeaturedLearningCard imageAlt="Financial wellness" onKnowMore={() => navigate("/help")} />
+          <FeaturedLearningCard
+            imageAlt="Financial wellness"
+            onKnowMore={() => window.open("https://enrich.org/", "_blank", "noopener,noreferrer")}
+          />
         </main>
 
         <AIToast

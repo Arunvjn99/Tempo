@@ -415,8 +415,6 @@ export function ContributionSetup() {
           </div>
         </div>
       </div>
-
-      <p className="text-center text-sm text-muted-foreground">You can adjust anytime</p>
     </div>
   );
 }
