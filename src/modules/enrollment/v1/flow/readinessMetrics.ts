@@ -11,22 +11,6 @@ export function getGrowthRate(risk: RiskLevel | null): number {
   return GROWTH_RATES[risk ?? "balanced"] ?? 0.068;
 }
 
-export function computeReadinessScore(
-  contribPct: number,
-  autoInc: boolean,
-  riskLevel: RiskLevel | null,
-  yearsToRetirement: number,
-  currentSavings: number,
-): number {
-  const rl = riskLevel ?? "balanced";
-  const contribScore = contribPct * 5;
-  const autoIncScore = autoInc ? 12 : 0;
-  const timeScore = Math.min(yearsToRetirement * 0.8, 20);
-  const savingsBonus = Math.min(currentSavings / 10000, 10);
-  const riskBonus = rl === "growth" ? 3 : rl === "aggressive" ? 5 : 0;
-  return Math.min(Math.round(contribScore + autoIncScore + timeScore + savingsBonus + riskBonus), 100);
-}
-
 export function computeProjectedBalancePure(
   salary: number,
   currentSavings: number,

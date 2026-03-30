@@ -55,7 +55,7 @@ export function EnrollmentHeaderWithStepper({
     <div
       className={cn(
         "bg-transparent",
-        dense ? "mb-3 py-3" : "mb-4 py-4",
+        dense ? "mb-4 py-4" : "mb-5 py-5",
         className,
       )}
     >

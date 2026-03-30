@@ -17,7 +17,7 @@ type EnrollmentContainerProps = {
 };
 
 /**
- * V1 enrollment shell: max-w-2xl, stepper on top, dense scrollable body, non-scrolling footer.
+ * V1 enrollment shell: max-w-5xl (Figma column width), stepper + dense body + footer.
  * Fills available height under the dashboard header when parent uses `h-full min-h-0`.
  */
 export function EnrollmentContainer({
@@ -32,7 +32,7 @@ export function EnrollmentContainer({
   return (
     <div
       className={cn(
-        "mx-auto flex min-h-0 w-full max-w-6xl flex-col px-4",
+        "mx-auto flex min-h-0 w-full min-w-0 max-w-5xl flex-col px-4 sm:px-6",
         className,
       )}
     >
@@ -41,7 +41,7 @@ export function EnrollmentContainer({
       <div className="flex min-h-0 flex-1 flex-col">
         <div
           className={cn(
-            "min-h-0 flex-1 overflow-x-hidden overflow-y-auto py-2",
+            "min-h-0 min-w-0 flex-1 overflow-y-auto py-1 [overflow-wrap:anywhere]",
             contentClassName,
           )}
         >
@@ -55,7 +55,7 @@ export function EnrollmentContainer({
               footerSurface === "wizard"
                 ? "enrollment-wizard-footer-bar"
                 : cn(
-                    "bg-[var(--color-background)] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3",
+                    "enrollment-footer-slot bg-background pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3",
                     footerTopBorder && "border-t border-border",
                   ),
             )}

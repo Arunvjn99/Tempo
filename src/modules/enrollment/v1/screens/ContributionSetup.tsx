@@ -1,10 +1,11 @@
 import { useEffect, useId, useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import { Info, Minus, Plus, Sparkles } from "lucide-react";
+import { Check, Info, Minus, Plus, Sparkles } from "lucide-react";
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
+  Line,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -12,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { generateContributionProjectionData } from "../flow/contributionProjection";
+import { getGrowthRate } from "../flow/readinessMetrics";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
 
@@ -21,15 +23,21 @@ export function ContributionSetup() {
   const { t } = useTranslation();
   const contribution = useEnrollmentStore((s) => s.contribution);
   const salary = useEnrollmentStore((s) => s.salary);
+  const monthlyPaycheck = useEnrollmentStore((s) => s.monthlyPaycheck);
+  const monthlyContribution = useEnrollmentStore((s) => s.monthlyContribution);
+  const employerMatch = useEnrollmentStore((s) => s.employerMatch);
+  const projectedBalance = useEnrollmentStore((s) => s.projectedBalance);
+  const monthlyRetirementIncomeFromStore = useEnrollmentStore((s) => s.retirementProjection.monthlyIncome);
+  const riskLevel = useEnrollmentStore((s) => s.riskLevel);
   const retirementAge = useEnrollmentStore((s) => s.retirementAge);
   const updateField = useEnrollmentStore((s) => s.updateField);
 
   const quickOptions = useMemo(
     () => [
-      { label: t(`${S}quick4`), value: 4, icon: null as string | null },
-      { label: t(`${S}quick6`), value: 6, icon: "✅" },
-      { label: t(`${S}quick10`), value: 10, icon: null },
-      { label: t(`${S}quick15`), value: 15, icon: "🚀" },
+      { label: t(`${S}quick4`), value: 4 },
+      { label: t(`${S}quick6`), value: 6 },
+      { label: t(`${S}quick10`), value: 10 },
+      { label: t(`${S}quick15`), value: 15 },
     ],
     [t],
   );
@@ -41,31 +49,35 @@ export function ContributionSetup() {
 
   const gradientId = useId().replace(/:/g, "");
 
+  /* eslint-disable react-hooks/set-state-in-effect -- sync local inputs when zustand contribution/salary changes */
   useEffect(() => {
     setPercentInput(String(contribution));
     setDollarInput(String(Math.round((salary * contribution) / 100)));
   }, [contribution, salary]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const percent = contribution;
-  const monthlyPaycheck = Math.round(salary / 12);
-  const monthlyContribution = Math.round((salary * percent) / 100 / 12);
-  const matchPercent = Math.min(percent, 6);
-  const monthlyMatch = Math.round((salary * matchPercent) / 100 / 12);
+  const monthlyMatch = employerMatch;
 
-  const projectionData = generateContributionProjectionData(percent, salary);
-  const projectedTotal = projectionData[projectionData.length - 1]?.value ?? 0;
-  const monthlyRetirementIncome = Math.round((projectedTotal * 0.04) / 12);
+  const growthRate = getGrowthRate(riskLevel);
+  const projectionData = generateContributionProjectionData(percent, salary, growthRate);
+  const chartEndCurrent = projectionData[projectionData.length - 1]?.value ?? 0;
+  const projectedTotal = projectedBalance;
+  const monthlyRetirementIncome = monthlyRetirementIncomeFromStore;
 
   const recommendedPercent = 12;
   const progressPercentage = Math.min((percent / recommendedPercent) * 100, 100);
 
-  const comparisonData = generateContributionProjectionData(comparePercent, salary);
-  const comparisonTotal = comparisonData[comparisonData.length - 1]?.value ?? 0;
-  const difference = comparisonTotal - projectedTotal;
+  const targetGoalLine = useMemo(() => {
+    const d = generateContributionProjectionData(recommendedPercent, salary, growthRate);
+    return d[d.length - 1]?.value ?? 0;
+  }, [salary, growthRate]);
 
-  const onePercentIncrease = generateContributionProjectionData(percent + 1, salary);
-  const onePercentImpact =
-    (onePercentIncrease[onePercentIncrease.length - 1]?.value ?? 0) - projectedTotal;
+  const comparisonData = generateContributionProjectionData(comparePercent, salary, growthRate);
+  const comparisonTotal = comparisonData[comparisonData.length - 1]?.value ?? 0;
+  const difference = comparisonTotal - chartEndCurrent;
+
+  const onePercentImpact = Math.round(monthlyPaycheck * 0.01);
 
   const adjustPercent = (delta: number) => {
     const newValue = Math.max(1, Math.min(25, percent + delta));
@@ -107,324 +119,365 @@ export function ContributionSetup() {
     return [formatted, name];
   };
 
+  const cardShell =
+    "min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_28px_-8px_rgba(15,23,42,0.1)] dark:border-gray-700 dark:bg-gray-900 dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.45)]";
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground md:text-2xl">{t(`${S}title`)}</h1>
-        <p className="mt-1 text-sm text-muted-foreground md:text-base">{t(`${S}subtitle`)}</p>
+    <div className="min-w-0 w-full space-y-6 bg-transparent">
+      <div className="min-w-0 text-left">
+        <h1 className="text-2xl font-semibold leading-tight tracking-tight text-gray-900 dark:text-gray-50">
+          {t(`${S}title`)}
+        </h1>
+        <p className="mt-1.5 text-sm leading-snug text-gray-600 dark:text-gray-400">{t(`${S}subtitle`)}</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="card space-y-6">
-          <div className="card-highlight">
-            <p className="text-center text-[0.75rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              {t(`${S}monthlyPaycheck`)}
-            </p>
-            <p className="mt-1 text-center text-2xl font-bold text-foreground">
-              ${monthlyPaycheck.toLocaleString()}
-            </p>
-          </div>
-
-          <div className="text-center">
-            <p className="mb-3 text-[0.8rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              {t(`${S}yourContribution`)}
-            </p>
-            <div className="contribution-control">
-              <button
-                type="button"
-                onClick={() => adjustPercent(-1)}
-                className="control-btn"
-                aria-label={t(`${S}decreasePctAria`)}
-              >
-                <Minus className="h-5 w-5" aria-hidden />
-              </button>
-              <p className="contribution-value">{percent}%</p>
-              <button
-                type="button"
-                onClick={() => adjustPercent(1)}
-                className="control-btn"
-                aria-label={t(`${S}increasePctAria`)}
-              >
-                <Plus className="h-5 w-5" aria-hidden />
-              </button>
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-start">
+          {/* Left: single settings card */}
+          <div className={cn(cardShell, "flex min-w-0 flex-col gap-5")}>
+            <div className="rounded-xl bg-blue-50 px-4 py-3.5 dark:bg-blue-950/35">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                {t(`${S}monthlyPaycheck`)}
+              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums text-gray-900 dark:text-gray-50">
+                ${monthlyPaycheck.toLocaleString()}
+              </p>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-2 block text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                {t(`${S}percentage`)}
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min={1}
-                  max={25}
-                  step={0.5}
-                  value={percentInput}
-                  onChange={(e) => handlePercentInputChange(e.target.value)}
-                  className="input input--suffix"
-                />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-                  %
-                </span>
-              </div>
-            </div>
-            <div>
-              <label className="mb-2 block text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                {t(`${S}annualDollar`)}
-              </label>
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
-                  $
-                </span>
-                <input
-                  type="text"
-                  value={dollarInput}
-                  onChange={(e) => handleDollarInputChange(e.target.value)}
-                  className="input input--prefix"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              {t(`${S}quickSelect`)}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {quickOptions.map((opt) => (
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                {t(`${S}yourContribution`)}
+              </p>
+              <div className="mt-3 flex items-center justify-center gap-4">
                 <button
-                  key={opt.value}
                   type="button"
-                  onClick={() => handleQuickOption(opt.value)}
-                  className={cn("chip", percent === opt.value && "chip-active")}
+                  onClick={() => adjustPercent(-1)}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:hover:bg-blue-900/70"
+                  aria-label={t(`${S}decreasePctAria`)}
                 >
-                  {opt.label} {opt.icon ?? ""}
+                  <Minus className="h-5 w-5" aria-hidden strokeWidth={2.5} />
                 </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="px-1">
-            <input
-              type="range"
-              min={1}
-              max={25}
-              value={percent}
-              onChange={(e) => updateField("contribution", Number(e.target.value))}
-              className="contribution-range"
-              style={{ "--range-pct": rangePct } as CSSProperties}
-            />
-            <div className="mt-2 flex justify-between text-[0.7rem] text-muted-foreground">
-              <span>1%</span>
-              <span>25%</span>
-            </div>
-          </div>
-
-          <div className="card-highlight">
-            <div className="flex items-start gap-2">
-              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <div>
-                <p className="text-[0.7rem] font-bold text-foreground">{t(`${S}proTipTitle`)}</p>
-                <p className="text-[0.75rem] leading-snug text-muted-foreground">
-                  {t(`${S}proTipBody`, { amount: `$${onePercentImpact.toLocaleString()}` })}
+                <p className="min-w-[4.5rem] text-center text-4xl font-bold tabular-nums leading-none text-blue-600 dark:text-blue-400">
+                  {percent}%
                 </p>
+                <button
+                  type="button"
+                  onClick={() => adjustPercent(1)}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:hover:bg-blue-900/70"
+                  aria-label={t(`${S}increasePctAria`)}
+                >
+                  <Plus className="h-5 w-5" aria-hidden strokeWidth={2.5} />
+                </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="card space-y-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground md:text-base">{t(`${S}projectionTitle`)}</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">{t(`${S}projectionSub`)}</p>
-            </div>
-            <div className="text-right">
-              <p className="success-inline-label">
-                {t(`${S}onTrack`, { percent: Math.round(progressPercentage) })}
-              </p>
-              <div className="success-progress-track">
-                <div className="success-progress-fill" style={{ width: `${progressPercentage}%` }} />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="success-card">
-              <p className="text-center text-[0.7rem] font-semibold uppercase tracking-wide success-card-muted-label">
-                {t(`${S}projectedAtAge`, { age: retirementAge })}
-              </p>
-              <p className="success-card-value">${(projectedTotal / 1_000_000).toFixed(1)}M</p>
-              <p className="success-card-caption">
-                {t(`${S}approxPerMo`, { amount: `$${monthlyRetirementIncome.toLocaleString()}` })}
-              </p>
-            </div>
-
-            <div className="card-soft space-y-2.5">
-              <p className="text-center text-[0.7rem] font-bold uppercase tracking-wide text-foreground">
-                {t(`${S}monthlyImpact`)}
-              </p>
-              <div>
-                <p className="text-center text-[0.7rem] text-muted-foreground">{t(`${S}youContribute`)}</p>
-                <p className="mt-0.5 text-center text-base font-bold text-foreground">
-                  ${monthlyContribution.toLocaleString()}
-                </p>
-              </div>
-              <div className="success-card success-card--compact">
-                <p className="success-card-emphasis">{t(`${S}employerAdds`)}</p>
-                <p className="success-card-emphasis-lg">+${monthlyMatch.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="chart-container h-56 md:h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={projectionData}>
-                <defs>
-                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id={`${gradientId}-m`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.22} />
-                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.5} vertical={false} />
-                <XAxis
-                  dataKey="year"
-                  tick={{ fontSize: 10, fill: "var(--color-text-tertiary)" }}
-                  tickLine={false}
-                  axisLine={{ stroke: "var(--color-border)" }}
-                  interval={4}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "var(--color-text-tertiary)" }}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(val) => `$${(val / 1_000_000).toFixed(1)}M`}
-                />
-                <Tooltip
-                  formatter={tooltipFormatter}
-                  contentStyle={{
-                    borderRadius: 12,
-                    fontSize: 11,
-                    border: "1px solid var(--color-border)",
-                    backgroundColor: "var(--color-background)",
-                    color: "var(--color-text)",
-                  }}
-                />
-                <ReferenceLine
-                  y={projectedTotal * 0.75}
-                  stroke="var(--color-success)"
-                  strokeDasharray="5 5"
-                  strokeWidth={2}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="contributions"
-                  stroke="var(--color-text-tertiary)"
-                  fill="transparent"
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="marketGain"
-                  stroke="var(--color-success)"
-                  fill={`url(#${gradientId}-m)`}
-                  strokeWidth={2}
-                  stackId="1"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="var(--color-primary)"
-                  fill={`url(#${gradientId})`}
-                  strokeWidth={3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 text-[0.7rem] text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <span className="chart-legend-swatch chart-legend-swatch--primary" />
-              {t(`${S}chartTotalSavings`)}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="chart-legend-swatch chart-legend-swatch--success" />
-              {t(`${S}chartMarketGains`)}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="chart-legend-dash" />
-              {t(`${S}chartYourContributions`)}
-            </div>
-          </div>
-
-          <div className="flex items-start gap-2">
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            <p className="text-[0.7rem] leading-snug text-muted-foreground">{t(`${S}disclaimer`)}</p>
-          </div>
-
-          <div className="card-soft space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[0.7rem] font-bold uppercase tracking-wide text-foreground">
-                {t(`${S}compareScenarios`)}
-              </p>
-              <button
-                type="button"
-                onClick={() => setCompareMode(!compareMode)}
-                className={cn("chip", compareMode && "chip-active")}
-              >
-                {compareMode ? t(`${S}hide`) : t(`${S}show`)}
-              </button>
-            </div>
-            {compareMode ? (
-              <div className="space-y-3 border-t border-border pt-3">
-                <div className="flex gap-2">
-                  {[10, 12, 15].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => setComparePercent(val)}
-                      className={cn("chip flex-1", comparePercent === val && "chip-active")}
-                    >
-                      {val}%
-                    </button>
-                  ))}
+            <div className="grid min-w-0 grid-cols-2 gap-3">
+              <div className="min-w-0">
+                <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                  {t(`${S}percentage`)}
+                </label>
+                <div className="relative min-w-0">
+                  <input
+                    type="number"
+                    min={1}
+                    max={25}
+                    step={0.5}
+                    value={percentInput}
+                    onChange={(e) => handlePercentInputChange(e.target.value)}
+                    className="input input--suffix w-full min-w-0 rounded-lg border border-gray-200 bg-white py-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-950 dark:text-gray-100"
+                  />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    %
+                  </span>
                 </div>
-                <div
+              </div>
+              <div className="min-w-0">
+                <label className="mb-1.5 block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                  {t(`${S}annualDollar`)}
+                </label>
+                <div className="relative min-w-0">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    value={dollarInput}
+                    onChange={(e) => handleDollarInputChange(e.target.value)}
+                    className="input input--prefix w-full min-w-0 rounded-lg border border-gray-200 bg-white py-2.5 pl-7 text-gray-900 dark:border-gray-600 dark:bg-gray-950 dark:text-gray-100"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                {t(`${S}quickSelect`)}
+              </p>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                {quickOptions.map((opt) => {
+                  const active = percent === opt.value;
+                  const isMatchChip = opt.value === 6;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleQuickOption(opt.value)}
+                      className={cn(
+                        "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors",
+                        active
+                          ? "border-blue-600 bg-blue-600 text-white shadow-sm dark:border-blue-500 dark:bg-blue-600"
+                          : "border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-slate-50/80 dark:border-gray-600 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-gray-500 dark:hover:bg-gray-900",
+                      )}
+                    >
+                      {active && isMatchChip ? <Check className="h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden /> : null}
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-0.5">
+              <input
+                type="range"
+                min={1}
+                max={25}
+                value={percent}
+                onChange={(e) => updateField("contribution", Number(e.target.value))}
+                className="contribution-range h-2.5 w-full min-w-0"
+                style={{ "--range-pct": rangePct } as CSSProperties}
+              />
+              <div className="mt-2 flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
+                <span>{t(`${S}rangeMin`)}</span>
+                <span>{t(`${S}rangeMax`)}</span>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-violet-200/80 bg-violet-50/95 px-4 py-3.5 dark:border-violet-800/60 dark:bg-violet-950/40">
+              <div className="flex min-w-0 items-start gap-2.5">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-violet-900 dark:text-violet-100">{t(`${S}proTipTitle`)}</p>
+                  <p className="mt-1 text-sm leading-snug text-violet-900/90 dark:text-violet-100/90">
+                    {t(`${S}proTipBody`, { amount: `$${onePercentImpact.toLocaleString()}` })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: projection + chart + compare — one card */}
+          <div className={cn(cardShell, "flex min-w-0 flex-col gap-5")}>
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{t(`${S}projectionTitle`)}</h2>
+                <p className="mt-1 text-xs leading-snug text-gray-600 dark:text-gray-400">{t(`${S}projectionSub`)}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                  {t(`${S}onTrack`, { percent: Math.round(progressPercentage) })}
+                </p>
+                <div className="mt-1.5 h-2 w-32 overflow-hidden rounded-full border border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-950">
+                  <div
+                    className="h-full rounded-full bg-emerald-600 transition-all duration-300 dark:bg-emerald-500"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid min-w-0 grid-cols-2 gap-3">
+              <div className="min-w-0 rounded-xl border border-emerald-200/70 bg-emerald-50/95 p-3.5 dark:border-emerald-900/50 dark:bg-emerald-950/40">
+                <p className="text-center text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-400">
+                  {t(`${S}projectedAtAge`, { age: retirementAge })}
+                </p>
+                <p className="mt-1.5 text-center text-2xl font-bold tabular-nums leading-none text-emerald-700 dark:text-emerald-400">
+                  ${(projectedTotal / 1_000_000).toFixed(1)}M
+                </p>
+                <p className="mt-1 text-center text-xs font-medium text-emerald-700/95 dark:text-emerald-300">
+                  {t(`${S}approxPerMo`, { amount: `$${monthlyRetirementIncome.toLocaleString()}` })}
+                </p>
+              </div>
+
+              <div className="flex min-w-0 flex-col justify-between rounded-xl border border-gray-200 bg-white p-3.5 dark:border-gray-600 dark:bg-gray-900/80">
+                <p className="text-center text-[0.65rem] font-bold uppercase tracking-[0.1em] text-gray-700 dark:text-gray-300">
+                  {t(`${S}monthlyImpact`)}
+                </p>
+                <div className="mt-2 text-center">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{t(`${S}youContribute`)}</p>
+                  <p className="mt-0.5 text-base font-semibold tabular-nums text-gray-900 dark:text-gray-50">
+                    ${monthlyContribution.toLocaleString()}
+                  </p>
+                </div>
+                <div className="mt-2 rounded-lg border border-emerald-200/80 bg-emerald-50 px-2 py-2 dark:border-emerald-900/50 dark:bg-emerald-950/50">
+                  <p className="text-center text-xs font-semibold text-emerald-900 dark:text-emerald-100">
+                    {t(`${S}employerAdds`)}{" "}
+                    <span className="tabular-nums">+${monthlyMatch.toLocaleString()}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="min-h-0 min-w-0">
+              <div className="h-52 min-h-[13rem] w-full md:h-60">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={projectionData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.32} />
+                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0.04} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.45} vertical={false} />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fontSize: 10, fill: "var(--color-text-tertiary)" }}
+                      tickLine={false}
+                      axisLine={{ stroke: "var(--color-border)" }}
+                      interval={4}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "var(--color-text-tertiary)" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(val) => `$${(val / 1_000_000).toFixed(1)}M`}
+                    />
+                    <Tooltip
+                      formatter={tooltipFormatter}
+                      contentStyle={{
+                        borderRadius: 10,
+                        fontSize: 11,
+                        border: "1px solid var(--color-border)",
+                        backgroundColor: "var(--color-background)",
+                        color: "var(--color-text)",
+                      }}
+                    />
+                    <ReferenceLine
+                      y={targetGoalLine}
+                      stroke="var(--color-success)"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="var(--color-primary)"
+                      strokeWidth={2.5}
+                      fill={`url(#${gradientId})`}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="marketGain"
+                      stroke="var(--color-success)"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{ r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="contributions"
+                      stroke="var(--color-text-tertiary)"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      activeDot={{ r: 3 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-1.5">
+                  <span className="chart-legend-swatch chart-legend-swatch--primary" />
+                  {t(`${S}chartTotalSavings`)}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="chart-legend-swatch chart-legend-swatch--success" />
+                  {t(`${S}chartMarketGains`)}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="chart-legend-dash" />
+                  {t(`${S}chartYourContributions`)}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="chart-legend-target" />
+                  {t(`${S}chartTargetGoal`)}
+                </div>
+              </div>
+
+              <div className="mt-3 flex min-w-0 items-start gap-2">
+                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                <p className="text-xs leading-snug text-gray-500 dark:text-gray-400">{t(`${S}disclaimer`)}</p>
+              </div>
+            </div>
+
+            <div className="mt-1 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-600 dark:bg-gray-950/50">
+              <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-gray-700 dark:text-gray-300">
+                  {t(`${S}compareScenarios`)}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCompareMode(!compareMode)}
                   className={cn(
-                    "difference-card",
-                    difference < 0 ? "difference-card--negative" : "difference-card--positive",
+                    "rounded-md border px-4 py-2 text-xs font-semibold shadow-sm transition-colors",
+                    compareMode
+                      ? "border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                      : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800",
                   )}
                 >
-                  <p
-                    className={cn(
-                      "text-sm font-bold",
-                      difference < 0 ? "difference-title--negative" : "difference-title--positive",
-                    )}
-                  >
-                    {difference >= 0 ? "+" : "-"}${Math.abs(difference).toLocaleString()}
-                  </p>
-                  <p
-                    className={cn(
-                      "text-[0.7rem]",
-                      difference < 0 ? "difference-sub--negative" : "difference-sub--positive",
-                    )}
-                  >
-                    {difference >= 0 ? t(`${S}compareMore`) : t(`${S}compareLess`)}{" "}
-                    {t(`${S}compareVs`, { compare: comparePercent, current: percent })}
-                  </p>
-                </div>
+                  {compareMode ? t(`${S}hide`) : t(`${S}show`)}
+                </button>
               </div>
-            ) : null}
+              {compareMode ? (
+                <div className="mt-3 space-y-3 border-t border-gray-200/80 pt-3 dark:border-gray-600/80">
+                  <div className="flex min-w-0 gap-2">
+                    {[10, 12, 15].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setComparePercent(val)}
+                        className={cn(
+                          "min-w-0 flex-1 rounded-md border px-2 py-2 text-xs font-semibold transition-colors",
+                          comparePercent === val
+                            ? "border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                            : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:hover:bg-gray-800",
+                        )}
+                      >
+                        {val}%
+                      </button>
+                    ))}
+                  </div>
+                  <div
+                    className={cn(
+                      "rounded-lg border p-3",
+                      difference < 0
+                        ? "border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30"
+                        : "border-emerald-200 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/30",
+                    )}
+                  >
+                    <p
+                      className={cn(
+                        "text-sm font-bold",
+                        difference < 0 ? "text-red-800 dark:text-red-200" : "text-emerald-800 dark:text-emerald-200",
+                      )}
+                    >
+                      {difference >= 0 ? "+" : "-"}${Math.abs(difference).toLocaleString()}
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xs",
+                        difference < 0 ? "text-red-600 dark:text-red-300/90" : "text-emerald-600 dark:text-emerald-300/90",
+                      )}
+                    >
+                      {difference >= 0 ? t(`${S}compareMore`) : t(`${S}compareLess`)}{" "}
+                      {t(`${S}compareVs`, { compare: comparePercent, current: percent })}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

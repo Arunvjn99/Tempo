@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { buildEnrollmentDerived, type EnrollmentState } from "../flow/enrollmentDerivedEngine";
+import { getGrowthRate } from "../flow/readinessMetrics";
 import {
   ENROLLMENT_STEP_COUNT,
   ENROLLMENT_STEPS,
@@ -24,6 +26,13 @@ export type EnrollmentV1Snapshot = {
   /** Deferral % of salary (figma uses 1–25). */
   contribution: number;
   salary: number;
+  /** Gross monthly pay; kept in sync with `salary` (salary = monthlyPaycheck × 12). */
+  monthlyPaycheck: number;
+  monthlyContribution: number;
+  employerMatch: number;
+  projectedBalance: number;
+  projectedBalanceNoAutoIncrease: number;
+  readinessScore: number;
   contributionSources: ContributionSources;
   supportsAfterTax: boolean;
   companyPlans: SelectedPlanOption[];
@@ -47,6 +56,25 @@ export type EnrollmentV1Snapshot = {
   };
 };
 
+export type { EnrollmentState };
+
+export function selectEnrollmentState(s: EnrollmentV1Snapshot): EnrollmentState {
+  return {
+    planType: s.selectedPlan,
+    contributionPercent: s.contribution,
+    contributionAmount: s.monthlyContribution,
+    monthlyPaycheck: s.monthlyPaycheck,
+    preTaxPercent: s.contributionSources.preTax,
+    rothPercent: s.contributionSources.roth,
+    autoIncreaseEnabled: s.autoIncrease,
+    investmentStrategy: s.useRecommendedPortfolio ? "default" : "custom",
+    projectedBalance: s.projectedBalance,
+    monthlyContribution: s.monthlyContribution,
+    employerMatch: s.employerMatch,
+    readinessScore: s.readinessScore,
+  };
+}
+
 type EnrollmentV1Actions = {
   nextStep: () => void;
   prevStep: () => void;
@@ -57,11 +85,74 @@ type EnrollmentV1Actions = {
   ) => void;
 };
 
+type EnrollmentV1StoreBase = EnrollmentV1Snapshot & EnrollmentV1Actions;
+
+function toSnapshot(s: EnrollmentV1StoreBase): EnrollmentV1Snapshot {
+  return {
+    currentStep: s.currentStep,
+    selectedPlan: s.selectedPlan,
+    contribution: s.contribution,
+    salary: s.salary,
+    monthlyPaycheck: s.monthlyPaycheck,
+    monthlyContribution: s.monthlyContribution,
+    employerMatch: s.employerMatch,
+    projectedBalance: s.projectedBalance,
+    projectedBalanceNoAutoIncrease: s.projectedBalanceNoAutoIncrease,
+    readinessScore: s.readinessScore,
+    contributionSources: s.contributionSources,
+    supportsAfterTax: s.supportsAfterTax,
+    companyPlans: s.companyPlans,
+    autoIncrease: s.autoIncrease,
+    autoIncreaseStepResolved: s.autoIncreaseStepResolved,
+    autoIncreaseRate: s.autoIncreaseRate,
+    autoIncreaseMax: s.autoIncreaseMax,
+    incrementCycle: s.incrementCycle,
+    riskLevel: s.riskLevel,
+    useRecommendedPortfolio: s.useRecommendedPortfolio,
+    agreedToTerms: s.agreedToTerms,
+    retirementAge: s.retirementAge,
+    currentAge: s.currentAge,
+    currentSavings: s.currentSavings,
+    retirementProjection: s.retirementProjection,
+  };
+}
+
+function patchDerived(s: EnrollmentV1Snapshot): Partial<EnrollmentV1Snapshot> {
+  const d = buildEnrollmentDerived({
+    monthlyPaycheck: s.monthlyPaycheck ?? 0,
+    salaryAnnual: s.salary ?? 0,
+    contributionPercent: s.contribution,
+    currentSavings: s.currentSavings,
+    currentAge: s.currentAge,
+    retirementAge: s.retirementAge,
+    growthRateAnnual: getGrowthRate(s.riskLevel),
+    autoIncreaseEnabled: s.autoIncrease,
+    autoIncreaseRate: s.autoIncreaseRate,
+    autoIncreaseMax: s.autoIncreaseMax,
+  });
+  return {
+    monthlyPaycheck: d.monthlyPaycheck,
+    salary: d.salaryAnnual,
+    monthlyContribution: d.monthlyContribution,
+    employerMatch: d.employerMatch,
+    projectedBalance: d.projectedBalance,
+    projectedBalanceNoAutoIncrease: d.projectedBalanceNoAutoIncrease,
+    readinessScore: d.readinessScore,
+    retirementProjection: d.retirementProjection,
+  };
+}
+
 const initialSnapshot: EnrollmentV1Snapshot = {
   currentStep: 0,
   selectedPlan: null,
   contribution: 6,
   salary: 85000,
+  monthlyPaycheck: 0,
+  monthlyContribution: 0,
+  employerMatch: 0,
+  projectedBalance: 0,
+  projectedBalanceNoAutoIncrease: 0,
+  readinessScore: 0,
   contributionSources: { preTax: 60, roth: 40, afterTax: 0 },
   supportsAfterTax: true,
   companyPlans: ["traditional", "roth"],
@@ -82,6 +173,11 @@ const initialSnapshot: EnrollmentV1Snapshot = {
   },
 };
 
+const seededSnapshot: EnrollmentV1Snapshot = {
+  ...initialSnapshot,
+  ...patchDerived(initialSnapshot),
+};
+
 export type EnrollmentV1Store = EnrollmentV1Snapshot & EnrollmentV1Actions;
 
 const maxIndex = ENROLLMENT_STEP_COUNT - 1;
@@ -89,7 +185,7 @@ const maxIndex = ENROLLMENT_STEP_COUNT - 1;
 export const useEnrollmentStore = create<EnrollmentV1Store>()(
   persist(
     (set, get) => ({
-      ...initialSnapshot,
+      ...seededSnapshot,
 
       nextStep: () => {
         const { currentStep } = get();
@@ -111,16 +207,34 @@ export const useEnrollmentStore = create<EnrollmentV1Store>()(
       },
 
       updateField: (key, value) => {
-        set({ [key]: value } as Partial<EnrollmentV1Snapshot>);
+        set((state) => {
+          const next = { ...state, [key]: value } as EnrollmentV1Snapshot;
+          if (key === "monthlyPaycheck") {
+            next.salary = Math.round(Number(value) * 12);
+          }
+          return { ...next, ...patchDerived(next) };
+        });
       },
     }),
     {
       name: "enrollment-v1-engine",
+      merge: (persisted, current) => {
+        const c = current as EnrollmentV1StoreBase;
+        const p = (persisted ?? {}) as Partial<EnrollmentV1Snapshot>;
+        const mergedSnap: EnrollmentV1Snapshot = {
+          ...initialSnapshot,
+          ...toSnapshot(c),
+          ...p,
+        };
+        const derived = patchDerived(mergedSnap);
+        return { ...c, ...mergedSnap, ...derived };
+      },
       partialize: (s) => ({
         currentStep: s.currentStep,
         selectedPlan: s.selectedPlan,
         contribution: s.contribution,
         salary: s.salary,
+        monthlyPaycheck: s.monthlyPaycheck,
         contributionSources: s.contributionSources,
         supportsAfterTax: s.supportsAfterTax,
         companyPlans: s.companyPlans,

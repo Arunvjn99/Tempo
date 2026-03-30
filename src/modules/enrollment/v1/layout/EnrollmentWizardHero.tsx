@@ -12,24 +12,24 @@ type EnrollmentWizardHeroProps = {
 export function EnrollmentWizardHero({ displayName }: EnrollmentWizardHeroProps) {
   const { t } = useTranslation();
   return (
-    <header className="enrollment-wizard-hero relative shrink-0 overflow-hidden px-6 pb-6 pt-6 text-white">
+    <header className="enrollment-wizard-hero relative shrink-0 overflow-hidden px-6 pb-6 pt-6">
       <div
         className="pointer-events-none absolute right-3 top-2 opacity-20"
         aria-hidden
       >
-        <Sparkles className="size-16 text-white" strokeWidth={1.25} />
+        <Sparkles className="size-16 opacity-25" strokeWidth={1.25} />
       </div>
       <div
         className="pointer-events-none absolute right-0 top-3 opacity-10"
         aria-hidden
       >
-        <TrendingUp className="size-24 text-white" strokeWidth={1.25} />
+        <TrendingUp className="size-24 opacity-20" strokeWidth={1.25} />
       </div>
       <div className="relative z-[1] flex flex-col gap-1">
-        <h1 className="text-2xl font-bold leading-9 tracking-wide md:text-[1.875rem] md:leading-9">
+        <h1 className="text-2xl font-bold leading-9 tracking-wide text-inherit md:text-[1.875rem] md:leading-9">
           {t("enrollment.wizardHeroTitle", { name: displayName })}
         </h1>
-        <p className="text-base leading-6 text-sky-100/95">
+        <p className="enrollment-wizard-hero__subtitle text-base leading-6">
           {t("enrollment.wizardHeroSubtitle")}
         </p>
       </div>

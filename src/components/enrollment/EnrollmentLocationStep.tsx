@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
+import { AnimatedLocationGlobe } from "@/components/v2";
 import { cn } from "@/lib/utils";
 import { US_STATES } from "@/constants/usStates";
 import { getStateLocationInsight } from "@/constants/stateLocationInsights";
@@ -69,7 +70,12 @@ export function EnrollmentLocationStep({ value, onChange }: EnrollmentLocationSt
     <>
       <OnboardingStepCard>
         <div>
-          <h3 className="premium-wizard__question text-center">{t(`${pw}locationQuestion`)}</h3>
+          <h3 className="premium-wizard__question text-center">
+            <Trans
+              i18nKey="preEnrollment.personalizeWizard.locationQuestion"
+              components={{ globe: <AnimatedLocationGlobe /> }}
+            />
+          </h3>
           <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">{t(`${pw}locationSubtitle`)}</p>
         </div>
 

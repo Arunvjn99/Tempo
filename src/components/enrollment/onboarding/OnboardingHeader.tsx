@@ -1,4 +1,5 @@
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
+import { AnimatedHeaderWave } from "@/components/v2";
 import { cn } from "@/lib/utils";
 
 export interface OnboardingHeaderProps {
@@ -19,9 +20,15 @@ export function OnboardingHeader({ name, subtitle, onClose, className }: Onboard
   const trimmed = name?.trim();
   const isCasual =
     !trimmed || trimmed.toLowerCase() === GENERIC_EN || trimmed === t("preEnrollment.personalizeWizard.headerAnonymous");
-  const greeting = isCasual
-    ? t("preEnrollment.personalizeWizard.headerGreetingCasual")
-    : t("preEnrollment.personalizeWizard.headerGreeting", { name: trimmed });
+  const greeting = isCasual ? (
+    <Trans i18nKey="preEnrollment.personalizeWizard.headerGreetingCasual" components={{ wave: <AnimatedHeaderWave /> }} />
+  ) : (
+    <Trans
+      i18nKey="preEnrollment.personalizeWizard.headerGreeting"
+      values={{ name: trimmed }}
+      components={{ wave: <AnimatedHeaderWave /> }}
+    />
+  );
   const sub = subtitle ?? t("preEnrollment.personalizeWizard.headerSubtitle");
 
   return (

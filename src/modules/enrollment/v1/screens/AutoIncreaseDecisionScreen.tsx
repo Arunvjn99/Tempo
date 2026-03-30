@@ -1,58 +1,53 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, Minus, TrendingUp } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { saveAutoIncreasePreference } from "@/services/enrollmentService";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
-import {
-  pathForWizardStep,
-  V1_ENROLLMENT_AUTO_INCREASE_CONFIG_PATH,
-  V1_ENROLLMENT_AUTO_INCREASE_SKIP_PATH,
-} from "../flow/v1WizardPaths";
-import { ENROLLMENT_STEPS } from "../flow/steps";
-import { GROWTH, useAutoIncreaseFinancialImpact, formatAutoIncreaseCurrency } from "../lib/autoIncreaseShared";
+import { getGrowthRate, projectBalanceWithAutoIncrease } from "../flow/readinessMetrics";
+import { V1_ENROLLMENT_AUTO_INCREASE_CONFIG_PATH } from "../flow/v1WizardPaths";
+import { useAutoIncreaseFinancialImpact, formatAutoIncreaseCurrency } from "../lib/autoIncreaseShared";
+import { AutoIncreaseSkipPanel } from "../components/AutoIncreaseSkipPanel";
 
-const AUTO_INCREASE_STEP_INDEX = ENROLLMENT_STEPS.indexOf("autoIncrease");
 const A = "enrollment.v1.autoIncreaseDecision.";
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="enrollment-flow-popup enrollment-flow-popup--flat">
-      <div className="enrollment-flow-popup__card">{children}</div>
-    </div>
-  );
-}
-
-/** Decision-only: two comparison cards + bottom CTAs (no merged config UI). */
+/** Decision-only: two comparison cards + bottom CTAs (Figma: auto-increase.tsx). */
 export function AutoIncreaseDecisionScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
-  const prevStep = useEnrollmentStore((s) => s.prevStep);
+  const [skipPopupOpen, setSkipPopupOpen] = useState(false);
 
   const currentPercent = data.contribution;
-  const risk = data.riskLevel ?? "balanced";
-  const growthRate = GROWTH[risk] ?? 0.068;
+  const growthRate = getGrowthRate(data.riskLevel);
+  const yearsToRetirement = Math.max(0, data.retirementAge - data.currentAge);
+  const stepPct = Math.max(data.autoIncreaseRate, 1);
+  const maxCap = Math.min(Math.max(data.autoIncreaseMax, 10), 15);
 
-  const fixedProjection = 124621;
-  const autoProjection = 185943;
+  const fixedProjection = data.projectedBalanceNoAutoIncrease;
+  const autoProjection = Math.round(
+    projectBalanceWithAutoIncrease(
+      data.salary,
+      data.currentSavings,
+      currentPercent,
+      yearsToRetirement,
+      growthRate,
+      stepPct,
+      maxCap,
+    ),
+  );
 
   const financialImpact = useAutoIncreaseFinancialImpact({
     currentPercent,
-    increaseAmount: Math.max(data.autoIncreaseRate, 1),
-    maxContribution: Math.min(Math.max(data.autoIncreaseMax, 10), 15),
+    increaseAmount: stepPct,
+    maxContribution: maxCap,
     salary: data.salary,
     growthRate,
     currentSavings: data.currentSavings,
     retirementAge: data.retirementAge,
     currentAge: data.currentAge,
   });
-
-  const goPreviousEnrollmentStep = () => {
-    if (AUTO_INCREASE_STEP_INDEX <= 0) return;
-    prevStep();
-    navigate(pathForWizardStep(AUTO_INCREASE_STEP_INDEX - 1));
-  };
 
   const handleEnableAutoIncrease = () => {
     updateField("autoIncreaseStepResolved", false);
@@ -62,74 +57,101 @@ export function AutoIncreaseDecisionScreen() {
   };
 
   const handleSkipForNow = () => {
-    navigate(V1_ENROLLMENT_AUTO_INCREASE_SKIP_PATH);
+    setSkipPopupOpen(true);
   };
 
+  useEffect(() => {
+    if (!skipPopupOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSkipPopupOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [skipPopupOpen]);
+
   return (
-    <Shell>
-      <div className="space-y-6">
-        <div>
-          <button type="button" onClick={goPreviousEnrollmentStep} className="enrollment-auto-increase-back">
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            {t(`${A}back`)}
-          </button>
-          <h1 className="text-xl font-semibold text-foreground md:text-2xl">{t(`${A}title`)}</h1>
-          <p className="mt-1 text-sm text-muted-foreground md:text-base">{t(`${A}subtitle`)}</p>
-        </div>
+    <div className="min-w-0 w-full space-y-4">
+      <div className="text-left">
+        <h1 className="text-2xl font-semibold leading-tight text-gray-900 dark:text-gray-50">{t(`${A}title`)}</h1>
+        <p className="mt-1 text-sm leading-snug text-gray-500 dark:text-gray-400">{t(`${A}subtitle`)}</p>
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="auto-increase-card">
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                <Minus className="h-5 w-5 text-muted-foreground" aria-hidden />
-              </div>
-              <h3 className="font-semibold text-foreground">{t(`${A}cardFixedTitle`)}</h3>
+      <div className="grid min-w-0 gap-4 md:grid-cols-2">
+        <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-600 dark:bg-gray-900">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-lg leading-none dark:bg-gray-800">
+              <span aria-hidden>➖</span>
             </div>
-            <p className="text-sm text-muted-foreground">{t(`${A}cardFixedDesc`, { percent: currentPercent })}</p>
-            <div className="mt-4 flex-1">
-              <p className="auto-increase-eyebrow">{t(`${A}projected10y`)}</p>
-              <p className="auto-increase-gate-projection">${fixedProjection.toLocaleString()}</p>
-            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-50">{t(`${A}cardFixedTitle`)}</h3>
           </div>
-
-          <div className="auto-increase-card auto-increase-card--featured">
-            <span className="badge-floating">{t(`${A}recommended`)}</span>
-            <div className="mb-3 mt-1 flex items-center gap-2">
-              <div className="success-icon-soft">
-                <TrendingUp className="h-5 w-5" aria-hidden />
-              </div>
-              <h3 className="font-semibold text-foreground">{t(`${A}cardAutoTitle`)}</h3>
-            </div>
-            <p className="text-sm text-muted-foreground">{t(`${A}cardAutoDesc`)}</p>
-            <div className="mt-4 flex-1">
-              <p className="auto-increase-eyebrow">{t(`${A}projected10y`)}</p>
-              <p className="auto-increase-gate-projection auto-increase-gate-projection--success">
-                ${autoProjection.toLocaleString()}
-              </p>
-            </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t(`${A}cardFixedDesc`, { percent: currentPercent })}</p>
+          <div className="mt-4 flex-1">
+            <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              {t(`${A}projectedRetirement`)}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-50">${fixedProjection.toLocaleString()}</p>
           </div>
-        </div>
-
-        <div className="enrollment-insight-banner enrollment-insight-banner--row">
-          <p className="enrollment-insight-banner__body">
-            {t(`${A}insightBefore`)}
-            <span className="enrollment-insight-banner__emphasis">
-              {formatAutoIncreaseCurrency(financialImpact.difference)}
-            </span>
-            {t(`${A}insightAfter`)}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <button type="button" onClick={handleEnableAutoIncrease} className="btn-enroll-success sm:flex-1">
-            {t(`${A}ctaEnable`)}
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </button>
-          <button type="button" onClick={handleSkipForNow} className="btn btn-outline sm:flex-1">
+          <button
+            type="button"
+            onClick={handleSkipForNow}
+            className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-500 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
             {t(`${A}ctaSkip`)}
           </button>
         </div>
+
+        <div className="relative flex flex-col rounded-xl border-2 border-green-500 bg-white p-5 shadow-sm dark:border-green-600 dark:bg-gray-900">
+          <span className="absolute -top-3 left-4 rounded-full bg-green-600 px-3 py-0.5 text-xs font-semibold text-white dark:bg-green-500">
+            {t(`${A}recommended`)}
+          </span>
+          <div className="mb-3 mt-1 flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-lg leading-none dark:bg-green-950/50">
+              <span aria-hidden>📈</span>
+            </div>
+            <h3 className="font-semibold text-gray-900 dark:text-gray-50">{t(`${A}cardAutoTitle`)}</h3>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t(`${A}cardAutoDesc`)}</p>
+          <div className="mt-4 flex-1">
+            <p className="text-[0.75rem] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              {t(`${A}projectedRetirement`)}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-green-700 dark:text-green-400">${autoProjection.toLocaleString()}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleEnableAutoIncrease}
+            className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-green-700"
+          >
+            {t(`${A}ctaEnable`)}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
       </div>
-    </Shell>
+
+      <div className="rounded-xl border border-green-100 bg-green-50 p-3 text-left md:text-center dark:border-green-900/50 dark:bg-green-950/35">
+        <p className="text-sm font-medium leading-snug text-green-800 dark:text-green-100">
+          {t(`${A}insightBefore`)}
+          <span className="font-bold">{formatAutoIncreaseCurrency(financialImpact.difference)}</span>
+          {t(`${A}insightAfter`)}
+        </p>
+      </div>
+
+      {skipPopupOpen ? (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auto-increase-skip-popup-title"
+          onClick={() => setSkipPopupOpen(false)}
+        >
+          <div
+            className="max-h-[min(90vh,900px)] w-full max-w-[520px] overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl dark:bg-gray-900 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AutoIncreaseSkipPanel variant="modal" onDismiss={() => setSkipPopupOpen(false)} />
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

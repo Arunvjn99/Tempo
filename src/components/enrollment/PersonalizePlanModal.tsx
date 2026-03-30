@@ -1,9 +1,20 @@
-import { useState, useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Trans, useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
-import { Modal } from "../ui/Modal";
-import { cn } from "@/lib/utils";
+import { Trans, useTranslation } from "react-i18next";
+import "@/styles/v2/v2-ui.css";
+import {
+  V2WizardShell,
+  V2Stepper,
+  V2WizardFooter,
+  V2Button,
+  V2AgeStep,
+  V2LocationStep,
+  V2SavingsStep,
+  V2ComfortStep,
+  AnimatedHeaderWave,
+  type V2InvestmentComfort,
+} from "@/components/v2";
 import {
   loadEnrollmentDraft,
   saveEnrollmentDraft,
@@ -11,16 +22,20 @@ import {
 } from "@/enrollment/enrollmentDraftStore";
 import { US_STATES } from "@/constants/usStates";
 import { getRoutingVersion, withVersion } from "@/core/version";
-import { Step4Comfort, type InvestmentComfort } from "./Step4Comfort";
-import { Step2Location } from "./Step2Location";
-import { OnboardingHeader, OnboardingStepCard, SuggestionCard, WizardGuideInsight } from "./onboarding";
+import {
+  WIZARD_RETIREMENT_AGE_MAX,
+  WIZARD_RETIREMENT_AGE_MIN,
+  clampWizardRetirementAge,
+  getYearsUntilRetirement,
+  type WizardStepsCoreState,
+} from "@/enrollment/wizardStepInsights";
 import { RETIREMENT_LOCATION_UNKNOWN } from "./wizardConstants";
 
 export { RETIREMENT_LOCATION_UNKNOWN };
 
 const TOTAL_STEPS = 4;
 const DEFAULT_DOB = "1994-04-16";
-const POPULAR_RETIREMENT_AGE = 58;
+const GENERIC_EN = "there";
 
 function getAgeFromDOB(isoDate: string): number {
   const d = new Date(isoDate);
@@ -30,17 +45,6 @@ function getAgeFromDOB(isoDate: string): number {
   const m = today.getMonth() - d.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age -= 1;
   return Math.max(18, Math.min(74, age));
-}
-
-function resolveLocaleTag(i18nLanguage: string): string {
-  const base = i18nLanguage.split("-")[0]?.toLowerCase() ?? "en";
-  return base === "es" ? "es-ES" : "en-US";
-}
-
-function formatDOBDisplay(isoDate: string, i18nLanguage: string): string {
-  const d = new Date(isoDate + "T12:00:00");
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(resolveLocaleTag(i18nLanguage), { month: "long", day: "numeric", year: "numeric" });
 }
 
 function getDOBFromAge(age: number): string {
@@ -54,7 +58,7 @@ interface WizardFormState {
   annualSalary: number;
   retirementLocation: string;
   savingsAmount: number;
-  investmentComfort: InvestmentComfort;
+  investmentComfort: V2InvestmentComfort;
 }
 
 const DEFAULT_STATE: WizardFormState = {
@@ -72,435 +76,37 @@ export interface PersonalizePlanModalProps {
   userName?: string;
 }
 
-function formatCurrency(value: number, i18nLanguage: string): string {
-  if (value === 0) return "";
-  return new Intl.NumberFormat(resolveLocaleTag(i18nLanguage), {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function parseCurrencyInput(value: string): number {
-  const cleaned = value.replace(/[^0-9]/g, "");
-  return parseInt(cleaned, 10) || 0;
-}
-
 const stepTransition = { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] };
 
-function WizardStepProgress({ currentStep }: { currentStep: number }) {
-  const { t } = useTranslation();
-  const stepLabels = [
-    t("preEnrollment.personalizeWizard.stepAge"),
-    t("preEnrollment.personalizeWizard.stepLocation"),
-    t("preEnrollment.personalizeWizard.stepSavings"),
-    t("preEnrollment.personalizeWizard.stepComfort"),
-  ] as const;
-  return (
-    <div className="py-1">
-      <p className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">
-        {t("preEnrollment.personalizeWizard.stepOf", { current: currentStep, total: TOTAL_STEPS })}
-      </p>
-      <div className="flex items-stretch gap-1.5 sm:gap-2">
-        {stepLabels.map((label, i) => {
-          const stepNum = i + 1;
-          const isCompleted = stepNum < currentStep;
-          const isCurrent = stepNum === currentStep;
-          const isUpcoming = stepNum > currentStep;
-          return (
-            <div key={i} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-              <div
-                className={cn(
-                  "h-1.5 w-full rounded-full transition-colors",
-                  isCompleted && "bg-[var(--color-primary)]",
-                  isCurrent && "bg-[var(--color-primary)] opacity-80",
-                  isUpcoming && "bg-[var(--color-border)]",
-                )}
-                aria-hidden
-              />
-              <div className="flex flex-col items-center gap-0.5">
-                {isCompleted ? (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-white" aria-hidden>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </span>
-                ) : (
-                  <span
-                    className={cn(
-                      "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold tabular-nums",
-                      isCurrent && "bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]",
-                      isUpcoming && "text-[var(--color-text-tertiary,var(--color-text-secondary))]",
-                    )}
-                  >
-                    {stepNum}
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "text-center text-[10px] font-medium leading-tight sm:text-[11px]",
-                    isCurrent && "font-semibold text-[var(--color-primary)]",
-                    isCompleted && "text-[var(--color-text-secondary)]",
-                    isUpcoming && "text-[var(--color-text-tertiary,var(--color-text-secondary))]",
-                  )}
-                >
-                  {label}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function ExitConfirmation({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+function V2ExitConfirmation({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   const { t } = useTranslation();
   return (
-    <motion.div className="premium-wizard__exit-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-      <motion.div className="premium-wizard__exit-dialog" initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}>
-        <div className="flex justify-center mb-4">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+    <motion.div className="v2-exit-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+      <motion.div
+        className="v2-exit-dialog"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+      >
+        <div className="v2-flex-center v2-mb-1">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--v2-color-violet-600)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
         </div>
-        <h3 className="text-lg font-bold text-[var(--color-text)] text-center mb-1">{t("preEnrollment.personalizeWizard.exitTitle")}</h3>
-        <p className="text-sm text-[var(--color-text-secondary)] text-center mb-6">{t("preEnrollment.personalizeWizard.exitBody")}</p>
-        <div className="flex gap-3">
-          <button type="button" onClick={onCancel} className="premium-wizard__exit-btn premium-wizard__exit-btn--cancel">
+        <h3 className="v2-section__title">{t("preEnrollment.personalizeWizard.exitTitle")}</h3>
+        <p className="v2-text-center v2-text-muted v2-mt-1">{t("preEnrollment.personalizeWizard.exitBody")}</p>
+        <div className="v2-exit-dialog__actions">
+          <V2Button variant="secondary" type="button" onClick={onCancel}>
             {t("preEnrollment.personalizeWizard.exitKeepGoing")}
-          </button>
-          <button type="button" onClick={onConfirm} className="premium-wizard__exit-btn premium-wizard__exit-btn--confirm">
+          </V2Button>
+          <V2Button variant="primary" type="button" onClick={onConfirm}>
             {t("preEnrollment.personalizeWizard.exitExit")}
-          </button>
+          </V2Button>
         </div>
       </motion.div>
     </motion.div>
-  );
-}
-
-function Step1RetirementAge({
-  dateOfBirth,
-  currentAge,
-  retirementAge,
-  editingAge,
-  onEdit,
-  onDoneEditing,
-  onDateOfBirthChange,
-  onRetirementAgeChange,
-  onApplySuggestedAge,
-  canApplySuggestedAge,
-}: {
-  dateOfBirth: string;
-  currentAge: number;
-  retirementAge: number;
-  editingAge: boolean;
-  onEdit: () => void;
-  onDoneEditing: () => void;
-  onDateOfBirthChange: (isoDate: string) => void;
-  onRetirementAgeChange: (v: number) => void;
-  onApplySuggestedAge: () => void;
-  canApplySuggestedAge: boolean;
-}) {
-  const { t, i18n } = useTranslation();
-  const max = 75;
-  const min = Math.min(max, Math.max(22, currentAge + 1));
-  const sliderValue = Math.min(max, Math.max(min, retirementAge));
-  const isRangeLocked = min === max;
-  const yearsToGrow = Math.max(0, sliderValue - currentAge);
-  const sliderPercent = isRangeLocked ? 0 : ((sliderValue - min) / (max - min)) * 100;
-  const currentYear = new Date().getFullYear();
-  const estimatedRetirementYear = currentYear + yearsToGrow;
-
-  const ageInsightText = useMemo(() => {
-    const pw = "preEnrollment.personalizeWizard.";
-    const yearsLabel = yearsToGrow === 1 ? t(`${pw}yearOne`) : t(`${pw}yearsOther`);
-    const growthKey =
-      yearsToGrow >= 30
-        ? "ageInsightGrowth30"
-        : yearsToGrow >= 20
-          ? "ageInsightGrowth20"
-          : yearsToGrow >= 10
-            ? "ageInsightGrowth10"
-            : "ageInsightGrowthShort";
-    const growth = t(`${pw}${growthKey}`);
-    return (
-      <>
-        <span className="font-medium text-[var(--color-text)]">
-          {t(`${pw}ageInsightLead`, {
-            count: yearsToGrow,
-            yearsLabel,
-            year: estimatedRetirementYear,
-          })}
-        </span>{" "}
-        <span className="mt-2 block text-xs opacity-90">
-          {t(`${pw}ageInsightTail`, { retireAge: sliderValue, count: yearsToGrow, growth })}
-        </span>
-      </>
-    );
-  }, [sliderValue, yearsToGrow, estimatedRetirementYear, t]);
-
-  return (
-    <>
-      <OnboardingStepCard>
-        <AnimatePresence mode="wait">
-          {editingAge ? (
-            <motion.div
-              key="editing"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25 }}
-              className="premium-wizard__info-card"
-            >
-              <label htmlFor="wizard-dob-input" className="mb-2 block text-sm font-semibold text-[var(--color-text)]">
-                {t("preEnrollment.personalizeWizard.dobLabel")}
-              </label>
-              <div className="relative">
-                <input
-                  id="wizard-dob-input"
-                  type="date"
-                  value={dateOfBirth}
-                  onChange={(e) => onDateOfBirthChange(e.target.value)}
-                  onBlur={onDoneEditing}
-                  max={new Date().toISOString().slice(0, 10)}
-                  className="premium-wizard__dob-input"
-                  aria-describedby="wizard-dob-helper"
-                />
-                <span className="premium-wizard__dob-icon" aria-hidden>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                </span>
-              </div>
-              <p id="wizard-dob-helper" className="mt-2 text-xs text-[var(--color-text-secondary)]">
-                {t("preEnrollment.personalizeWizard.dobHelper")}
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="display"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
-              className="premium-wizard__info-card"
-            >
-              <div className="flex items-center gap-4">
-                <div className="premium-wizard__info-icon">
-                  <span className="text-xl" role="img" aria-label={t("preEnrollment.personalizeWizard.celebrationAria")}>
-                    🎉
-                  </span>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-base font-semibold text-[var(--color-text)]">
-                    {t("preEnrollment.personalizeWizard.youreYearsOld", { age: currentAge })}
-                  </p>
-                  <p className="mt-0.5 text-sm text-[var(--color-text-secondary)]">
-                    {t("preEnrollment.personalizeWizard.bornOn", { date: formatDOBDisplay(dateOfBirth, i18n.language) })}
-                  </p>
-                  <button type="button" onClick={onEdit} className="premium-wizard__edit-link">
-                    {t("preEnrollment.personalizeWizard.editDob")}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div>
-          <h3 className="premium-wizard__question text-center">{t("preEnrollment.personalizeWizard.retireQuestion")}</h3>
-        </div>
-
-        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">
-          {t("preEnrollment.personalizeWizard.planRetireAt")}
-        </p>
-
-        <div className="flex flex-col items-center gap-4">
-          <div className="premium-wizard__slider-container w-full max-w-md">
-            <input
-              type="range"
-              min={min}
-              max={max}
-              value={sliderValue}
-              disabled={isRangeLocked}
-              onChange={(e) => onRetirementAgeChange(parseInt(e.target.value, 10))}
-              className="premium-wizard__slider"
-              style={{ "--slider-percent": `${sliderPercent}%` } as CSSProperties}
-              aria-label={t("preEnrollment.personalizeWizard.retirementAgeAria")}
-            />
-            <div className="mt-1.5 flex justify-between px-0.5">
-              <span className="text-[11px] font-medium text-[var(--color-text-tertiary,var(--color-text-secondary))]">{min}</span>
-              <span className="text-[11px] font-medium text-[var(--color-text-tertiary,var(--color-text-secondary))]">{max}</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-center">
-            <div className="premium-wizard__stepper">
-              <button
-                type="button"
-                disabled={isRangeLocked || sliderValue <= min}
-                onClick={() => onRetirementAgeChange(Math.max(min, sliderValue - 1))}
-                className="premium-wizard__stepper-btn"
-                aria-label={t("preEnrollment.personalizeWizard.decreaseRetirementAge")}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-              </button>
-              <div className="premium-wizard__stepper-value">
-                <motion.span
-                  key={sliderValue}
-                  initial={{ y: -6, opacity: 0.65 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                  className="text-2xl font-bold text-[var(--color-primary)] tabular-nums"
-                >
-                  {sliderValue}
-                </motion.span>
-                <span className="mt-0.5 text-xs font-medium text-[var(--color-text-secondary)]">
-                  {t("preEnrollment.personalizeWizard.yearsOldSuffix")}
-                </span>
-              </div>
-              <button
-                type="button"
-                disabled={isRangeLocked || sliderValue >= max}
-                onClick={() => onRetirementAgeChange(Math.min(max, sliderValue + 1))}
-                className="premium-wizard__stepper-btn"
-                aria-label={t("preEnrollment.personalizeWizard.increaseRetirementAge")}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <SuggestionCard
-          title={t("preEnrollment.personalizeWizard.popularRetireTitle", { age: POPULAR_RETIREMENT_AGE })}
-          subtitle={t("preEnrollment.personalizeWizard.popularRetireSubtitle")}
-          badge={t("preEnrollment.personalizeWizard.badgePopular")}
-          actionLabel={t("preEnrollment.personalizeWizard.apply")}
-          onAction={onApplySuggestedAge}
-          disabled={!canApplySuggestedAge}
-        />
-      </OnboardingStepCard>
-
-      <AnimatePresence mode="wait">
-        <WizardGuideInsight key={sliderValue}>{ageInsightText}</WizardGuideInsight>
-      </AnimatePresence>
-    </>
-  );
-}
-
-const SUGGESTED_SAVINGS = 10_000;
-
-function Step3Savings({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const { t, i18n } = useTranslation();
-  const pw = "preEnrollment.personalizeWizard.";
-  const chips = useMemo(
-    () =>
-      [
-        { amount: 0, label: t(`${pw}chip0`) },
-        { amount: 5000, label: t(`${pw}chip5k`) },
-        { amount: 10000, label: t(`${pw}chip10k`) },
-        { amount: 50000, label: t(`${pw}chip50k`) },
-      ] as const,
-    [t],
-  );
-  const display = value > 0 ? formatCurrency(value, i18n.language) : "";
-  const [isFocused, setIsFocused] = useState(false);
-  const hasValue = value > 0;
-
-  const savingsInsight = useMemo(() => {
-    if (value <= 0) {
-      return <>{t(`${pw}savingsInsightZero`)}</>;
-    }
-    const amount = `$${formatCurrency(value, i18n.language)}`;
-    return (
-      <Trans
-        i18nKey={`${pw}savingsInsightHasValue`}
-        values={{ amount }}
-        components={{ strong: <strong className="font-semibold text-[var(--color-text)]" /> }}
-      />
-    );
-  }, [value, t, i18n.language]);
-
-  return (
-    <>
-      <OnboardingStepCard>
-        <div>
-          <h3 className="premium-wizard__question text-center">{t(`${pw}savingsQuestion`)}</h3>
-          <p className="mt-2 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">{t(`${pw}savingsSubtitle`)}</p>
-        </div>
-
-        <p className="text-center text-sm text-[var(--color-text-tertiary,var(--color-text-secondary))]">{t(`${pw}savingsIntro`)}</p>
-
-        <div>
-          <p className="mb-2 text-center text-xs font-medium text-[var(--color-text-secondary)]">{t(`${pw}quickSelect`)}</p>
-          <div className="flex flex-wrap justify-center gap-2" role="group" aria-label={t(`${pw}quickSelect`)}>
-            {chips.map((chip) => {
-              const selected = value === chip.amount;
-              return (
-                <motion.button
-                  key={chip.amount}
-                  type="button"
-                  onClick={() => onChange(chip.amount)}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className={cn(
-                    "rounded-full border-2 px-3.5 py-2 text-sm font-semibold transition-colors",
-                    selected
-                      ? "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-[var(--color-text)] shadow-sm ring-2 ring-[color-mix(in_srgb,var(--color-primary)_28%,transparent)]"
-                      : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-secondary)] hover:border-[color-mix(in_srgb,var(--color-primary)_35%,var(--color-border))]",
-                  )}
-                >
-                  {chip.label}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            "premium-wizard__currency-wrapper mx-auto max-w-md",
-            isFocused && "premium-wizard__currency-wrapper--focused",
-          )}
-        >
-          <span className="premium-wizard__currency-symbol">$</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={display}
-            onChange={(e) => onChange(parseCurrencyInput(e.target.value))}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholder={t(`${pw}savingsPlaceholder`)}
-            className="premium-wizard__currency-input"
-            aria-describedby="step3-helper"
-          />
-        </div>
-        <p id="step3-helper" className="text-center text-sm text-[var(--color-text-secondary)]">
-          {hasValue ? t(`${pw}savingsHelperHasValue`) : t(`${pw}savingsHelperEmpty`)}
-        </p>
-
-        <SuggestionCard
-          title={t(`${pw}savingsSuggestTitle`)}
-          subtitle={t(`${pw}savingsSuggestSubtitle`)}
-          badge={t(`${pw}badgePopular`)}
-          actionLabel={t(`${pw}apply`)}
-          onAction={() => onChange(SUGGESTED_SAVINGS)}
-          disabled={value === SUGGESTED_SAVINGS}
-        />
-      </OnboardingStepCard>
-
-      <AnimatePresence mode="wait">
-        <WizardGuideInsight key={value}>{savingsInsight}</WizardGuideInsight>
-      </AnimatePresence>
-    </>
   );
 }
 
@@ -514,61 +120,64 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
   const [editingAge, setEditingAge] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const stateRef = useRef(state);
-  stateRef.current = state;
-  const ageAnimRef = useRef<number | null>(null);
-
   const currentAge = useMemo(() => getAgeFromDOB(state.dateOfBirth), [state.dateOfBirth]);
+  const yearsUntilRetirement = useMemo(
+    () => getYearsUntilRetirement(clampWizardRetirementAge(state.retirementAge), currentAge),
+    [state.retirementAge, currentAge],
+  );
 
-  const minRetirementAge = useMemo(() => Math.min(75, Math.max(22, currentAge + 1)), [currentAge]);
+  /** Steps 1–3 core fields (single source of truth for wizard logic). */
+  const wizardCore: WizardStepsCoreState = useMemo(
+    () => ({
+      retirementAge: clampWizardRetirementAge(state.retirementAge),
+      retirementLocation: state.retirementLocation.trim() === "" ? null : state.retirementLocation,
+      savingsAmount: state.savingsAmount,
+    }),
+    [state.retirementAge, state.retirementLocation, state.savingsAmount],
+  );
 
-  const canApplySuggestedAge = minRetirementAge <= POPULAR_RETIREMENT_AGE && state.retirementAge !== POPULAR_RETIREMENT_AGE;
+  const trimmed = userName?.trim();
+  const isCasual =
+    !trimmed || trimmed.toLowerCase() === GENERIC_EN || trimmed === t("preEnrollment.personalizeWizard.headerAnonymous");
+  const wave = <AnimatedHeaderWave />;
+  const headerTitle = isCasual ? (
+    <Trans i18nKey="preEnrollment.personalizeWizard.headerGreetingCasual" components={{ wave }} />
+  ) : (
+    <Trans
+      i18nKey="preEnrollment.personalizeWizard.headerGreeting"
+      values={{ name: trimmed }}
+      components={{ wave }}
+    />
+  );
+  const headerSubtitle = t("preEnrollment.personalizeWizard.headerSubtitle");
 
-  const applyRetirementAgeSmooth = useCallback(() => {
-    if (ageAnimRef.current != null) cancelAnimationFrame(ageAnimRef.current);
-    const prev = stateRef.current;
-    const ca = getAgeFromDOB(prev.dateOfBirth);
-    const min = Math.min(75, Math.max(22, ca + 1));
-    const end = Math.min(75, Math.max(min, POPULAR_RETIREMENT_AGE));
-    const start = prev.retirementAge;
-    if (start === end) return;
-
-    const t0 = performance.now();
-    const duration = 400;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - t0) / duration);
-      const eased = 1 - (1 - t) * (1 - t);
-      const v = Math.round(start + (end - start) * eased);
-      setState((p) => ({ ...p, retirementAge: v }));
-      if (t < 1) {
-        ageAnimRef.current = requestAnimationFrame(tick);
-      } else {
-        ageAnimRef.current = null;
-      }
-    };
-    ageAnimRef.current = requestAnimationFrame(tick);
+  const POPULAR_RETIREMENT_AGE = 58;
+  const applyPopularRetirementAge = useCallback(() => {
+    setState((p) => ({ ...p, retirementAge: clampWizardRetirementAge(POPULAR_RETIREMENT_AGE) }));
   }, []);
 
+  const canApplyPopularAge = state.retirementAge !== POPULAR_RETIREMENT_AGE;
+
+  /* figma-dump footer: hide floating Core AI so it does not overlap the modal chrome */
   useEffect(() => {
-    return () => {
-      if (ageAnimRef.current != null) cancelAnimationFrame(ageAnimRef.current);
-    };
-  }, []);
+    if (isOpen) {
+      document.documentElement.setAttribute("data-v2-wizard-open", "true");
+    } else {
+      document.documentElement.removeAttribute("data-v2-wizard-open");
+    }
+    return () => document.documentElement.removeAttribute("data-v2-wizard-open");
+  }, [isOpen]);
 
   const canProceedFromStep = useCallback(
     (s: number): boolean => {
       switch (s) {
         case 1:
           return (
-            Number.isFinite(state.retirementAge) &&
-            state.retirementAge >= minRetirementAge &&
-            state.retirementAge <= 75
+            wizardCore.retirementAge >= WIZARD_RETIREMENT_AGE_MIN && wizardCore.retirementAge <= WIZARD_RETIREMENT_AGE_MAX
           );
         case 2: {
-          const loc = state.retirementLocation;
-          if (!loc) return false;
-          if (loc === RETIREMENT_LOCATION_UNKNOWN) return true;
-          return US_STATES.includes(loc);
+          const loc = wizardCore.retirementLocation;
+          return loc != null && US_STATES.includes(loc);
         }
         case 3:
           return true;
@@ -583,55 +192,61 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
           return false;
       }
     },
-    [state, minRetirementAge],
+    [wizardCore, state.investmentComfort],
   );
 
+  /* Reset step + hydrate draft when the wizard opens (external isOpen signal). */
   useEffect(() => {
+    if (!isOpen) return;
+    /* Opening the overlay must sync step UI and optional draft; not derivable from render alone. */
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setStep(1);
+    setEditingAge(false);
+    setShowExitConfirm(false);
+    const draft = loadEnrollmentDraft();
     setState((prev) => {
-      const max = 75;
-      const minRetirementAge = Math.min(max, Math.max(22, currentAge + 1));
-      const normalizedRetirementAge = Math.min(max, Math.max(minRetirementAge, prev.retirementAge));
-      if (normalizedRetirementAge === prev.retirementAge) return prev;
-      return { ...prev, retirementAge: normalizedRetirementAge };
-    });
-  }, [currentAge]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setStep(1);
-      setEditingAge(false);
-      setShowExitConfirm(false);
-      const draft = loadEnrollmentDraft();
+      let next = { ...prev };
       if (draft) {
-        setState((prev) => ({
-          ...prev,
+        next = {
+          ...next,
           dateOfBirth: draft.dateOfBirth ?? (draft.currentAge != null ? getDOBFromAge(draft.currentAge) : prev.dateOfBirth),
           retirementAge: draft.retirementAge ?? prev.retirementAge,
           annualSalary: draft.annualSalary ?? prev.annualSalary,
           retirementLocation: draft.retirementLocation || prev.retirementLocation,
           savingsAmount: draft.otherSavings?.amount ?? prev.savingsAmount,
-          investmentComfort: draft.investmentComfort ?? prev.investmentComfort,
-        }));
+          investmentComfort: (draft.investmentComfort as V2InvestmentComfort) ?? prev.investmentComfort,
+        };
       }
-    }
+      return { ...next, retirementAge: clampWizardRetirementAge(next.retirementAge) };
+    });
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [isOpen]);
 
   const update = useCallback(<K extends keyof WizardFormState>(key: K, value: WizardFormState[K]) => {
-    if (key === "retirementAge" && ageAnimRef.current != null) {
-      cancelAnimationFrame(ageAnimRef.current);
-      ageAnimRef.current = null;
-    }
-    setState((prev) => ({ ...prev, [key]: value }));
+    setState((prev) => {
+      if (key === "dateOfBirth") {
+        const iso = value as string;
+        return {
+          ...prev,
+          dateOfBirth: iso,
+          retirementAge: clampWizardRetirementAge(prev.retirementAge),
+        };
+      }
+      if (key === "retirementAge") {
+        return { ...prev, retirementAge: clampWizardRetirementAge(value as number) };
+      }
+      return { ...prev, [key]: value };
+    });
   }, []);
 
   const persistDraft = useCallback(() => {
     const existing = loadEnrollmentDraft();
-    const yearsToRetire = state.retirementAge - currentAge;
+    const yearsToRetire = clampWizardRetirementAge(state.retirementAge) - currentAge;
     const merged: EnrollmentDraft = {
       ...existing,
       currentAge,
       dateOfBirth: state.dateOfBirth,
-      retirementAge: state.retirementAge,
+      retirementAge: clampWizardRetirementAge(state.retirementAge),
       yearsToRetire,
       annualSalary: state.annualSalary,
       retirementLocation: state.retirementLocation,
@@ -672,105 +287,141 @@ export const PersonalizePlanModal = ({ isOpen, onClose, userName = "there" }: Pe
         : t("preEnrollment.personalizeWizard.footerNext");
   const nextDisabled = !canProceedFromStep(step);
 
-  return (
-    <Modal isOpen={isOpen} onClose={handleCloseAttempt} closeOnOverlayClick={false} dialogClassName="premium-wizard__dialog" wizard>
-      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.3 }} className="premium-wizard">
-        <OnboardingHeader name={userName} onClose={handleCloseAttempt} />
-        <div className="border-b border-[var(--color-border)] bg-muted/30 px-6 py-3 sm:px-8 dark:bg-muted/15">
-          <WizardStepProgress currentStep={step} />
-        </div>
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4 sm:px-8 sm:py-5">
-          <AnimatePresence mode="wait">
-            {step === 1 && (
-              <motion.div
-                key="step-1"
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={stepTransition}
-              >
-                <Step1RetirementAge
-                  dateOfBirth={state.dateOfBirth}
-                  currentAge={currentAge}
-                  retirementAge={state.retirementAge}
-                  editingAge={editingAge}
-                  onEdit={() => setEditingAge(true)}
-                  onDoneEditing={() => setEditingAge(false)}
-                  onDateOfBirthChange={(v) => update("dateOfBirth", v)}
-                  onRetirementAgeChange={(v) => update("retirementAge", v)}
-                  onApplySuggestedAge={applyRetirementAgeSmooth}
-                  canApplySuggestedAge={canApplySuggestedAge}
-                />
-              </motion.div>
-            )}
-            {step === 2 && (
-              <motion.div
-                key="step-2"
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={stepTransition}
-              >
-                <Step2Location value={state.retirementLocation} onChange={(v) => update("retirementLocation", v)} />
-              </motion.div>
-            )}
-            {step === 3 && (
-              <motion.div
-                key="step-3"
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={stepTransition}
-              >
-                <Step3Savings value={state.savingsAmount} onChange={(v) => update("savingsAmount", v)} />
-              </motion.div>
-            )}
-            {step === 4 && (
-              <motion.div
-                key="step-4"
-                className="flex flex-col gap-4"
-                initial={{ opacity: 0, x: 16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -16 }}
-                transition={stepTransition}
-              >
-                <Step4Comfort value={state.investmentComfort} onChange={(v) => update("investmentComfort", v)} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-        <div className="premium-wizard__footer">
-          <button type="button" onClick={handleSaveAndExit} className="premium-wizard__ghost-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" /></svg>
+  const stepLabels = [
+    t("preEnrollment.personalizeWizard.stepAge"),
+    t("preEnrollment.personalizeWizard.stepLocation"),
+    t("preEnrollment.personalizeWizard.stepSavings"),
+    t("preEnrollment.personalizeWizard.stepComfort"),
+  ] as const;
+
+  const stepper = <V2Stepper currentStep={step} labels={stepLabels} />;
+
+  const footer = (
+    <V2WizardFooter
+      left={
+        isFirstStep ? (
+          <V2Button variant="ghost" type="button" onClick={handleSaveAndExit}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
             {t("preEnrollment.personalizeWizard.footerSaveExit")}
-          </button>
-          <div className="flex items-center gap-2.5">
-            {!isFirstStep && (
-              <motion.button type="button" onClick={handlePrevious} className="premium-wizard__back-btn" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" /></svg>
-                {t("preEnrollment.personalizeWizard.footerBack")}
-              </motion.button>
-            )}
-            <motion.button
-              type="button"
-              onClick={handleNext}
-              disabled={nextDisabled}
-              className={cn("premium-wizard__cta", nextDisabled && "pointer-events-none opacity-50")}
-              whileHover={nextDisabled ? undefined : { y: -1 }}
-              whileTap={nextDisabled ? undefined : { scale: 0.98 }}
+          </V2Button>
+        ) : (
+          <V2Button variant="ghost" type="button" onClick={handlePrevious}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            {t("preEnrollment.personalizeWizard.footerBack")}
+          </V2Button>
+        )
+      }
+      right={
+        <V2Button
+          variant="primary"
+          type="button"
+          onClick={handleNext}
+          disabled={nextDisabled}
+          className="v2-btn--primary-cta-wizard"
+        >
+          {ctaLabel}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </V2Button>
+      }
+    />
+  );
+
+  return (
+    <V2WizardShell
+      isOpen={isOpen}
+      onClose={handleCloseAttempt}
+      title={headerTitle}
+      subtitle={headerSubtitle}
+      closeLabel={t("preEnrollment.personalizeWizard.headerCloseAria")}
+      stepper={stepper}
+      footer={footer}
+      exitOverlay={
+        <AnimatePresence>
+          {showExitConfirm ? (
+            <V2ExitConfirmation
+              key="v2-exit"
+              onConfirm={handleConfirmExit}
+              onCancel={() => setShowExitConfirm(false)}
+            />
+          ) : null}
+        </AnimatePresence>
+      }
+    >
+      <div className="v2-wizard-step-host">
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div
+              key="step-1"
+              className="v2-wizard-step-motion"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={stepTransition}
             >
-              {ctaLabel}
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </motion.button>
-          </div>
-        </div>
-        {showExitConfirm && <ExitConfirmation onConfirm={handleConfirmExit} onCancel={() => setShowExitConfirm(false)} />}
-      </motion.div>
-    </Modal>
+              <V2AgeStep
+                dateOfBirth={state.dateOfBirth}
+                currentAge={currentAge}
+                retirementAge={state.retirementAge}
+                editingAge={editingAge}
+                onEdit={() => setEditingAge(true)}
+                onDoneEditing={() => setEditingAge(false)}
+                onDateOfBirthChange={(v) => update("dateOfBirth", v)}
+                onRetirementAgeChange={(v) => update("retirementAge", v)}
+                onApplySuggestedAge={applyPopularRetirementAge}
+                canApplySuggestedAge={canApplyPopularAge}
+              />
+            </motion.div>
+          )}
+          {step === 2 && (
+            <motion.div
+              key="step-2"
+              className="v2-wizard-step-motion"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={stepTransition}
+            >
+              <V2LocationStep value={state.retirementLocation} onChange={(v) => update("retirementLocation", v)} />
+            </motion.div>
+          )}
+          {step === 3 && (
+            <motion.div
+              key="step-3"
+              className="v2-wizard-step-motion"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={stepTransition}
+            >
+              <V2SavingsStep
+                value={state.savingsAmount}
+                yearsUntilRetirement={yearsUntilRetirement}
+                onChange={(v) => update("savingsAmount", v)}
+              />
+            </motion.div>
+          )}
+          {step === 4 && (
+            <motion.div
+              key="step-4"
+              className="v2-wizard-step-motion"
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={stepTransition}
+            >
+              <V2ComfortStep value={state.investmentComfort} onChange={(v) => update("investmentComfort", v)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </V2WizardShell>
   );
 };

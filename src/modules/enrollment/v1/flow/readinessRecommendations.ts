@@ -1,9 +1,9 @@
 import type { TFunction } from "i18next";
 import { DollarSign, ShieldCheck, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
 import type { EnrollmentV1Snapshot, RiskLevel } from "../store/useEnrollmentStore";
+import { computeReadinessScoreLinear } from "./enrollmentDerivedEngine";
 import {
   computeProjectedBalancePure,
-  computeReadinessScore,
   getGrowthRate,
   projectBalanceWithAutoIncrease,
 } from "./readinessMetrics";
@@ -65,21 +65,25 @@ export function generateRecommendations(
 
   const bumpPct = Math.min(data.contribution + 3, 15);
   if (bumpPct > data.contribution) {
-    const futureBal = computeProjectedBalancePure(
-      data.salary,
-      data.currentSavings,
-      bumpPct,
-      yearsToRetirement,
-      growthRate,
-    );
+    const futureBal = data.autoIncrease
+      ? projectBalanceWithAutoIncrease(
+          data.salary,
+          data.currentSavings,
+          bumpPct,
+          yearsToRetirement,
+          growthRate,
+          data.autoIncreaseRate,
+          data.autoIncreaseMax,
+        )
+      : computeProjectedBalancePure(
+          data.salary,
+          data.currentSavings,
+          bumpPct,
+          yearsToRetirement,
+          growthRate,
+        );
     const deltaBal = futureBal - projectedBalance;
-    const newScore = computeReadinessScore(
-      bumpPct,
-      data.autoIncrease,
-      data.riskLevel,
-      yearsToRetirement,
-      data.currentSavings,
-    );
+    const newScore = computeReadinessScoreLinear(bumpPct, yearsToRetirement, futureBal);
     const dScore = newScore - score;
     const empBefore = Math.round((data.salary * Math.min(data.contribution, 6)) / 100);
     const empAfter = Math.round((data.salary * Math.min(bumpPct, 6)) / 100);
@@ -101,14 +105,6 @@ export function generateRecommendations(
   }
 
   if (!data.autoIncrease) {
-    const newScore = computeReadinessScore(
-      data.contribution,
-      true,
-      data.riskLevel,
-      yearsToRetirement,
-      data.currentSavings,
-    );
-    const dScore = newScore - score;
     const futureBal = projectBalanceWithAutoIncrease(
       data.salary,
       data.currentSavings,
@@ -118,6 +114,8 @@ export function generateRecommendations(
       data.autoIncreaseRate,
       data.autoIncreaseMax,
     );
+    const newScore = computeReadinessScoreLinear(data.contribution, yearsToRetirement, futureBal);
+    const dScore = newScore - score;
     const deltaBal = futureBal - projectedBalance;
     const addAnnual = Math.max(0, Math.round((data.salary * data.autoIncreaseRate) / 100));
     pushIf("auto-increase", {
@@ -140,21 +138,25 @@ export function generateRecommendations(
 
   if (data.contribution < 6 && bumpPct < 6) {
     const targetMatch = 6;
-    const futureBal = computeProjectedBalancePure(
-      data.salary,
-      data.currentSavings,
-      targetMatch,
-      yearsToRetirement,
-      growthRate,
-    );
+    const futureBal = data.autoIncrease
+      ? projectBalanceWithAutoIncrease(
+          data.salary,
+          data.currentSavings,
+          targetMatch,
+          yearsToRetirement,
+          growthRate,
+          data.autoIncreaseRate,
+          data.autoIncreaseMax,
+        )
+      : computeProjectedBalancePure(
+          data.salary,
+          data.currentSavings,
+          targetMatch,
+          yearsToRetirement,
+          growthRate,
+        );
     const deltaBal = futureBal - projectedBalance;
-    const newScore = computeReadinessScore(
-      targetMatch,
-      data.autoIncrease,
-      data.riskLevel,
-      yearsToRetirement,
-      data.currentSavings,
-    );
+    const newScore = computeReadinessScoreLinear(targetMatch, yearsToRetirement, futureBal);
     const dScore = newScore - score;
     const addAnnual =
       Math.round(((targetMatch - data.contribution) * data.salary) / 100) +
@@ -176,21 +178,25 @@ export function generateRecommendations(
 
   if (data.riskLevel === "conservative") {
     const balancedRate = getGrowthRate("balanced");
-    const futureBal = computeProjectedBalancePure(
-      data.salary,
-      data.currentSavings,
-      data.contribution,
-      yearsToRetirement,
-      balancedRate,
-    );
+    const futureBal = data.autoIncrease
+      ? projectBalanceWithAutoIncrease(
+          data.salary,
+          data.currentSavings,
+          data.contribution,
+          yearsToRetirement,
+          balancedRate,
+          data.autoIncreaseRate,
+          data.autoIncreaseMax,
+        )
+      : computeProjectedBalancePure(
+          data.salary,
+          data.currentSavings,
+          data.contribution,
+          yearsToRetirement,
+          balancedRate,
+        );
     const deltaBal = futureBal - projectedBalance;
-    const newScore = computeReadinessScore(
-      data.contribution,
-      data.autoIncrease,
-      "balanced",
-      yearsToRetirement,
-      data.currentSavings,
-    );
+    const newScore = computeReadinessScoreLinear(data.contribution, yearsToRetirement, futureBal);
     const dScore = newScore - score;
     pushIf("strategy-balanced", {
       title: t(`${REC}strategyBalancedTitle`),

@@ -73,6 +73,8 @@ export default {
           hover: "var(--color-primary-hover)",
           active: "var(--color-primary-active)",
         },
+        /** On-primary text (stepper, chips); maps to global --primary-foreground */
+        "primary-foreground": "var(--primary-foreground)",
         border: {
           DEFAULT: "var(--color-border)",
           subtle: "var(--border-subtle)",
@@ -81,6 +83,15 @@ export default {
         danger: "var(--color-danger)",
         success: "var(--accent-success)",
         warning: "var(--accent-warning)",
+      },
+      backgroundImage: {
+        "brand-gradient": "var(--brand-gradient)",
+        "surface-gradient": "var(--surface-gradient)",
+        "insight-gradient": "var(--insight-gradient)",
+      },
+      boxShadow: {
+        "elevation-sm": "var(--elevation-sm)",
+        "elevation-md": "var(--elevation-md)",
       },
       borderRadius: {
         card: "var(--radius-2xl)",
@@ -96,6 +107,9 @@ export default {
       fontFamily: {
         sans: ["system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"],
         display: ["Outfit", "system-ui", "sans-serif"],
+        /** Post-enrollment dashboard (Figma typography) */
+        "dashboard-heading": ['"Montserrat"', "system-ui", "sans-serif"],
+        "dashboard-body": ['"Open Sans"', "system-ui", "sans-serif"],
       },
     },
   },

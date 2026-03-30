@@ -80,7 +80,7 @@ export function SuccessEnrollmentModal({
 
         {/* Modal card */}
         <motion.div
-          className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-[var(--color-surface)] p-8 shadow-2xl"
+          className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-surface-gradient p-8 shadow-elevation-md"
           initial={reducedMotion ? false : { scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
@@ -202,7 +202,7 @@ export function SuccessEnrollmentModal({
             <button
               type="button"
               onClick={handleOkay}
-              className="w-full max-w-[200px] rounded-xl bg-[var(--color-success)] px-6 py-3 text-base font-medium text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--color-success)] focus:ring-offset-2"
+              className="w-full max-w-[200px] rounded-full bg-success px-6 py-3 text-base font-medium text-[var(--color-text-inverse)] shadow-elevation-sm transition hover:scale-[1.02] hover:opacity-95 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
             >
               {t("enrollment.successModalOkay")}
             </button>

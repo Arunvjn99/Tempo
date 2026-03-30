@@ -47,7 +47,7 @@ export function DesktopStepper({
     return (
       <div
         className={cn(
-          "mx-auto flex w-full max-w-full flex-wrap items-center justify-center gap-6",
+          "mx-auto flex w-full max-w-full flex-wrap items-center justify-center gap-8",
           className,
         )}
       >
@@ -59,11 +59,10 @@ export function DesktopStepper({
             <div
               className={cn(
                 "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors motion-reduce:transition-none",
-                (isCompleted || isCurrent) &&
-                  "bg-[#155dfc] text-white dark:bg-primary dark:text-primary-foreground",
+                (isCompleted || isCurrent) && "bg-primary text-primary-foreground",
                 !isCompleted &&
                   !isCurrent &&
-                  "bg-[#e5e7eb] text-[#6a7282] dark:bg-muted dark:text-muted-foreground",
+                  "bg-background-secondary text-muted-foreground",
               )}
             >
               {isCompleted ? (
@@ -77,8 +76,8 @@ export function DesktopStepper({
             <span
               className={cn(
                 "max-w-[9rem] truncate text-sm font-medium tracking-tight",
-                isCurrent && "text-[#101828] dark:text-foreground",
-                !isCurrent && "text-[#99a1af] dark:text-muted-foreground",
+                isCurrent && "text-foreground",
+                !isCurrent && "text-muted-foreground",
               )}
               title={label}
             >
@@ -89,7 +88,7 @@ export function DesktopStepper({
             <button
               type="button"
               onClick={() => onStepClick(index)}
-              className="flex shrink-0 items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0"
+              className="flex shrink-0 items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
             >
               {circle}
               {labelEl}
@@ -104,10 +103,7 @@ export function DesktopStepper({
             <React.Fragment key={`${label}-${index}`}>
               {row}
               {!isLast ? (
-                <div
-                  className="hidden h-0.5 w-12 shrink-0 rounded-full bg-[#e5e7eb] sm:block"
-                  aria-hidden
-                />
+                <div className="hidden h-0.5 w-12 shrink-0 rounded-full bg-border sm:block" aria-hidden />
               ) : null}
             </React.Fragment>
           );

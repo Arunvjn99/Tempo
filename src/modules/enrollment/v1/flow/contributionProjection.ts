@@ -1,5 +1,11 @@
-/** Figma-aligned 30-year projection curve (7% growth, employer match up to 6%). */
-export function generateContributionProjectionData(percent: number, salary: number) {
+/** Figma-aligned 30-year projection curve (employer match up to 6%). */
+export function generateContributionProjectionData(
+  percent: number,
+  salary: number,
+  /** Annual growth rate, e.g. 0.068 for 6.8%. */
+  annualGrowthRate = 0.07,
+) {
+  const growthMult = 1 + annualGrowthRate;
   const annual = salary * (percent / 100);
   const matchPercent = Math.min(percent, 6);
   const matchAnnual = salary * (matchPercent / 100);
@@ -14,7 +20,7 @@ export function generateContributionProjectionData(percent: number, salary: numb
   for (let year = 0; year <= 30; year++) {
     const yearlyContribution = annual + matchAnnual;
     contributions += yearlyContribution;
-    total = (total + yearlyContribution) * 1.07;
+    total = (total + yearlyContribution) * growthMult;
     data.push({
       year: `${year}yr`,
       value: Math.round(total),

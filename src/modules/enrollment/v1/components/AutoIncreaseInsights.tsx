@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import type { TFunction } from "i18next";
 import { Trans, useTranslation } from "react-i18next";
-import { DollarSign } from "lucide-react";
 import type { IncrementCycle, RiskLevel } from "../store/useEnrollmentStore";
 import { GROWTH, useAutoIncreaseFinancialImpact, formatAutoIncreaseCurrency } from "../lib/autoIncreaseShared";
 
@@ -127,7 +126,7 @@ export function AutoIncreaseInsights({
 
   return (
     <aside
-      className="auto-increase-insights-panel lg:sticky lg:top-4 lg:self-start"
+      className="auto-increase-insights-panel w-full min-w-0 max-w-full lg:sticky lg:top-4 lg:self-start"
       aria-label={t(`${I}aria`)}
     >
       <div className="auto-increase-insights-panel__section">
@@ -170,7 +169,9 @@ export function AutoIncreaseInsights({
             </div>
           </div>
           <div className="auto-increase-insights-banner">
-            <DollarSign className="h-4 w-4 shrink-0" style={{ color: "var(--success)" }} aria-hidden />
+            <span className="shrink-0 text-base leading-none" style={{ color: "var(--success)" }} aria-hidden>
+              💵
+            </span>
             <p className="m-0">
               {t(`${I}bannerBefore`)}
               <strong>{formatAutoIncreaseCurrency(financialImpact.difference)}</strong>

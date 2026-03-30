@@ -23,15 +23,16 @@ export const AppRoutes = () => {
       <Route path="/reset" element={<ResetPassword />} />
       <Route path="/help" element={<HelpCenter />} />
       <Route path="/dashboard" element={<Navigate to="/dashboard/pre-enrollment" replace />} />
-      {V1_WIZARD_SEGMENTS.map((slug) => (
+      <Route path="/v1/enrollment/auto-increase/config" element={<EnrollmentV1Layout />} />
+      <Route path="/v1/enrollment/auto-increase/skip" element={<EnrollmentV1Layout />} />
+      {V1_WIZARD_SEGMENTS.filter((slug) => slug !== "auto-increase").map((slug) => (
         <Route
           key={slug}
           path={`/v1/enrollment/${slug}`}
           element={<EnrollmentV1Layout />}
         />
       ))}
-      <Route path="/v1/enrollment/auto-increase/config" element={<EnrollmentV1Layout />} />
-      <Route path="/v1/enrollment/auto-increase/skip" element={<EnrollmentV1Layout />} />
+      <Route path="/v1/enrollment/auto-increase" element={<EnrollmentV1Layout />} />
       <Route
         path="/enrollment"
         element={<EnrollmentLayout />}

@@ -2,12 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { ArrowRight, Award, DollarSign, Info, Sparkles } from "lucide-react";
 import { useEnrollmentStore, type EnrollmentV1Store } from "../store/useEnrollmentStore";
-import { computeMockRetirementProjection } from "../flow/projection";
-import {
-  computeProjectedBalancePure,
-  computeReadinessScore,
-  getGrowthRate,
-} from "../flow/readinessMetrics";
 import {
   generateRecommendations,
   type GeneratedRecommendation,
@@ -70,7 +64,7 @@ function AnimatedScoreRing({
         />
       </svg>
       <div className="absolute inset-0 flex rotate-90 flex-col items-center justify-center">
-        <span className={cn("text-4xl font-bold tabular-nums sm:text-5xl", displayClass)}>{displayValue}</span>
+        <span className={cn("text-3xl font-bold tabular-nums sm:text-4xl", displayClass)}>{displayValue}</span>
         <span className="text-xs text-muted-foreground">{t(`${P}outOf100`)}</span>
       </div>
     </div>
@@ -101,28 +95,11 @@ export function RetirementReadiness() {
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
 
   const yearsToRetirement = Math.max(0, data.retirementAge - data.currentAge);
-  const growthRate = getGrowthRate(data.riskLevel);
 
-  const matchPercent = Math.min(data.contribution, 6);
-  const annualEmployee = Math.round((data.salary * data.contribution) / 100);
-  const annualEmployer = Math.round((data.salary * matchPercent) / 100);
-  const totalAnnualContributions = annualEmployee + annualEmployer;
+  const projectedBalance = data.projectedBalance;
+  const score = data.readinessScore;
 
-  const projectedBalance = computeProjectedBalancePure(
-    data.salary,
-    data.currentSavings,
-    data.contribution,
-    yearsToRetirement,
-    growthRate,
-  );
-
-  const score = computeReadinessScore(
-    data.contribution,
-    data.autoIncrease,
-    data.riskLevel,
-    yearsToRetirement,
-    data.currentSavings,
-  );
+  const totalAnnualContributions = Math.round(data.monthlyContribution * 12 + data.employerMatch * 12);
 
   const retirementIncomeGoalAnnual = Math.round(projectedBalance * 0.03);
   const annualSavingsGap = Math.max(0, retirementIncomeGoalAnnual - totalAnnualContributions);
@@ -164,13 +141,6 @@ export function RetirementReadiness() {
   const boostPoints = Math.max(0, bestNewScore - score);
   const showRecommendedPanel = actionableRecs.length > 0 && boostPoints > 0;
 
-  useEffect(() => {
-    const p = computeMockRetirementProjection(data.contribution, data.riskLevel);
-    const { retirementProjection: rp } = useEnrollmentStore.getState();
-    if (rp.estimatedValue === p.estimatedValue && rp.monthlyIncome === p.monthlyIncome) return;
-    updateField("retirementProjection", p);
-  }, [data.contribution, data.riskLevel, updateField]);
-
   const applyRec = (rec: GeneratedRecommendation) => {
     if (rec.patch.kind === "none") return;
     if (!window.confirm(t(`${P}confirmApply`))) return;
@@ -194,22 +164,22 @@ export function RetirementReadiness() {
 
   const statusMessage = (s: number) => {
     if (s >= 80) return t(`${P}statusGreat`);
-    if (s >= 60) return t(`${P}statusSolid`);
+    if (s >= 70) return t(`${P}statusSolid`);
     if (s >= 40) return t(`${P}statusStarted`);
     return t(`${P}statusEveryStep`);
   };
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <header className="mb-5">
-        <h1 className="text-2xl font-semibold text-foreground">{t(`${P}pageTitle`)}</h1>
-        <p className="mt-1 text-sm text-muted-foreground md:text-base">{t(`${P}pageSubtitle`)}</p>
+    <div className="w-full min-w-0 space-y-4 text-left">
+      <header className="mb-1">
+        <h1 className="text-2xl font-semibold leading-tight text-foreground">{t(`${P}pageTitle`)}</h1>
+        <p className="mt-1 text-sm leading-snug text-muted-foreground">{t(`${P}pageSubtitle`)}</p>
       </header>
 
-      <div className="grid items-start gap-6 md:grid-cols-[1fr_min(22rem,100%)] lg:grid-cols-[1fr_24rem]">
+      <div className="grid min-w-0 items-start gap-4 md:grid-cols-[minmax(0,1fr)_min(22rem,100%)] lg:grid-cols-[minmax(0,1fr)_24rem]">
         {/* ── Left: score hero + understanding + funding (Figma) ── */}
-        <div className="min-w-0 space-y-5">
-          <div className="card p-6">
+        <div className="min-w-0 space-y-4">
+          <div className="card rounded-xl border p-5 shadow-sm">
             <div className="flex flex-col items-center">
               <div className="readiness-score-visual relative">
                 <div className="readiness-score-glow" aria-hidden />
@@ -229,7 +199,7 @@ export function RetirementReadiness() {
                 <AnimatedScoreRing value={score} strokeClass={strokeClass} displayClass={displayClass} />
               </div>
 
-              <p className="mt-4 text-center text-base font-semibold text-foreground">{statusMessage(score)}</p>
+              <p className="mt-3 text-center text-sm font-semibold text-foreground">{statusMessage(score)}</p>
               <p className="mt-1 text-center text-sm text-muted-foreground">
                 <Trans
                   i18nKey={`${P}onTrackLine`}
@@ -252,7 +222,7 @@ export function RetirementReadiness() {
               </div>
             </div>
 
-            <div className="my-5 border-t border-border" />
+            <div className="my-4 border-t border-border" />
 
             <div className="text-center">
               <div className="mb-1 flex items-center justify-center gap-2">
@@ -315,7 +285,7 @@ export function RetirementReadiness() {
         </div>
 
         {/* ── Right: reference section (Recommended + optional improvements) ── */}
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-3">
           {showRecommendedPanel ? (
             <div className="readiness-recommended-panel">
               <div className="readiness-recommended-panel__title-row">

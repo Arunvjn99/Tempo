@@ -1,5 +1,6 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { computeSourceSplitMonthly } from "../flow/enrollmentDerivedEngine";
 import {
   Check,
   ChevronDown,
@@ -18,7 +19,6 @@ import { cn } from "@/lib/utils";
 const A = "enrollment.v1.sourceAllocation.";
 
 const PLAN_DEFAULT: ContributionSources = { preTax: 60, roth: 40, afterTax: 0 };
-const RECOMMENDED: ContributionSources = { preTax: 40, roth: 60, afterTax: 0 };
 
 function asStringArray(v: unknown): string[] {
   return Array.isArray(v) ? v.map(String) : [];
@@ -29,9 +29,16 @@ export function ContributionSource() {
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
   const sources = data.contributionSources;
-  const salary = data.salary;
+  const monthlyTotal = data.monthlyContribution;
+  const monthlyMatch = data.employerMatch;
   const percent = data.contribution;
   const supportsAfterTax = data.supportsAfterTax;
+
+  const recommended = useMemo((): ContributionSources => {
+    if (data.currentAge > 50) return { preTax: 70, roth: 30, afterTax: 0 };
+    if (data.currentAge < 40) return { preTax: 40, roth: 60, afterTax: 0 };
+    return { preTax: 55, roth: 45, afterTax: 0 };
+  }, [data.currentAge]);
 
   const explainPreTax = useMemo(() => asStringArray(t(`${A}explainPreTaxItems`, { returnObjects: true })), [t]);
   const explainRoth = useMemo(() => asStringArray(t(`${A}explainRothItems`, { returnObjects: true })), [t]);
@@ -39,16 +46,13 @@ export function ContributionSource() {
 
   const [showAdvanced, setShowAdvanced] = useState(sources.afterTax > 0);
 
-  const monthlyTotal = Math.round((salary * percent) / 100 / 12);
   const matchPercent = Math.min(percent, 6);
-  const monthlyMatch = Math.round((salary * matchPercent) / 100 / 12);
-  const monthlyPreTax = Math.round(monthlyTotal * (sources.preTax / 100));
-  const monthlyRoth = Math.round(monthlyTotal * (sources.roth / 100));
-  const monthlyAfterTax = Math.round(monthlyTotal * (sources.afterTax / 100));
+  const { monthlyPreTax, monthlyRoth, monthlyAfterTax } = computeSourceSplitMonthly(monthlyTotal, sources);
   const totalMonthlyInvestment = monthlyTotal + monthlyMatch;
 
-  const planDefaultPreTax = Math.round(monthlyTotal * (PLAN_DEFAULT.preTax / 100));
-  const planDefaultRoth = Math.round(monthlyTotal * (PLAN_DEFAULT.roth / 100));
+  const planDefaultSplit = computeSourceSplitMonthly(monthlyTotal, PLAN_DEFAULT);
+  const planDefaultPreTax = planDefaultSplit.monthlyPreTax;
+  const planDefaultRoth = planDefaultSplit.monthlyRoth;
 
   const setSources = (next: ContributionSources) => {
     updateField("contributionSources", next);
@@ -105,13 +109,13 @@ export function ContributionSource() {
   const total = sources.preTax + sources.roth + sources.afterTax;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground md:text-3xl">{t(`${A}title`)}</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground md:text-base">{t(`${A}subtitle`)}</p>
+    <div className="w-full min-w-0 space-y-4">
+      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1 text-left">
+          <h1 className="text-2xl font-semibold leading-tight text-foreground">{t(`${A}title`)}</h1>
+          <p className="mt-1 max-w-xl text-sm leading-snug text-muted-foreground">{t(`${A}subtitle`)}</p>
         </div>
-        <div className="enroll-inline-highlight shrink-0">
+        <div className="inline-flex min-w-0 max-w-full shrink-0 flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] px-4 py-2.5 shadow-sm">
           <Wallet className="h-5 w-5 text-primary" aria-hidden />
           <p className="text-sm font-bold text-foreground">
             {t(`${A}contributingSummary`, {
@@ -122,8 +126,8 @@ export function ContributionSource() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
-        <div className="card card--pad-sm flex flex-col space-y-4 opacity-90">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,35%)_minmax(0,1fr)] lg:items-start">
+        <div className="card card--pad-sm flex flex-col space-y-3 rounded-xl border border-border bg-card p-5 opacity-90 shadow-sm">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <div className="rounded-md bg-secondary px-2.5 py-1">
@@ -161,16 +165,16 @@ export function ContributionSource() {
               <p className="text-sm font-semibold">${planDefaultRoth.toLocaleString()}</p>
             </div>
           </div>
-          <p className="flex-1 pt-3 text-center text-[0.7rem] leading-snug text-muted-foreground">
+          <p className="flex-1 pt-2 text-left text-[0.7rem] leading-snug text-muted-foreground">
             {t(`${A}planDefaultFootnote`)}
           </p>
-          <button type="button" onClick={() => setSources({ ...PLAN_DEFAULT })} className="btn btn-primary w-full">
+          <button type="button" onClick={() => setSources({ ...PLAN_DEFAULT })} className="btn btn-primary h-10 w-full text-sm">
             {t(`${A}usePlanDefaultCta`)}
           </button>
         </div>
 
-        <div className="card card-border-accent flex flex-col gap-6 lg:flex-row">
-          <div className="min-w-0 flex-1 space-y-4">
+        <div className="card card-border-accent flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm lg:flex-row">
+          <div className="min-w-0 flex-1 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="text-lg font-bold text-foreground">{t(`${A}yourTaxStrategy`)}</h3>
@@ -286,18 +290,20 @@ export function ContributionSource() {
                 <div className="badge-score">{t(`${A}scoreLabel`)}</div>
               </div>
               <p className="text-sm leading-snug text-foreground/90">
-                {t(`${A}recommendedMix`, { preTax: RECOMMENDED.preTax, roth: RECOMMENDED.roth })}
+                {t(`${A}recommendedMix`, { preTax: recommended.preTax, roth: recommended.roth })}
               </p>
             </div>
 
             <div className="tip-callout">
               <div className="flex items-start gap-2.5">
                 <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <p className="tip-callout__text">{t(`${A}tipRothBetter`)}</p>
+                <p className="tip-callout__text">
+                  {data.currentAge > 50 ? t(`${A}tipPreTaxBetter`) : t(`${A}tipRothBetter`)}
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => setSources({ ...RECOMMENDED })}
+                onClick={() => setSources({ ...recommended })}
                 disabled={Math.abs(total - 100) > 0.001}
                 className="btn btn-outline mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -394,13 +400,10 @@ function RowMini({
   );
 }
 
-const ACCENT_BY_COLOR: Record<
-  "blue" | "purple" | "orange",
-  { varName: string; valueClass: string }
-> = {
-  blue: { varName: "var(--color-primary)", valueClass: "alloc-value-pretax" },
-  purple: { varName: "var(--chart-5)", valueClass: "alloc-value-roth" },
-  orange: { varName: "var(--chart-9)", valueClass: "alloc-value-aftertax" },
+const ACCENT_BY_COLOR: Record<"blue" | "purple" | "orange", { valueClass: string }> = {
+  blue: { valueClass: "alloc-value-pretax" },
+  purple: { valueClass: "alloc-value-roth" },
+  orange: { valueClass: "alloc-value-aftertax" },
 };
 
 function SliderRow({
@@ -418,13 +421,22 @@ function SliderRow({
   monthly: number;
   onChange: (n: number) => void;
 }) {
-  const { varName, valueClass } = ACCENT_BY_COLOR[color];
+  const { valueClass } = ACCENT_BY_COLOR[color];
+  const rangeMod =
+    color === "blue" ? "source-allocation-range--pretax" : color === "purple" ? "source-allocation-range--roth" : "source-allocation-range--aftertax";
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: varName }} />
+            <div
+              className={cn(
+                "alloc-dot alloc-dot--md",
+                color === "blue" && "alloc-dot--pretax",
+                color === "purple" && "alloc-dot--roth",
+                color === "orange" && "alloc-dot--aftertax",
+              )}
+            />
             <p className="text-sm font-semibold text-foreground">{label}</p>
           </div>
           <p className="ml-5 text-[0.7rem] leading-snug text-muted-foreground">{sub}</p>
@@ -437,13 +449,8 @@ function SliderRow({
         max={100}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="source-allocation-range"
-        style={
-          {
-            "--range-pct": `${value}%`,
-            "--range-accent": varName,
-          } as CSSProperties
-        }
+        className={cn("source-allocation-range", rangeMod)}
+        style={{ "--range-pct": `${value}%` } as CSSProperties}
       />
       <div className="flex justify-between text-[0.7rem] text-muted-foreground">
         <span>0%</span>

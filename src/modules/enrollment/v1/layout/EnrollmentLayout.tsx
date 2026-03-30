@@ -23,13 +23,13 @@ import {
   V1_ENROLLMENT_AUTO_INCREASE_DECISION_PATH,
   wizardStepIndexFromSegment,
 } from "../flow/v1WizardPaths";
-import { AutoIncrease } from "../screens/AutoIncrease";
-import { ContributionSetup } from "../screens/ContributionSetup";
-import { ContributionSource } from "../screens/ContributionSource";
-import { InvestmentStrategy } from "../screens/InvestmentStrategy";
-import { ChoosePlan } from "../screens/ChoosePlan";
-import { RetirementReadiness } from "../screens/RetirementReadiness";
-import { Review } from "../screens/Review";
+import AutoIncreaseScreen from "../screens/AutoIncreaseScreen";
+import ChoosePlanScreen from "../screens/ChoosePlanScreen";
+import ContributionScreen from "../screens/ContributionScreen";
+import InvestmentScreen from "../screens/InvestmentScreen";
+import ReadinessScreen from "../screens/ReadinessScreen";
+import ReviewScreen from "../screens/ReviewScreen";
+import SourceScreen from "../screens/SourceScreen";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { SuccessEnrollmentModal } from "@/components/enrollment/SuccessEnrollmentModal";
 import { useUser } from "@/context/UserContext";
@@ -49,13 +49,13 @@ const V1_STEP_ICONS = [
 ] as const;
 
 const SCREENS = [
-  ChoosePlan,
-  ContributionSetup,
-  ContributionSource,
-  AutoIncrease,
-  InvestmentStrategy,
-  RetirementReadiness,
-  Review,
+  ChoosePlanScreen,
+  ContributionScreen,
+  SourceScreen,
+  AutoIncreaseScreen,
+  InvestmentScreen,
+  ReadinessScreen,
+  ReviewScreen,
 ] as const;
 
 /**
@@ -96,7 +96,7 @@ export function EnrollmentV1Layout() {
     }
   }, [pathname, pathStepIndex, goToStep, navigate]);
 
-  const StepScreen = SCREENS[stepIndex] ?? ChoosePlan;
+  const StepScreen = SCREENS[stepIndex] ?? ChoosePlanScreen;
 
   const stepValid = isEnrollmentStepValid(stepIndex, state);
   const isFirst = stepIndex <= 0;
@@ -172,8 +172,9 @@ export function EnrollmentV1Layout() {
       transparentBackground
       fullWidthChildren
       hideFooter
+      allowMainOverflowX
     >
-      <div className="flex h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] w-full min-h-0 flex-col">
+      <div className="flex h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] w-full min-h-0 min-w-0 flex-col">
         <EnrollmentContainer
           stepper={stepper}
           footer={stepFooter}
@@ -192,7 +193,7 @@ export function EnrollmentV1Layout() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="flex flex-col gap-3"
+              className="flex min-w-0 flex-col"
             >
               <StepScreen />
             </motion.div>

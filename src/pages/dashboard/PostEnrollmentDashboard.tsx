@@ -1,28 +1,33 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Download, Landmark, Repeat2, Scale, Wallet, Zap } from "lucide-react";
+import { ArrowLeftRight, Landmark, Repeat2, Wallet } from "lucide-react";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import {
+  ActiveLoanCard,
   AdvisorCard,
-  AIToast,
-  DashboardHero,
-  FeaturedLearningCard,
-  InsightCards,
-  MonthlyContributionCard,
+  LearningHub,
+  MonthlyContribution,
+  NextBestActions,
+  PerformanceChart,
   PortfolioAllocation,
+  PostEnrollmentDashboardHeader,
   QuickActions,
+  type QuickActionItem,
   ReadinessScore,
   RecentActivity,
-} from "@/components/dashboard/command-center";
+} from "@/components/dashboard/post-enrollment";
+import { PostEnrollmentDashboardSkeleton } from "@/components/dashboard/post-enrollment/PostEnrollmentDashboardSkeleton";
 import { useUser } from "@/context/UserContext";
 import { advisorAvatars } from "@/assets/avatars";
-import { getRoutingVersion, withVersion } from "@/core/version";
+import { getRoutingVersion, withVersion, withVersionIfEnrollment } from "@/core/version";
+import { usePostEnrollmentDashboardStore } from "@/stores/postEnrollmentDashboardStore";
 
 /**
- * Post-enrollment home — Snitch command-center layout (`dashboard-design-system` tokens).
- * Single {@link FeaturedLearningCard} (no carousel). Routed at `/dashboard/post-enrollment` and `/:version/dashboard`.
+ * Post-enrollment home — asymmetric 70/30 layout (Figma hierarchy).
+ * Left: hero → quick actions → contributions → learning → portfolio → performance → activity.
+ * Right: readiness → loan → next actions → advisor.
  */
 export const PostEnrollmentDashboard = () => {
   const { t } = useTranslation();
@@ -30,165 +35,124 @@ export const PostEnrollmentDashboard = () => {
   const { pathname } = useLocation();
   const version = getRoutingVersion(pathname);
   const { profile, loading } = useUser();
-  const [showAiToast, setShowAiToast] = useState(true);
+  const data = usePostEnrollmentDashboardStore((s) => s.data);
+  const displayName = usePostEnrollmentDashboardStore((s) => s.displayName);
+  const setUserDisplayName = usePostEnrollmentDashboardStore((s) => s.setUserDisplayName);
 
   useEffect(() => {
-    if (loading) return;
-    console.log("POST DASHBOARD LOADED");
-  }, [loading]);
+    const first = profile?.name?.trim()?.split(/\s+/)[0];
+    if (first) setUserDisplayName(first);
+  }, [profile?.name, setUserDisplayName]);
 
-  // POC mode — always allow access (no enrollmentStatus redirect)
+  const increaseContribution = () => navigate(withVersion(version, "/enrollment/contribution"));
 
-  const firstName = profile?.name?.split(/\s+/)[0] ?? "there";
-
-  const insightCards = useMemo(
-    () => [
-      {
-        variant: "urgent" as const,
-        title: t("dashboard.postEnrollment.cmdInsight1Title"),
-        description: t("dashboard.postEnrollment.cmdInsight1Desc"),
-        ctaLabel: t("dashboard.postEnrollment.cmdInsight1Cta"),
-        onCtaClick: () => navigate("/profile"),
-      },
-      {
-        variant: "insight" as const,
-        title: t("dashboard.postEnrollment.cmdInsight2Title"),
-        description: t("dashboard.postEnrollment.cmdInsight2Desc"),
-        ctaLabel: t("dashboard.postEnrollment.cmdInsight2Cta"),
-        onCtaClick: () => navigate(withVersion(version, "/enrollment/choose-plan")),
-      },
-    ],
-    [navigate, t, version],
-  );
-
-  const allocationRows = useMemo(
-    () => [
-      { label: t("dashboard.postEnrollment.cmdAllocDomestic"), percent: 42, barColorVar: "var(--primary)" },
-      { label: t("dashboard.postEnrollment.cmdAllocIntl"), percent: 28, barColorVar: "var(--primary)" },
-      { label: t("dashboard.postEnrollment.cmdAllocFixed"), percent: 20, barColorVar: "var(--primary)" },
-      { label: t("dashboard.postEnrollment.cmdAllocCash"), percent: 10, barColorVar: "var(--primary)" },
-    ],
-    [t],
-  );
-
-  const quickActions = useMemo(
+  const quickActions: QuickActionItem[] = useMemo(
     () => [
       {
         id: "loan",
         title: t("dashboard.postEnrollment.cmdQALoanTitle"),
         description: t("dashboard.postEnrollment.cmdQALoanDesc"),
         icon: Landmark,
-        route: "/transactions/loan",
+        onClick: () => navigate(withVersion(version, "/transactions/loan/eligibility")),
       },
       {
         id: "withdraw",
         title: t("dashboard.postEnrollment.cmdQAWithdrawTitle"),
         description: t("dashboard.postEnrollment.cmdQAWithdrawDesc"),
         icon: Wallet,
-        route: "/transactions/withdraw",
+        onClick: () => navigate(withVersion(version, "/transactions/withdraw")),
+      },
+      {
+        id: "transfer",
+        title: t("dashboard.postEnrollment.peQATransferTitle"),
+        description: t("dashboard.postEnrollment.peQATransferDesc"),
+        icon: ArrowLeftRight,
+        onClick: () => navigate(withVersion(version, "/transactions")),
       },
       {
         id: "rollover",
         title: t("dashboard.postEnrollment.cmdQARolloverTitle"),
         description: t("dashboard.postEnrollment.cmdQARolloverDesc"),
         icon: Repeat2,
-        route: "/transactions/rollover",
-      },
-      {
-        id: "rebalance",
-        title: t("dashboard.postEnrollment.cmdQARebalanceTitle"),
-        description: t("dashboard.postEnrollment.cmdQARebalanceDesc"),
-        icon: Scale,
-        route: "/transactions/rebalance",
+        onClick: () => navigate(withVersion(version, "/transactions/rollover")),
       },
     ],
-    [t],
+    [navigate, t, version],
   );
 
-  const activityItems = useMemo(
-    () => [
-      {
-        id: "1",
-        title: t("dashboard.postEnrollment.cmdActPayrollTitle"),
-        subtitle: t("dashboard.postEnrollment.cmdActPayrollSub"),
-        variant: "primary" as const,
-      },
-      {
-        id: "2",
-        title: t("dashboard.postEnrollment.cmdActAITitle"),
-        subtitle: t("dashboard.postEnrollment.cmdActAISub"),
-        icon: Zap,
-        variant: "ai" as const,
-      },
-      {
-        id: "3",
-        title: t("dashboard.postEnrollment.cmdActStmtTitle"),
-        subtitle: t("dashboard.postEnrollment.cmdActStmtSub"),
-        icon: Download,
-        variant: "muted" as const,
-      },
-    ],
-    [t],
+  const advisor = useMemo(
+    () => ({
+      ...data.advisor,
+      imageSrc: data.advisor.imageSrc || advisorAvatars.maya,
+      nextAvailableLabel: t(data.advisor.nextAvailable),
+    }),
+    [data.advisor, t],
   );
 
-  if (loading) return null;
+  if (loading) {
+    return <PostEnrollmentDashboardSkeleton />;
+  }
 
   return (
     <DashboardLayout header={<DashboardHeader />} fullWidthChildren>
-      <div className="dashboard-design-system min-h-full bg-[var(--bg-primary)] pb-20 text-[var(--text-primary)]">
-        <main className="mx-auto max-w-[1440px] px-4 pb-12 pt-4 sm:px-6 lg:px-8 lg:pt-6">
-          <DashboardHero
-            userName={firstName}
-            totalBalance="$324,560.21"
-            growthPercent={2.4}
-            aiMessage={t("dashboard.postEnrollment.cmdHeroAiMessage")}
-            ctaLabel={t("dashboard.postEnrollment.cmdHeroCta")}
-            onCtaClick={() => navigate(withVersion(version, "/enrollment/contribution"))}
-            onAiActionClick={() => navigate(withVersion(version, "/enrollment/contribution"))}
+      <div className="post-enrollment-dashboard min-h-full bg-[var(--ds-page-bg)] pb-24 font-dashboard-body text-[var(--color-text)]">
+        <main className="mx-auto max-w-[1440px] space-y-10 px-4 py-8 sm:px-6 lg:space-y-12 lg:px-8 lg:py-10">
+          <PostEnrollmentDashboardHeader
+            userName={displayName}
+            balance={data.balance}
+            growthPercent={data.growthPercent}
+            aiRecommendation={t(data.aiRecommendation)}
+            onIncreaseContribution={increaseContribution}
           />
 
-          <MonthlyContributionCard />
+          {/* Asymmetric primary / secondary columns (~70% / ~30%) */}
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:gap-10 xl:gap-12">
+            <div className="flex min-w-0 flex-col gap-10 lg:gap-12">
+              <QuickActions actions={quickActions} />
+              <MonthlyContribution
+                userMonthly={data.contributions.userMonthly}
+                employerMonthly={data.contributions.employerMonthly}
+                userPercent={data.contributions.userPercent}
+                employerPercent={data.contributions.employerPercent}
+              />
+              <LearningHub
+                title={t(data.learning.titleKey)}
+                description={t(data.learning.descriptionKey)}
+                href={data.learning.href}
+              />
+              <PortfolioAllocation portfolio={data.portfolio} onViewDetails={() => navigate("/investments")} />
+              <PerformanceChart data={data.performance} />
+              <RecentActivity items={data.activities} />
+            </div>
 
-          <InsightCards cards={insightCards} />
-
-          <div className="mb-12 grid grid-cols-12 gap-6 lg:gap-8">
-            <ReadinessScore
-              className="col-span-12 lg:col-span-4"
-              score={68}
-              footerText={t("dashboard.postEnrollment.cmdReadinessFooter")}
-              aiRecommendation={t("dashboard.postEnrollment.cmdReadinessAi")}
-            />
-            <PortfolioAllocation
-              className="col-span-12 lg:col-span-8"
-              rows={allocationRows}
-              onDetailsClick={() => navigate("/investments")}
-            />
-            <QuickActions className="col-span-12 lg:col-span-4" actions={quickActions} />
-            <RecentActivity className="col-span-12 lg:col-span-4" items={activityItems} />
-            <AdvisorCard
-              className="col-span-12 lg:col-span-4"
-              organization="Strategic Wealth Management"
-              advisorName="Sarah Jenkins"
-              credentials="CFP®"
-              availability="Next avail: Today, 2:00 PM"
-              imageSrc={advisorAvatars.maya}
-              onBookClick={() => navigate("/profile")}
-            />
+            <aside className="flex min-w-0 flex-col gap-10 lg:gap-12">
+              <ReadinessScore
+                score={data.readinessScore}
+                labelKey={data.readinessLabelKey}
+                onLaunchSimulator={() => navigate("/dashboard/investment-portfolio")}
+              />
+              <ActiveLoanCard
+                loan={data.loan}
+                onManage={() => navigate(withVersion(version, "/transactions/loan/eligibility"))}
+              />
+              <NextBestActions
+                actions={data.nextActions}
+                onAction={(route) => navigate(withVersionIfEnrollment(version, route))}
+              />
+              <AdvisorCard
+                name={advisor.name}
+                title={advisor.title}
+                organization={advisor.organization}
+                rating={advisor.rating}
+                experienceYears={advisor.experienceYears}
+                imageSrc={advisor.imageSrc}
+                nextAvailableLabel={advisor.nextAvailableLabel}
+                onMessage={() => navigate("/profile")}
+                onSchedule={() => navigate("/profile")}
+              />
+            </aside>
           </div>
-
-          <FeaturedLearningCard
-            imageAlt={t("dashboard.postEnrollment.featuredLearningAlt")}
-            onKnowMore={() => window.open("https://enrich.org/", "_blank", "noopener,noreferrer")}
-          />
         </main>
-
-        <AIToast
-          visible={showAiToast}
-          message={t("dashboard.postEnrollment.cmdAiToastMessage")}
-          actionLabel={t("dashboard.postEnrollment.cmdAiToastAction")}
-          onActionClick={() => navigate(withVersion(version, "/enrollment/contribution"))}
-          onDismiss={() => setShowAiToast(false)}
-        />
       </div>
     </DashboardLayout>
   );

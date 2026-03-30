@@ -238,15 +238,10 @@ export const router = createBrowserRouter([
        *
        * V1 hub only: exact `/v1/enrollment` → `/:version/enrollment` index → `EnrollmentManagement`.
        * V2 steps: `/v2/enrollment/*` uses nested routes under `VersionedEnrollment` (no static override).
+       *
+       * Auto-increase: register `/auto-increase/config` and `/auto-increase/skip` before `/auto-increase`
+       * so "Enable Auto Increase" navigates to the configure screen reliably (RR7 route ranking).
        */
-      ...V1_WIZARD_SEGMENTS.map((slug) => ({
-        path: `/v1/enrollment/${slug}`,
-        element: (
-          <ProtectedRoute>
-            <EnrollmentV1Layout />
-          </ProtectedRoute>
-        ),
-      })),
       {
         path: "/v1/enrollment/auto-increase/config",
         element: (
@@ -257,6 +252,22 @@ export const router = createBrowserRouter([
       },
       {
         path: "/v1/enrollment/auto-increase/skip",
+        element: (
+          <ProtectedRoute>
+            <EnrollmentV1Layout />
+          </ProtectedRoute>
+        ),
+      },
+      ...V1_WIZARD_SEGMENTS.filter((slug) => slug !== "auto-increase").map((slug) => ({
+        path: `/v1/enrollment/${slug}`,
+        element: (
+          <ProtectedRoute>
+            <EnrollmentV1Layout />
+          </ProtectedRoute>
+        ),
+      })),
+      {
+        path: "/v1/enrollment/auto-increase",
         element: (
           <ProtectedRoute>
             <EnrollmentV1Layout />

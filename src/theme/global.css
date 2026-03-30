@@ -39,6 +39,17 @@
   --insight-success-body: color-mix(in srgb, var(--foreground) 42%, var(--color-success) 58%);
   --insight-success-emphasis: var(--color-success);
 
+  /* Enrollment wizard — semantic aliases (Tailwind: bg-brand-gradient, shadow-elevation-md, etc.) */
+  --brand-gradient: var(--banner-gradient);
+  --surface-gradient: linear-gradient(
+    165deg,
+    var(--color-background) 0%,
+    color-mix(in srgb, var(--color-background-secondary) 90%, var(--color-background)) 100%
+  );
+  --insight-gradient: var(--insight-success-surface);
+  --elevation-sm: var(--enroll-elevation-1);
+  --elevation-md: var(--enroll-elevation-2);
+
   --danger-bg: color-mix(in srgb, var(--color-danger) 12%, transparent);
   --danger-text: var(--color-danger);
 
@@ -262,14 +273,45 @@
     to right,
     var(--primary) 0%,
     var(--primary) var(--range-pct),
-    var(--muted) var(--range-pct),
-    var(--muted) 100%
+    color-mix(in srgb, var(--color-primary) 12%, var(--color-background) 88%) var(--range-pct),
+    color-mix(in srgb, var(--color-primary) 12%, var(--color-background) 88%) 100%
   );
 }
 
 .contribution-range:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.contribution-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #0f172a;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.12);
+}
+
+.contribution-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #0f172a;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.12);
+}
+
+.dark .contribution-range::-webkit-slider-thumb {
+  background: var(--color-background);
+  border-color: #e2e8f0;
+}
+
+.dark .contribution-range::-moz-range-thumb {
+  background: var(--color-background);
+  border-color: #e2e8f0;
 }
 
 /* ── Chips / pills ── */
@@ -637,6 +679,13 @@ progress.draft-progress-native::-moz-progress-bar {
   border-top: 2px dashed var(--color-text-tertiary);
 }
 
+.chart-legend-target {
+  height: 0;
+  width: 14px;
+  flex-shrink: 0;
+  border-top: 2px dashed var(--color-success);
+}
+
 .success-inline-label {
   font-size: 0.875rem;
   font-weight: 700;
@@ -1001,24 +1050,104 @@ progress.draft-progress-native::-moz-progress-bar {
 
 .source-allocation-range {
   --range-pct: 0%;
-  --range-accent: var(--primary);
-  height: 8px;
   width: 100%;
+  height: calc(var(--financial-slider-thumb-size) + var(--spacing-2));
   cursor: pointer;
   appearance: none;
-  border-radius: 999px;
-  background: linear-gradient(
-    to right,
-    var(--range-accent) 0%,
-    var(--range-accent) var(--range-pct),
-    var(--muted) var(--range-pct),
-    var(--muted) 100%
-  );
+  background: transparent;
+}
+
+.source-allocation-range::-webkit-slider-runnable-track {
+  height: var(--financial-slider-track-height, 8px);
+  border-radius: var(--radius-full);
+  background-color: var(--muted);
+  background-image: var(--brand-gradient);
+  background-size: var(--range-pct) 100%;
+  background-repeat: no-repeat;
+  background-position: left center;
+  transition: filter 0.15s ease;
+}
+
+.source-allocation-range:hover::-webkit-slider-runnable-track {
+  filter: brightness(1.03);
+}
+
+.source-allocation-range:active::-webkit-slider-runnable-track {
+  filter: brightness(0.97);
+}
+
+.source-allocation-range::-moz-range-track {
+  height: var(--financial-slider-track-height, 8px);
+  border-radius: var(--radius-full);
+  background-color: var(--muted);
+  background-image: var(--brand-gradient);
+  background-size: var(--range-pct) 100%;
+  background-repeat: no-repeat;
+  background-position: left center;
+  transition: filter 0.15s ease;
+}
+
+.source-allocation-range:hover::-moz-range-track {
+  filter: brightness(1.03);
+}
+
+.source-allocation-range:active::-moz-range-track {
+  filter: brightness(0.97);
+}
+
+/* Per-row accent (filled segment still uses brand-gradient; thumb uses row token) */
+.source-allocation-range--pretax {
+  --range-thumb-border: var(--color-primary);
+}
+.source-allocation-range--roth {
+  --range-thumb-border: var(--chart-5);
+}
+.source-allocation-range--aftertax {
+  --range-thumb-border: var(--chart-9);
+}
+
+.source-allocation-range::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--financial-slider-thumb-size);
+  height: var(--financial-slider-thumb-size);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--range-thumb-border, var(--color-primary));
+  background: var(--color-background);
+  box-shadow: var(--elevation-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.source-allocation-range::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: var(--elevation-md);
+}
+
+.source-allocation-range::-webkit-slider-thumb:active {
+  transform: scale(0.96);
+}
+
+.source-allocation-range::-moz-range-thumb {
+  width: var(--financial-slider-thumb-size);
+  height: var(--financial-slider-thumb-size);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--range-thumb-border, var(--color-primary));
+  background: var(--color-background);
+  box-shadow: var(--elevation-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.source-allocation-range::-moz-range-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: var(--elevation-md);
+}
+
+.source-allocation-range::-moz-range-thumb:active {
+  transform: scale(0.96);
 }
 
 .source-allocation-range:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: var(--financial-slider-thumb-focus-ring) solid var(--color-primary);
+  outline-offset: var(--spacing-2);
 }
 
 .alloc-value-pretax {
@@ -1045,13 +1174,9 @@ progress.draft-progress-native::-moz-progress-bar {
 .explain-card {
   --explain-accent: var(--color-primary);
   border-radius: calc(var(--ds-card-radius) - 4px);
-  border: 1px solid color-mix(in srgb, var(--explain-accent) 25%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--explain-accent) 14%, var(--border));
   padding: 16px;
-  background: linear-gradient(
-    to bottom right,
-    color-mix(in srgb, var(--explain-accent) 8%, var(--ds-card-bg)),
-    var(--ds-card-bg)
-  );
+  background: color-mix(in srgb, var(--color-background-secondary) 65%, var(--color-background));
 }
 
 .explain-card--roth {
@@ -1314,14 +1439,17 @@ progress.draft-progress-native::-moz-progress-bar {
 }
 
 .auto-increase-insights-panel {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-subtle);
-  background: var(--bg-primary);
+  background: var(--color-background);
   color: var(--text-primary);
   box-shadow:
     0 1px 3px rgb(0 0 0 / 0.06),
     0 1px 2px rgb(0 0 0 / 0.04);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .auto-increase-insights-panel__section {
@@ -1338,6 +1466,7 @@ progress.draft-progress-native::-moz-progress-bar {
   font-size: 0.82rem;
   line-height: 1.45;
   color: var(--text-secondary);
+  overflow-wrap: anywhere;
 }
 
 .auto-increase-insights-panel__summary strong {
@@ -1356,11 +1485,11 @@ progress.draft-progress-native::-moz-progress-bar {
   padding: 0.65rem 0.5rem;
   text-align: center;
   border: 1px solid var(--border-subtle);
-  background: var(--bg-secondary);
+  background: var(--color-background);
 }
 
 .auto-increase-insights-impact-card--highlight {
-  background: color-mix(in srgb, var(--success) 10%, var(--bg-primary));
+  background: color-mix(in srgb, var(--success) 10%, var(--color-background));
   border-color: color-mix(in srgb, var(--success) 35%, var(--border-subtle));
 }
 
@@ -1397,7 +1526,7 @@ progress.draft-progress-native::-moz-progress-bar {
   padding: 0.65rem 0.75rem;
   border-radius: var(--radius-xl);
   border: 1px solid color-mix(in srgb, var(--success) 28%, var(--border-subtle));
-  background: color-mix(in srgb, var(--success) 8%, var(--bg-secondary));
+  background: color-mix(in srgb, var(--success) 8%, var(--color-background));
   color: color-mix(in srgb, var(--success) 55%, var(--text-primary));
   font-size: 0.78rem;
   font-weight: 500;
@@ -1462,15 +1591,32 @@ progress.draft-progress-native::-moz-progress-bar {
   font-size: 0.55rem;
   font-weight: 700;
   vertical-align: middle;
-  background: color-mix(in srgb, var(--primary) 12%, var(--bg-secondary));
+  background: color-mix(in srgb, var(--primary) 12%, var(--color-background));
   color: var(--primary);
 }
 
 .auto-increase-config-card {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-subtle);
-  background: var(--bg-primary);
+  background: var(--color-background);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+}
+
+/* Current / Target max — pale blue tinted card + blue divider (Figma ref, not plain white panel) */
+.auto-increase-metrics-card {
+  border-radius: var(--radius-xl);
+  border: 1px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: color-mix(in srgb, var(--primary) 10%, var(--color-background));
+  box-shadow: none;
+}
+
+.auto-increase-metrics-card__divider {
+  border-left-color: color-mix(in srgb, var(--primary) 30%, var(--border-subtle));
+}
+
+.dark .auto-increase-metrics-card {
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+  background: color-mix(in srgb, var(--primary) 16%, var(--color-background));
 }
 
 /* V1 enrollment wizard modal shell — Figma Participants-Portal-Playground (node 1330:3285) */
@@ -1483,19 +1629,24 @@ progress.draft-progress-native::-moz-progress-bar {
   flex-direction: column;
   overflow: hidden;
   border-radius: 24px;
-  background: var(--ds-card-bg);
-  border: 1px solid color-mix(in srgb, var(--foreground) 6%, var(--border));
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  background: var(--surface-gradient);
+  border: 1px solid color-mix(in srgb, var(--foreground) 4%, var(--border));
+  box-shadow: var(--elevation-md);
 }
 
 .enrollment-wizard-hero {
   min-height: 6.75rem;
-  background: linear-gradient(171deg, #155dfc 0%, #4f39f6 100%);
+  background: var(--brand-gradient);
+  color: var(--color-text-on-primary);
+}
+
+.enrollment-wizard-hero__subtitle {
+  color: color-mix(in srgb, var(--color-text-on-primary) 88%, transparent);
 }
 
 .enrollment-wizard-card-shell .enrollment-wizard-stepper-wrap {
   flex-shrink: 0;
-  padding: 0.5rem 1.5rem 0.75rem;
+  padding: 0.75rem 1.5rem 1rem;
 }
 
 .enrollment-wizard-card-shell .enrollment-container--nested {
@@ -1511,8 +1662,8 @@ progress.draft-progress-native::-moz-progress-bar {
 }
 
 .enrollment-wizard-footer-bar {
-  border-top: 1px solid #f3f4f6;
-  background: #f9fafb;
+  border-top: 1px solid color-mix(in srgb, var(--foreground) 6%, var(--border));
+  background: var(--color-background-secondary);
   padding: 0.5rem 1.5rem max(0.75rem, env(safe-area-inset-bottom));
 }
 
@@ -1526,15 +1677,25 @@ progress.draft-progress-native::-moz-progress-bar {
 }
 
 .btn-enrollment-wizard-continue {
-  box-shadow:
-    0 10px 15px -3px color-mix(in srgb, #bedbff 85%, transparent),
-    0 4px 6px -2px color-mix(in srgb, #bedbff 75%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient);
+  color: var(--color-text-on-primary);
+  border: none;
+  box-shadow: var(--elevation-md);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.2s ease;
 }
 
-.dark .btn-enrollment-wizard-continue {
-  box-shadow:
-    0 8px 20px -4px color-mix(in srgb, var(--primary) 35%, transparent),
-    0 4px 8px -2px color-mix(in srgb, var(--primary) 22%, transparent);
+.btn-enrollment-wizard-continue:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow: var(--shadow-md);
+  opacity: 1;
+}
+
+.btn-enrollment-wizard-continue:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 /* Enrollment step “popup” — elevated card on tinted canvas (Satish / RetireWell) */
@@ -1562,11 +1723,9 @@ progress.draft-progress-native::-moz-progress-bar {
 
 .enrollment-flow-popup__card {
   border-radius: 24px;
-  border: 1px solid var(--border);
-  background: var(--ds-card-bg);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--foreground) 4%, transparent),
-    0 25px 50px -12px rgb(0 0 0 / 0.22);
+  border: 1px solid color-mix(in srgb, var(--foreground) 5%, var(--border));
+  background: var(--surface-gradient);
+  box-shadow: var(--elevation-md);
   padding: 1.25rem 1.35rem 1.5rem;
 }
 
@@ -1579,8 +1738,8 @@ progress.draft-progress-native::-moz-progress-bar {
 /* Centered “smart insight” strip + row variant (Dollar icon / copy) */
 .enrollment-insight-banner {
   border-radius: calc(var(--ds-card-radius) - 4px);
-  border: 1px solid var(--insight-success-border);
-  background: var(--insight-success-surface);
+  border: 1px solid color-mix(in srgb, var(--insight-success-border) 70%, transparent);
+  background: var(--insight-gradient);
   padding: 1rem 1.25rem;
   text-align: center;
 }
@@ -1618,9 +1777,9 @@ progress.draft-progress-native::-moz-progress-bar {
 /* Compact insight card (wizard / inline) — same tokens as enrollment-insight-banner */
 .enrollment-insight-card--success {
   border-radius: calc(var(--ds-card-radius) - 4px);
-  border: 1px solid var(--insight-success-border);
-  background: var(--insight-success-surface);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--insight-success-border) 70%, transparent);
+  background: var(--insight-gradient);
+  box-shadow: var(--elevation-sm);
 }
 
 .enrollment-insight-card--success .enrollment-insight-card__body {
@@ -2038,6 +2197,7 @@ progress.draft-progress-native::-moz-progress-bar {
 
 .footer-actions--triple .footer-actions__left {
   justify-self: start;
+  min-width: 0;
 }
 
 .footer-actions--triple .footer-actions__center {
@@ -2051,6 +2211,7 @@ progress.draft-progress-native::-moz-progress-bar {
 
 .footer-actions--triple .footer-actions__right {
   justify-self: end;
+  min-width: 0;
 }
 
 @media (max-width: 639px) {
@@ -2069,6 +2230,28 @@ progress.draft-progress-native::-moz-progress-bar {
   .footer-actions--triple .footer-actions__right {
     grid-column: 2;
     justify-self: end;
+  }
+}
+
+/* Plan step: only Back — no duplicate Next vs card CTAs */
+.footer-actions--triple.footer-actions--hide-next {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-actions--triple.footer-actions--hide-next .footer-actions__center:empty {
+  display: none;
+}
+
+.footer-actions--triple.footer-actions--hide-next .footer-actions__right {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .footer-actions--triple.footer-actions--hide-next .footer-actions__center {
+    display: none;
   }
 }
 
@@ -2120,6 +2303,45 @@ progress.draft-progress-native::-moz-progress-bar {
 
 .btn-outline:hover:not(:disabled) {
   background: var(--muted);
+}
+
+/* Enrollment step footer — softer divider (works with Tailwind border-t) */
+.enrollment-footer-slot {
+  border-top-color: color-mix(in srgb, var(--foreground) 8%, var(--border));
+}
+
+.footer-actions--triple .footer-actions__right .btn.btn-primary {
+  border-radius: var(--radius-md);
+  background: var(--brand-gradient);
+  color: var(--color-text-on-primary);
+  box-shadow: var(--elevation-sm);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.2s ease;
+}
+
+.footer-actions--triple .footer-actions__right .btn.btn-primary:hover:not(:disabled) {
+  opacity: 1;
+  transform: scale(1.03);
+  box-shadow: var(--elevation-md);
+}
+
+.footer-actions--triple .footer-actions__right .btn.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.footer-actions--triple .footer-actions__left .btn {
+  border-radius: var(--radius-md);
+  transition: transform 0.15s ease;
+}
+
+.footer-actions--triple .footer-actions__left .btn:hover:not(:disabled) {
+  transform: scale(1.03);
+}
+
+.footer-actions--triple .footer-actions__left .btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-outline.btn--pressed {
@@ -7799,4 +8021,18 @@ body.global-search-open {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
+}
+
+/* App-wide: no visible scrollbar chrome; scrolling still works (wheel, trackpad, touch, keyboard). */
+*,
+*::before,
+*::after {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }

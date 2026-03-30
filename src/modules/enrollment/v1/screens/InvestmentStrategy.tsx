@@ -16,7 +16,6 @@ import {
   Pencil,
   Phone,
   Plus,
-  RotateCcw,
   Settings,
   Sparkles,
   Trash2,
@@ -25,10 +24,12 @@ import {
   X,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { getGrowthRate } from "../flow/readinessMetrics";
 import { pathForWizardStep } from "../flow/v1WizardPaths";
 import type { RiskLevel } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/context/ThemeContext";
 
 /* ─── Types ─── */
 
@@ -71,15 +72,15 @@ const sourceColors: Record<SourceKey, string> = {
 };
 
 const sourceBorderColors: Record<SourceKey, string> = {
-  roth: "border-purple-200",
-  preTax: "border-blue-200",
-  afterTax: "border-green-200",
+  roth: "border-purple-200 dark:border-purple-800/80",
+  preTax: "border-blue-200 dark:border-blue-800/80",
+  afterTax: "border-green-200 dark:border-green-800/80",
 };
 
 const sourceBgColors: Record<SourceKey, string> = {
-  roth: "bg-purple-50",
-  preTax: "bg-blue-50",
-  afterTax: "bg-green-50",
+  roth: "bg-purple-50 dark:bg-purple-950/40",
+  preTax: "bg-blue-50 dark:bg-blue-950/40",
+  afterTax: "bg-green-50 dark:bg-green-950/40",
 };
 
 /* ─── Static data ─── */
@@ -220,10 +221,10 @@ function computeRiskLevel(funds: SourceFundAllocation[], t: TFunction): { label:
   const equityPct = funds
     .filter((f) => f.assetClass === "Equity" || f.assetClass === "International")
     .reduce((s, f) => s + f.allocation, 0);
-  if (equityPct >= 70) return { label: t(`${IV}riskAggressive`), color: "text-red-600" };
-  if (equityPct >= 50) return { label: t(`${IV}riskGrowth`), color: "text-orange-600" };
-  if (equityPct >= 30) return { label: t(`${IV}riskBalanced`), color: "text-blue-600" };
-  return { label: t(`${IV}riskConservative`), color: "text-green-600" };
+  if (equityPct >= 70) return { label: t(`${IV}riskAggressive`), color: "text-red-600 dark:text-red-400" };
+  if (equityPct >= 50) return { label: t(`${IV}riskGrowth`), color: "text-orange-600 dark:text-orange-400" };
+  if (equityPct >= 30) return { label: t(`${IV}riskBalanced`), color: "text-blue-600 dark:text-blue-400" };
+  return { label: t(`${IV}riskConservative`), color: "text-green-600 dark:text-green-400" };
 }
 
 /* ─── Allocation indicator ─── */
@@ -233,12 +234,20 @@ function AllocationIndicator({ total, label }: { total: number; label?: string }
   const isValid = total === 100;
   const diff = total - 100;
   return (
-    <div className={cn("flex items-center justify-between rounded-xl px-3.5 py-2", isValid ? "bg-green-50" : "bg-amber-50")}>
+    <div
+      className={cn(
+        "flex items-center justify-between rounded-xl px-3.5 py-2",
+        isValid ? "bg-green-50 dark:bg-green-950/40" : "bg-amber-50 dark:bg-amber-950/35",
+      )}
+    >
       <div className="flex items-center gap-2">
         {isValid
-          ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-          : <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />}
-        <span className={cn(isValid ? "text-green-700" : "text-amber-700")} style={{ fontSize: "0.78rem", fontWeight: 500 }}>
+          ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+          : <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />}
+        <span
+          className={cn(isValid ? "text-green-700 dark:text-green-200" : "text-amber-700 dark:text-amber-200")}
+          style={{ fontSize: "0.78rem", fontWeight: 500 }}
+        >
           {label ? `${label}: ` : ""}
           {isValid
             ? t(`${IV}allocBalanced`)
@@ -247,7 +256,10 @@ function AllocationIndicator({ total, label }: { total: number; label?: string }
               : t(`${IV}allocRemaining`, { diff: Math.abs(diff) })}
         </span>
       </div>
-      <span className={cn("tabular-nums", isValid ? "text-green-800" : "text-amber-800")} style={{ fontSize: "0.9rem", fontWeight: 700 }}>
+      <span
+        className={cn("tabular-nums", isValid ? "text-green-800 dark:text-green-100" : "text-amber-800 dark:text-amber-100")}
+        style={{ fontSize: "0.9rem", fontWeight: 700 }}
+      >
         {total}%
       </span>
     </div>
@@ -283,16 +295,19 @@ function FundPicker({ existingTickers, onAdd }: { existingTickers: string[]; onA
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors py-1.5 px-2 rounded-lg hover:bg-blue-50"
+        className="flex items-center gap-1.5 text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 py-1.5 px-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/50"
         style={{ fontSize: "0.8rem", fontWeight: 500 }}
       >
         <Plus className="w-3.5 h-3.5" /> {t(`${IV}addFund`)}
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-72 max-h-64 overflow-y-auto">
+        <div className="absolute left-0 top-full z-20 mt-1 max-h-64 w-72 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-900">
           {Object.entries(grouped).map(([cls, funds]) => (
             <div key={cls}>
-              <p className="px-3 pt-2.5 pb-1 text-gray-400 sticky top-0 bg-white" style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <p
+                className="sticky top-0 bg-white px-3 pb-1 pt-2.5 text-gray-400 dark:bg-gray-900 dark:text-gray-500"
+                style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
+              >
                 {assetClassLabelInv(t, cls)}
               </p>
               {funds.map((fund) => (
@@ -300,10 +315,10 @@ function FundPicker({ existingTickers, onAdd }: { existingTickers: string[]; onA
                   key={fund.ticker}
               type="button"
                   onClick={() => { onAdd({ ...fund, allocation: 0 }); setOpen(false); }}
-                  className="w-full px-3 py-2 hover:bg-gray-50 text-left flex items-center justify-between transition-colors"
+                  className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <div>
-                    <p className="text-gray-800" style={{ fontSize: "0.8rem" }}>{fund.name}</p>
+                    <p className="text-gray-800 dark:text-gray-100" style={{ fontSize: "0.8rem" }}>{fund.name}</p>
                     <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>
                       {fund.ticker} · {t(`${IV}erLabel`)} {fund.expense}
                     </p>
@@ -328,6 +343,8 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
   onAdd: (fund: SourceFundAllocation) => void;
 }) {
   const { t } = useTranslation();
+  const { effectiveMode } = useTheme();
+  const trackMuted = effectiveMode === "dark" ? "#4b5563" : "#e5e7eb";
   const grouped = funds.reduce<Record<string, SourceFundAllocation[]>>((acc, f) => {
     if (!acc[f.assetClass]) acc[f.assetClass] = [];
     acc[f.assetClass].push(f);
@@ -340,41 +357,59 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
         <div key={assetClass}>
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: classFunds[0].color }} />
-            <p className="text-gray-400" style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            <p
+              className="text-gray-400 dark:text-gray-500"
+              style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
+            >
               {assetClassLabelInv(t, assetClass)}
             </p>
           </div>
           <div className="space-y-2">
             {classFunds.map((fund) => (
-              <div key={fund.ticker} className="bg-white border border-gray-200 rounded-xl px-3.5 py-3">
-                <div className="flex items-start justify-between mb-2">
+              <div
+                key={fund.ticker}
+                className="rounded-xl border border-gray-200 bg-white px-3.5 py-3 dark:border-gray-600 dark:bg-gray-900/90"
+              >
+                <div className="mb-2 flex items-start justify-between">
                   <div className="min-w-0">
-                    <p className="text-gray-900 truncate" style={{ fontSize: "0.82rem", fontWeight: 500 }}>{fund.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-gray-400" style={{ fontSize: "0.68rem" }}>{fund.ticker}</span>
-                      <span className="text-gray-300">·</span>
-                      <span className="text-gray-400" style={{ fontSize: "0.68rem" }}>
+                    <p className="truncate text-gray-900 dark:text-gray-50" style={{ fontSize: "0.82rem", fontWeight: 500 }}>{fund.name}</p>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.68rem" }}>{fund.ticker}</span>
+                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                      <span className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.68rem" }}>
                         {t(`${IV}erLabel`)} {fund.expense}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                    <button type="button" onClick={() => onUpdate(fund.ticker, Math.max(0, fund.allocation - 1))} className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors border border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => onUpdate(fund.ticker, Math.max(0, fund.allocation - 1))}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                    >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <div className="flex items-center gap-0.5 bg-gray-50 rounded-lg px-2 py-0.5">
+                    <div className="flex items-center gap-0.5 rounded-lg bg-gray-50 px-2 py-0.5 dark:bg-gray-800/80">
                       <input
                         type="number" min={0} max={100} value={fund.allocation}
                         onChange={(e) => onUpdate(fund.ticker, Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-                        className="w-9 text-right bg-transparent border-none outline-none text-gray-900 tabular-nums"
+                        className="w-9 border-none bg-transparent text-right text-gray-900 tabular-nums outline-none dark:text-gray-100"
                         style={{ fontSize: "0.85rem", fontWeight: 600 }}
                       />
-                      <span className="text-gray-400" style={{ fontSize: "0.78rem" }}>%</span>
+                      <span className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.78rem" }}>%</span>
                     </div>
-                    <button type="button" onClick={() => onUpdate(fund.ticker, Math.min(100, fund.allocation + 1))} className="w-6 h-6 rounded-md flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors border border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => onUpdate(fund.ticker, Math.min(100, fund.allocation + 1))}
+                      className="flex h-6 w-6 items-center justify-center rounded-md border border-gray-200 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                    >
                       <Plus className="w-3 h-3" />
                     </button>
-                    <button type="button" onClick={() => onRemove(fund.ticker)} className="w-6 h-6 rounded-md flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors ml-0.5">
+                    <button
+                      type="button"
+                      onClick={() => onRemove(fund.ticker)}
+                      className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+                    >
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
@@ -384,7 +419,7 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
                   onChange={(e) => onUpdate(fund.ticker, parseInt(e.target.value))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, ${fund.color} 0%, ${fund.color} ${fund.allocation}%, #e5e7eb ${fund.allocation}%, #e5e7eb 100%)`,
+                    background: `linear-gradient(to right, ${fund.color} 0%, ${fund.color} ${fund.allocation}%, ${trackMuted} ${fund.allocation}%, ${trackMuted} 100%)`,
                     accentColor: fund.color,
                   }}
                 />
@@ -423,16 +458,26 @@ function CopyPortfolioMenu({ currentSource, activeSources, contributionSources, 
 
   return (
     <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen(!open)} className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors py-1 px-2 rounded-lg hover:bg-gray-100" style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 rounded-lg py-1 px-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+        style={{ fontSize: "0.75rem", fontWeight: 500 }}
+      >
         <Copy className="w-3 h-3" /> {t(`${IV}copyFrom`)}
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-52 py-1">
+        <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-gray-900">
           {others.map((src) => (
-            <button key={src} type="button" onClick={() => { onCopy(src); setOpen(false); }} className="w-full px-3 py-2 hover:bg-gray-50 text-left flex items-center justify-between transition-colors">
+            <button
+              key={src}
+              type="button"
+              onClick={() => { onCopy(src); setOpen(false); }}
+              className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[src] }} />
-                <span className="text-gray-700" style={{ fontSize: "0.78rem" }}>
+                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[src] }} />
+                <span className="text-gray-700 dark:text-gray-200" style={{ fontSize: "0.78rem" }}>
                   {sourceShort(t, src)} ({contributionSources[src]}%)
                 </span>
               </div>
@@ -507,20 +552,38 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
     <div className="space-y-4">
       {/* Same-for-all toggle */}
       {activeSources.length > 1 && (
-        <button type="button" onClick={toggleSameForAll} className={cn("w-full flex items-center gap-3 rounded-xl px-4 py-3 border transition-all", allocs.sameForAll ? "border-blue-200 bg-blue-50" : "border-gray-200 bg-gray-50")}>
-          {allocs.sameForAll ? <ToggleRight className="w-5 h-5 text-blue-600 shrink-0" /> : <ToggleLeft className="w-5 h-5 text-gray-400 shrink-0" />}
-          <div className="text-left flex-1">
-            <p className={cn(allocs.sameForAll ? "text-blue-800" : "text-gray-700")} style={{ fontSize: "0.82rem", fontWeight: 500 }}>
+        <button
+          type="button"
+          onClick={toggleSameForAll}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl border px-4 py-3 transition-all",
+            allocs.sameForAll
+              ? "border-blue-200 bg-blue-50 dark:border-blue-800/80 dark:bg-blue-950/40"
+              : "border-gray-200 bg-gray-50 dark:border-gray-600 dark:bg-gray-800/50",
+          )}
+        >
+          {allocs.sameForAll ? (
+            <ToggleRight className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
+          ) : (
+            <ToggleLeft className="h-5 w-5 shrink-0 text-gray-400 dark:text-gray-500" />
+          )}
+          <div className="flex-1 text-left">
+            <p
+              className={cn(
+                allocs.sameForAll ? "text-blue-800 dark:text-blue-100" : "text-gray-700 dark:text-gray-200",
+              )}
+              style={{ fontSize: "0.82rem", fontWeight: 500 }}
+            >
               {t(`${IV}sameForAllTitle`)}
             </p>
-            <p className="text-gray-400" style={{ fontSize: "0.7rem" }}>
+            <p className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.7rem" }}>
               {allocs.sameForAll ? t(`${IV}sameForAllOn`) : t(`${IV}sameForAllOff`)}
             </p>
           </div>
           {!allocs.sameForAll && (
             <div className="flex items-center gap-1 shrink-0">
-              <Layers className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-gray-500" style={{ fontSize: "0.72rem" }}>
+              <Layers className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+              <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.72rem" }}>
                 {t(`${IV}sourcesCount`, { count: activeSources.length })}
               </span>
             </div>
@@ -530,7 +593,7 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
 
       {/* Donut chart summary */}
       {chartData.length > 0 && (
-        <div className="flex items-center gap-4 bg-gray-50 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-4 rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
           <div className="w-14 h-14 shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -545,15 +608,16 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
               {chartData.map((d) => (
                 <div key={d.name} className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-                  <span className="text-gray-600" style={{ fontSize: "0.72rem" }}>
-                    {assetClassLabelInv(t, d.name)}: <span className="text-gray-900" style={{ fontWeight: 600 }}>{d.value}%</span>
+                  <span className="text-gray-600 dark:text-gray-300" style={{ fontSize: "0.72rem" }}>
+                    {assetClassLabelInv(t, d.name)}:{" "}
+                    <span className="text-gray-900 dark:text-gray-50" style={{ fontWeight: 600 }}>{d.value}%</span>
                   </span>
                 </div>
               ))}
             </div>
             <div className="flex items-center gap-1.5 mt-1.5">
-              <Gauge className="w-3 h-3 text-gray-400" />
-              <span className="text-gray-500" style={{ fontSize: "0.68rem" }}>
+              <Gauge className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+              <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.68rem" }}>
                 {t(`${IV}riskLabel`)}{" "}
                 <span className={computeRiskLevel(currentFunds || [], t).color} style={{ fontWeight: 600 }}>
                   {computeRiskLevel(currentFunds || [], t).label}
@@ -568,7 +632,7 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
         <div>
           {allocs.unified.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400" style={{ fontSize: "0.85rem" }}>{t(`${IV}noFunds`)}</p>
+              <p className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.85rem" }}>{t(`${IV}noFunds`)}</p>
               <div className="mt-3 flex justify-center"><FundPicker existingTickers={[]} onAdd={addUnifiedFund} /></div>
             </div>
           ) : (
@@ -581,18 +645,31 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
       ) : (
         <div>
           {/* Source tabs */}
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4">
+          <div className="mb-4 flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800/80">
             {activeSources.map((src) => {
               const srcTotal = getSourceTotal(allocs.sources[src]);
               const srcValid = srcTotal === 100;
               return (
-                <button key={src} type="button" onClick={() => setActiveTab(src)} className={cn("flex-1 rounded-lg py-2 px-3 transition-all flex items-center justify-center gap-2", activeTab === src ? "bg-white shadow-sm" : "hover:bg-gray-50")}>
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[src] }} />
-                  <span className={cn(activeTab === src ? "text-gray-900" : "text-gray-500")} style={{ fontSize: "0.8rem", fontWeight: activeTab === src ? 600 : 400 }}>
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setActiveTab(src)}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 transition-all",
+                    activeTab === src
+                      ? "bg-white shadow-sm dark:bg-gray-900 dark:shadow-none"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-700/60",
+                  )}
+                >
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[src] }} />
+                  <span
+                    className={cn(activeTab === src ? "text-gray-900 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}
+                    style={{ fontSize: "0.8rem", fontWeight: activeTab === src ? 600 : 400 }}
+                  >
                     {sourceShort(t, src)}
                   </span>
                   {srcTotal > 0 && (
-                    <span className={cn("shrink-0", srcValid ? "text-green-600" : "text-amber-600")}>
+                    <span className={cn("shrink-0", srcValid ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400")}>
                       {srcValid ? <CheckCircle2 className="w-3 h-3" /> : <span style={{ fontSize: "0.65rem", fontWeight: 600 }}>{srcTotal}%</span>}
                     </span>
                   )}
@@ -605,7 +682,7 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: sourceColors[activeTab] }} />
-                <p className="text-gray-800" style={{ fontSize: "0.88rem", fontWeight: 600 }}>
+                <p className="text-gray-800 dark:text-gray-100" style={{ fontSize: "0.88rem", fontWeight: 600 }}>
                   {t(`${IV}sourcePortfolio`, { source: sourceShort(t, activeTab) })}
                 </p>
               </div>
@@ -620,8 +697,8 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
             </div>
 
             {allocs.sources[activeTab].length === 0 ? (
-              <div className="text-center py-6 bg-gray-50 rounded-xl">
-                <p className="text-gray-400 mb-2" style={{ fontSize: "0.82rem" }}>
+              <div className="rounded-xl bg-gray-50 py-6 text-center dark:bg-gray-800/50">
+                <p className="mb-2 text-gray-400 dark:text-gray-500" style={{ fontSize: "0.82rem" }}>
                   {t(`${IV}noFundsForSource`, { source: sourceShort(t, activeTab) })}
                 </p>
                 <div className="flex justify-center"><FundPicker existingTickers={[]} onAdd={(fund) => addSourceFund(activeTab, fund)} /></div>
@@ -644,19 +721,45 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
           </div>
 
           {/* All-source summary */}
-          <div className="border-t border-gray-100 pt-3 mt-4 space-y-1.5">
-            <p className="text-gray-400 mb-1" style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div className="mt-4 space-y-1.5 border-t border-gray-100 pt-3 dark:border-gray-700">
+            <p
+              className="mb-1 text-gray-400 dark:text-gray-500"
+              style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
+            >
               {t(`${IV}allSources`)}
             </p>
             {sourceTotals.map((s) => (
-              <div key={s.key} className={cn("flex items-center justify-between px-3 py-1.5 rounded-lg", s.total === 100 ? "bg-green-50" : "bg-amber-50")}>
+              <div
+                key={s.key}
+                className={cn(
+                  "flex items-center justify-between rounded-lg px-3 py-1.5",
+                  s.total === 100 ? "bg-green-50 dark:bg-green-950/40" : "bg-amber-50 dark:bg-amber-950/35",
+                )}
+              >
                 <div className="flex items-center gap-2">
-                  {s.total === 100 ? <CheckCircle2 className="w-3 h-3 text-green-600" /> : <AlertTriangle className="w-3 h-3 text-amber-600" />}
-                  <span className={cn(s.total === 100 ? "text-green-700" : "text-amber-700")} style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+                  {s.total === 100 ? (
+                    <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                  )}
+                  <span
+                    className={cn(
+                      s.total === 100 ? "text-green-700 dark:text-green-200" : "text-amber-700 dark:text-amber-200",
+                    )}
+                    style={{ fontSize: "0.75rem", fontWeight: 500 }}
+                  >
                     {sourceShort(t, s.key)}
                   </span>
                 </div>
-                <span className={cn("tabular-nums", s.total === 100 ? "text-green-800" : "text-amber-800")} style={{ fontSize: "0.8rem", fontWeight: 600 }}>{s.total}%</span>
+                <span
+                  className={cn(
+                    "tabular-nums",
+                    s.total === 100 ? "text-green-800 dark:text-green-100" : "text-amber-800 dark:text-amber-100",
+                  )}
+                  style={{ fontSize: "0.8rem", fontWeight: 600 }}
+                >
+                  {s.total}%
+                </span>
               </div>
             ))}
           </div>
@@ -688,36 +791,41 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
   ).map(([name, d]) => ({ name, ...d }));
 
   return (
-    <div className={cn("bg-white rounded-2xl border shadow-sm overflow-hidden", sourceBorderColors[sourceKey])}>
+    <div className={cn("overflow-hidden rounded-2xl border bg-white shadow-sm dark:bg-gray-900/90", sourceBorderColors[sourceKey])}>
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[sourceKey] }} />
-              <p className="text-gray-900" style={{ fontSize: "0.9rem", fontWeight: 600 }}>{sourceFull(t, sourceKey)}</p>
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[sourceKey] }} />
+              <p className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.9rem", fontWeight: 600 }}>{sourceFull(t, sourceKey)}</p>
               <span className={cn(sourceBgColors[sourceKey], "px-1.5 py-0.5 rounded")} style={{ fontSize: "0.6rem", fontWeight: 600, letterSpacing: "0.03em" }}>
                 <span style={{ color: sourceColors[sourceKey] }}>{sourceTax(t, sourceKey)}</span>
                   </span>
             </div>
-            <div className="flex items-center gap-3 mt-1.5">
-              <span className="text-gray-700" style={{ fontSize: "0.82rem", fontWeight: 500 }}>
+            <div className="mt-1.5 flex items-center gap-3">
+              <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.82rem", fontWeight: 500 }}>
                 {t(`${IV}perMo`, { amount: `$${Math.round(monthlyAmount).toLocaleString()}` })}
               </span>
-              <span className="text-gray-300">·</span>
-              <span className="text-gray-500" style={{ fontSize: "0.78rem" }}>
+              <span className="text-gray-300 dark:text-gray-600">·</span>
+              <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.78rem" }}>
                 {t(`${IV}fund`, { count: activeFunds.length })}
               </span>
               {isCustomized && (
                 <>
-                  <span className="text-gray-300">·</span>
-                  <span className="text-blue-600" style={{ fontSize: "0.72rem", fontWeight: 500 }}>
+                  <span className="text-gray-300 dark:text-gray-600">·</span>
+                  <span className="text-blue-600 dark:text-blue-400" style={{ fontSize: "0.72rem", fontWeight: 500 }}>
                     {t(`${IV}customized`)}
                   </span>
                 </>
               )}
             </div>
           </div>
-          <button type="button" onClick={onEditPortfolio} className="shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors" style={{ fontSize: "0.82rem", fontWeight: 500 }}>
+          <button
+            type="button"
+            onClick={onEditPortfolio}
+            className="shrink-0 rounded-lg px-3 py-1.5 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-950/50 dark:hover:text-blue-300"
+            style={{ fontSize: "0.82rem", fontWeight: 500 }}
+          >
             <Pencil className="w-3.5 h-3.5 inline mr-1.5" />
             {t(`${IV}edit`)}
           </button>
@@ -732,8 +840,9 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
               {assetSummary.map((a) => (
                 <div key={a.name} className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
-                  <span className="text-gray-500" style={{ fontSize: "0.68rem" }}>
-                    {assetClassLabelInv(t, a.name)} <span className="text-gray-700" style={{ fontWeight: 600 }}>{a.value}%</span>
+                  <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.68rem" }}>
+                    {assetClassLabelInv(t, a.name)}{" "}
+                    <span className="text-gray-700 dark:text-gray-200" style={{ fontWeight: 600 }}>{a.value}%</span>
                   </span>
                 </div>
               ))}
@@ -743,9 +852,11 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
 
         {activeFunds.length > 0 && (
           <div className="mt-2.5 space-y-0.5">
-            {activeFunds.slice(0, 2).map((fund) => <p key={fund.ticker} className="text-gray-500 truncate" style={{ fontSize: "0.72rem" }}>{fund.name}</p>)}
+            {activeFunds.slice(0, 2).map((fund) => (
+              <p key={fund.ticker} className="truncate text-gray-500 dark:text-gray-400" style={{ fontSize: "0.72rem" }}>{fund.name}</p>
+            ))}
             {activeFunds.length > 2 && (
-              <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>
+              <p className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.68rem" }}>
                 {t(`${IV}moreFunds`, { count: activeFunds.length - 2 })}
               </p>
             )}
@@ -755,21 +866,26 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
 
       {activeFunds.length > 0 && (
         <>
-          <button type="button" onClick={() => setExpanded(!expanded)} className="w-full border-t border-gray-100 px-4 py-2 flex items-center justify-center gap-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors" style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="flex w-full items-center justify-center gap-1.5 border-t border-gray-100 px-4 py-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 dark:border-gray-700 dark:hover:bg-gray-800/80 dark:hover:text-gray-300"
+            style={{ fontSize: "0.75rem", fontWeight: 500 }}
+          >
             {expanded ? t(`${IV}hideFunds`) : t(`${IV}viewFunds`)}
             {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </button>
           {expanded && (
-            <div className="border-t border-gray-100 px-4 py-3 space-y-2">
+            <div className="space-y-2 border-t border-gray-100 px-4 py-3 dark:border-gray-700">
               {activeFunds.map((fund) => (
                 <div key={fund.ticker} className="flex items-center justify-between py-1">
                   <div>
-                    <p className="text-gray-700" style={{ fontSize: "0.78rem" }}>{fund.name}</p>
-                    <p className="text-gray-400" style={{ fontSize: "0.65rem" }}>
+                    <p className="text-gray-700 dark:text-gray-200" style={{ fontSize: "0.78rem" }}>{fund.name}</p>
+                    <p className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.65rem" }}>
                       {fund.ticker} · {t(`${IV}erLabel`)} {fund.expense}
                     </p>
                   </div>
-                  <span className="text-gray-900 tabular-nums" style={{ fontSize: "0.82rem", fontWeight: 600 }}>{fund.allocation}%</span>
+                  <span className="tabular-nums text-gray-900 dark:text-gray-50" style={{ fontSize: "0.82rem", fontWeight: 600 }}>{fund.allocation}%</span>
                 </div>
               ))}
             </div>
@@ -783,11 +899,11 @@ function SourceCard({ sourceKey, monthlyAmount, funds, isCustomized, onEditPortf
 function InactiveSourceCard({ sourceKey }: { sourceKey: SourceKey }) {
   const { t } = useTranslation();
   return (
-    <div className="bg-gray-50 rounded-2xl border border-gray-200 px-4 py-3.5 flex items-center gap-3 opacity-60">
-      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: sourceColors[sourceKey] }} />
+    <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 opacity-60 dark:border-gray-600 dark:bg-gray-800/50">
+      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[sourceKey] }} />
       <div>
-        <p className="text-gray-500" style={{ fontSize: "0.85rem", fontWeight: 500 }}>{sourceFull(t, sourceKey)}</p>
-        <p className="text-gray-400" style={{ fontSize: "0.72rem" }}>{t(`${IV}inactiveSource`)}</p>
+        <p className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.85rem", fontWeight: 500 }}>{sourceFull(t, sourceKey)}</p>
+        <p className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.72rem" }}>{t(`${IV}inactiveSource`)}</p>
       </div>
     </div>
   );
@@ -795,8 +911,16 @@ function InactiveSourceCard({ sourceKey }: { sourceKey: SourceKey }) {
 
 /* ─── Build Portfolio Modal ─── */
 
-function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, inactiveSources, contributionSources, monthlyTotal, onSave }: {
-  isOpen: boolean;
+function BuildPortfolioModal({
+  onClose,
+  defaultFunds,
+  activeSources,
+  inactiveSources,
+  contributionSources,
+  monthlyTotal,
+  onSave,
+  wizardHasCustomPortfolio,
+}: {
   onClose: () => void;
   defaultFunds: SourceFundAllocation[];
   activeSources: SourceKey[];
@@ -804,6 +928,7 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
   contributionSources: { preTax: number; roth: number; afterTax: number };
   monthlyTotal: number;
   onSave: (allocs: PerSourceAllocations) => void;
+  wizardHasCustomPortfolio: boolean;
 }) {
   const { t } = useTranslation();
   const [allocs, setAllocs] = useState<PerSourceAllocations>({
@@ -816,16 +941,11 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
   const [inlineActiveTab, setInlineActiveTab] = useState<SourceKey>("preTax");
 
   useEffect(() => {
-    if (isOpen) {
-      setAllocs({ sameForAll: activeSources.length === 1, unified: defaultFunds.map((f) => ({ ...f })), sources: { roth: defaultFunds.map((f) => ({ ...f })), preTax: defaultFunds.map((f) => ({ ...f })), afterTax: defaultFunds.map((f) => ({ ...f })) } });
-      setEditingSource(null);
-      setInlineAllocs(null);
-      document.body.style.overflow = "hidden";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen, defaultFunds, activeSources]);
-
-  if (!isOpen) return null;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   const getFundsForSource = (src: SourceKey) => {
     if (allocs.sameForAll) return allocs.unified;
@@ -849,34 +969,43 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="flex max-h-[90vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5 dark:border-gray-700">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
+            <div className="mb-1 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <h2 className="text-gray-900" style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+              <h2 className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1.25rem", fontWeight: 700 }}>
                 {t(`${IV}modalTitle`)}
               </h2>
             </div>
-            <p className="text-gray-500" style={{ fontSize: "0.85rem" }}>
+            <p className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.85rem" }}>
               {editingSource
                 ? t(`${IV}modalSubtitleEdit`, { source: sourceFull(t, editingSource) })
                 : t(`${IV}modalSubtitlePick`)}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
         {/* Body — two columns */}
-        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
+        <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
           {/* Left — source cards */}
-          <div className={cn(editingSource ? "md:w-2/5" : "w-full", "border-r border-gray-200 overflow-y-auto px-6 py-5 transition-all")}>
-            <p className="text-gray-900 mb-4" style={{ fontSize: "0.95rem", fontWeight: 600 }}>
+          <div
+            className={cn(
+              editingSource ? "md:w-2/5" : "w-full",
+              "overflow-y-auto border-r border-gray-200 px-6 py-5 transition-all dark:border-gray-700",
+            )}
+          >
+            <p className="mb-4 text-gray-900 dark:text-gray-50" style={{ fontSize: "0.95rem", fontWeight: 600 }}>
               {t(`${IV}yourSources`)}
             </p>
             <div className="space-y-3">
@@ -886,7 +1015,7 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
                   sourceKey={src}
                   monthlyAmount={getMonthlyForSource(src)}
                   funds={getFundsForSource(src)}
-                  isCustomized={!!editingSource}
+                  isCustomized={wizardHasCustomPortfolio}
                   onEditPortfolio={() => handleEditSource(src)}
                 />
               ))}
@@ -896,16 +1025,20 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
 
           {/* Right — inline editor */}
           {editingSource && inlineAllocs && (
-            <div className="flex-1 flex flex-col md:w-3/5 bg-gray-50">
-              <div className="px-6 py-4 border-b border-gray-200 bg-white flex items-center justify-between">
+            <div className="flex flex-1 flex-col bg-gray-50 md:w-3/5 dark:bg-gray-950/60">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: sourceColors[editingSource] }} />
-                  <h3 className="text-gray-900" style={{ fontSize: "1rem", fontWeight: 600 }}>
+                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[editingSource] }} />
+                  <h3 className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1rem", fontWeight: 600 }}>
                     {t(`${IV}customizeSource`, { source: sourceFull(t, editingSource) })}
                   </h3>
                 </div>
-                <button type="button" onClick={() => { setEditingSource(null); setInlineAllocs(null); }} className="text-gray-400 hover:text-gray-600 transition-colors">
-                  <X className="w-4 h-4" />
+                <button
+                  type="button"
+                  onClick={() => { setEditingSource(null); setInlineAllocs(null); }}
+                  className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </div>
               <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -918,11 +1051,11 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
                   setActiveTab={setInlineActiveTab}
                 />
               </div>
-              <div className="px-6 py-4 border-t border-gray-200 bg-white flex items-center gap-3">
+              <div className="flex items-center gap-3 border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900">
                 <button
                   type="button"
                   onClick={() => { setEditingSource(null); setInlineAllocs(null); }}
-                  className="flex-1 px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="flex-1 rounded-xl border border-gray-200 px-5 py-2.5 text-gray-600 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                   style={{ fontSize: "0.85rem", fontWeight: 500 }}
                 >
                   {t(`${IV}cancel`)}
@@ -941,7 +1074,7 @@ function BuildPortfolioModal({ isOpen, onClose, defaultFunds, activeSources, ina
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-950/50">
           <button
             type="button"
             onClick={() => { onSave(allocs); onClose(); }}
@@ -968,6 +1101,8 @@ export function InvestmentStrategy() {
   const salary = useEnrollmentStore((s) => s.salary);
   const contributionSources = useEnrollmentStore((s) => s.contributionSources);
   const supportsAfterTax = useEnrollmentStore((s) => s.supportsAfterTax);
+  const currentAge = useEnrollmentStore((s) => s.currentAge);
+  const retirementAge = useEnrollmentStore((s) => s.retirementAge);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [showBuildModal, setShowBuildModal] = useState(false);
@@ -1015,176 +1150,299 @@ export function InvestmentStrategy() {
     updateField("useRecommendedPortfolio", false);
   };
 
+  const growthRate = getGrowthRate(riskLevel ?? "balanced");
+  const expectedReturnLabel = `~${(growthRate * 100).toFixed(1)}%`;
+  const riskDotFilled: Record<RiskLevel, number> = {
+    conservative: 1,
+    balanced: 2,
+    growth: 4,
+    aggressive: 5,
+  };
+  const filledDots = riskDotFilled[activeRisk];
+  const yearsToRet = Math.max(0, retirementAge - currentAge);
+  const timelineLabel =
+    yearsToRet >= 10 ? t(`${IV}timeline10Plus`) : t(`${IV}timelineYears`, { count: Math.max(1, yearsToRet) });
+  const riskProfileWord = t(`${IV}${RISK_DEF.find((r) => r.key === activeRisk)!.labelKey}`);
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">{t(`${IV}pageTitle`)}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}pageSubtitle`)}</p>
+    <div className="mx-auto w-full min-w-0 max-w-6xl">
+      <div className="mb-5">
+        <h1 className="text-2xl font-semibold leading-tight tracking-tight text-gray-900 dark:text-gray-50 sm:text-3xl">
+          {t(`${IV}pageTitle`)}
+        </h1>
+        <p className="mt-2 text-base font-normal leading-relaxed text-gray-500 dark:text-gray-400">
+          {t(`${IV}pageSubtitle`)}
+        </p>
       </div>
 
-      {/* Investment style card */}
-      <div className="card flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="icon-box-soft h-10 w-10 shrink-0 rounded-xl">
-            <Gauge className="h-5 w-5" aria-hidden />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${IV}styleEyebrow`)}</p>
-            <p className="text-lg font-medium text-foreground">{t(`${IV}${STYLE_TITLE_KEYS[activeRisk]}`)}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}${STYLE_DESC_KEYS[activeRisk]}`)}</p>
-          </div>
-        </div>
-        <button type="button" onClick={() => setEditorOpen((o) => !o)} aria-expanded={editorOpen} className="btn btn-outline shrink-0 gap-1 self-start sm:self-center">
-          <Pencil className="h-4 w-4" aria-hidden />
-          {t(`${IV}editStrategy`)}
-          <ArrowRight className="h-4 w-4" aria-hidden />
-        </button>
-      </div>
-
-      {editorOpen && (
-        <div className="card">
-          <p className="mb-3 text-sm text-muted-foreground">{t(`${IV}chooseProfile`)}</p>
-          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {riskOptions.map((opt) => (
-              <button key={opt.key} type="button" onClick={() => { updateField("riskLevel", opt.key); setEditorOpen(false); setCustomAllocations(null); }} className={cn("btn min-h-20 flex-col gap-0.5 py-3 text-center", activeRisk === opt.key ? "btn-primary" : "btn-outline")}>
-                <span className="text-sm font-medium">{opt.label}</span>
-                <span className={cn("text-xs", activeRisk === opt.key ? "opacity-90" : "text-muted-foreground")}>{opt.sub}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recommended (2/3) + Customize (1/3) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-6">
-        {/* Recommended card */}
-        <div className="card space-y-4 lg:col-span-2">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-2.5 py-1 bg-blue-100 rounded-md text-blue-700 text-xs font-bold uppercase tracking-wide">
-                {t(`${IV}recommendedBadge`)}
-              </span>
-            </div>
-            <h2 className="text-lg font-medium text-foreground">{t(`${IV}planDefaultTitle`)}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}planDefaultDesc`)}</p>
-          </div>
-
-          <div className="card-soft space-y-2">
-            {currentAllocation.map((row) => (
-              <div key={row.name} className="flex items-center justify-between gap-3 text-sm">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: row.color }} />
-                  <span className="text-foreground">{translateAllocName(t, row.name)}</span>
-                </div>
-                <span className="font-medium tabular-nums text-foreground">{row.value}%</span>
+      <div className="space-y-5">
+        <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50">
+                <Gauge className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden />
               </div>
-            ))}
-          </div>
-
-          <div className="card-highlight">
-            <p className="text-sm font-medium text-foreground">{t(`${IV}whyTitle`)}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}${WHY_KEYS[activeRisk]}`)}</p>
-          </div>
-
-          <button type="button" onClick={handleContinueRecommended} className="btn btn-primary w-full gap-2">
-            {t(`${IV}continueRecommended`)}
-            <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-          </button>
-        </div>
-
-        {/* Customize card — light gradient in light mode; dark slate + purple in dark mode (no light-on-light) */}
-        <div
-          className={cn(
-            "flex flex-col gap-2 rounded-2xl border p-5 shadow-sm lg:col-span-1",
-            "border-purple-200/80 bg-gradient-to-br from-violet-50 via-white to-sky-50/90 text-slate-900",
-            "dark:border-purple-500/35 dark:bg-gradient-to-br dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950 dark:text-slate-100",
-          )}
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}>
-              <Settings className="w-5 h-5 text-white" aria-hidden />
+              <div className="min-w-0">
+                <p
+                  className="text-gray-400 dark:text-gray-500"
+                  style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
+                >
+                  {t(`${IV}styleEyebrow`)}
+                </p>
+                <p className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1.05rem", fontWeight: 700 }}>
+                  {t(`${IV}${STYLE_TITLE_KEYS[activeRisk]}`)}
+                </p>
+                <p className="mt-0.5 text-gray-500 dark:text-gray-400" style={{ fontSize: "0.78rem" }}>
+                  {t(`${IV}${STYLE_DESC_KEYS[activeRisk]}`)}
+                </p>
+              </div>
             </div>
-            <span
-              className={cn(
-                "rounded-md border border-[#ddd6fe] px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-purple-800",
-                "bg-gradient-to-r from-violet-100 to-sky-100",
-                "dark:border-purple-400/40 dark:bg-gradient-to-r dark:from-purple-950/95 dark:to-indigo-950/95 dark:text-purple-200",
-              )}
+            <button
+              type="button"
+              onClick={() => setEditorOpen(!editorOpen)}
+              aria-expanded={editorOpen}
+              className="flex shrink-0 items-center gap-1.5 text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              style={{ fontSize: "0.82rem", fontWeight: 500 }}
             >
-              {t(`${IV}advancedUser`)}
-            </span>
+              <Pencil className="h-3.5 w-3.5" aria-hidden />
+              {t(`${IV}editStrategy`)}
+            </button>
           </div>
 
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">{t(`${IV}customizeTitle`)}</h2>
-          <p className="text-sm leading-snug text-slate-600 dark:text-slate-300">
-            {t(`${IV}customizeDesc`)}
-          </p>
-          <p className="flex-1 text-sm font-medium text-slate-800 dark:text-slate-200">
-            {t(`${IV}customizeBestFor`)}
-          </p>
-
-          {customAllocations && (
-            <div className="flex items-center gap-1.5 rounded-xl border border-green-200 bg-green-50 px-3 py-2 dark:border-green-600/40 dark:bg-green-950/35">
-              <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-300">{t(`${IV}customSaved`)}</span>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setShowBuildModal(true)}
-            className={cn(
-              "mt-auto flex w-full items-center justify-center gap-2 rounded-xl border-2 px-5 py-2.5 text-sm font-semibold transition-all",
-              "border-purple-300 text-purple-800 hover:border-purple-400 hover:bg-purple-50/90",
-              "dark:border-purple-400/55 dark:text-purple-200 dark:hover:border-purple-300 dark:hover:bg-purple-950/50",
-            )}
-          >
-            {customAllocations ? t(`${IV}editPortfolioCta`) : t(`${IV}customizeCta`)}
-            <ArrowRight className="w-4 h-4 shrink-0" aria-hidden />
-          </button>
-        </div>
-      </div>
-
-      {/* Advisor card */}
-      <div className="card card-highlight flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-          <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${IV}expertHelp`)}</p>
-            <div className="icon-box-soft flex h-12 w-12 rounded-xl">
-              <Phone className="h-6 w-6" aria-hidden />
-            </div>
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-lg font-medium text-foreground">{t(`${IV}advisorTitle`)}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t(`${IV}advisorDesc`)}</p>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:gap-6">
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                {t(`${IV}advisorBullet1`)}
-              </div>
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <Check className="h-4 w-4 shrink-0 text-green-600" aria-hidden />
-                {t(`${IV}advisorBullet2`)}
+          {editorOpen ? (
+            <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-700">
+              <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-4">
+                {riskOptions.map((level) => (
+                  <button
+                    key={level.key}
+                    type="button"
+                    onClick={() => {
+                      updateField("riskLevel", level.key);
+                      setEditorOpen(false);
+                      setCustomAllocations(null);
+                    }}
+                    className={`rounded-xl border-2 p-3 text-center transition-all ${
+                      activeRisk === level.key
+                        ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/40"
+                        : "border-gray-200 bg-white hover:border-gray-300 dark:border-gray-600 dark:bg-gray-950 dark:hover:border-gray-500"
+                    }`}
+                  >
+                    <p
+                      className={activeRisk === level.key ? "text-blue-700 dark:text-blue-200" : "text-gray-900 dark:text-gray-50"}
+                      style={{ fontWeight: 600, fontSize: "0.85rem" }}
+                    >
+                      {level.label}
+                    </p>
+                    <p className="mt-0.5 text-gray-500 dark:text-gray-400" style={{ fontSize: "0.72rem" }}>
+                      {level.sub}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
+          ) : null}
+        </div>
+
+        <div className="grid gap-4" style={{ gridTemplateColumns: "60% 40%" }}>
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
+            <div className="mb-4 flex items-start justify-between gap-6">
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="rounded-md bg-blue-100 px-2.5 py-1 dark:bg-blue-950/60">
+                    <p
+                      className="text-blue-700 dark:text-blue-300"
+                      style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
+                    >
+                      {t(`${IV}recommendedBadge`)}
+                    </p>
+                  </div>
+                </div>
+                <h3 className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1.1rem", fontWeight: 700 }}>
+                  {t(`${IV}planDefaultTitle`)}
+                </h3>
+                <p className="mt-1 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.8rem" }}>
+                  {t(`${IV}planDefaultDesc`)}
+                </p>
+              </div>
+
+              <div className="shrink-0 space-y-1.5 rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-600 dark:text-gray-400" style={{ fontSize: "0.75rem" }}>
+                    {t(`${IV}metricReturn`)}
+                  </span>
+                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                    {expectedReturnLabel}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-600 dark:text-gray-400" style={{ fontSize: "0.75rem" }}>
+                    {t(`${IV}metricRisk`)}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                      {riskProfileWord}
+                    </span>
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <span
+                          key={i}
+                          className={`h-1.5 w-1.5 rounded-full ${i < filledDots ? "bg-gray-900 dark:bg-gray-100" : "bg-gray-200 dark:bg-gray-600"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-gray-600 dark:text-gray-400" style={{ fontSize: "0.75rem" }}>
+                    {t(`${IV}metricTimeline`)}
+                  </span>
+                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                    {timelineLabel}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+              <div className="space-y-2.5">
+                {currentAllocation.map((a) => (
+                  <div key={a.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: a.color }} />
+                      <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.8rem" }}>
+                        {translateAllocName(t, a.name)}
+                      </span>
+                    </div>
+                    <span className="tabular-nums text-gray-900 dark:text-gray-50" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                      {a.value}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-3 dark:border-blue-900/50 dark:bg-blue-950/35">
+              <p className="mb-1 text-blue-900 dark:text-blue-100" style={{ fontSize: "0.78rem", fontWeight: 600 }}>
+                {t(`${IV}whyTitle`)}
+              </p>
+              <p className="text-blue-800 dark:text-blue-200/95" style={{ fontSize: "0.75rem", lineHeight: 1.5 }}>
+                {t(`${IV}${WHY_KEYS[activeRisk]}`)}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleContinueRecommended}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-white transition-all hover:bg-blue-700 active:scale-[0.98]"
+              style={{ fontSize: "0.85rem", fontWeight: 600 }}
+            >
+              {t(`${IV}continueRecommended`)} <ArrowRight className="h-4 w-4" aria-hidden />
+            </button>
+          </div>
+
+          <div className="flex flex-col rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6 shadow-sm dark:border-purple-800/60 dark:from-purple-950/40 dark:via-gray-900 dark:to-blue-950/40">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-500">
+                <Settings className="h-5 w-5 text-white" aria-hidden />
+              </div>
+              <div className="rounded-md border border-purple-200 bg-gradient-to-r from-purple-100 to-blue-100 px-2.5 py-1 dark:border-purple-800/60 dark:from-purple-900/50 dark:to-blue-900/50">
+                <p
+                  className="text-purple-700 dark:text-purple-200"
+                  style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
+                >
+                  {t(`${IV}advancedUser`)}
+                </p>
+              </div>
+            </div>
+
+            <h3 className="mb-2 text-gray-900 dark:text-gray-50" style={{ fontSize: "1rem", fontWeight: 700 }}>
+              {t(`${IV}customizeTitle`)}
+            </h3>
+            <p className="mb-3 text-gray-700 dark:text-gray-300" style={{ fontSize: "0.82rem", lineHeight: 1.6 }}>
+              {t(`${IV}customizeDesc`)}
+            </p>
+
+            <p className="mb-4 flex-1 text-gray-800 dark:text-gray-200" style={{ fontSize: "0.82rem", lineHeight: 1.5, fontWeight: 500 }}>
+              {t(`${IV}customizeBestFor`)}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowBuildModal(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-purple-300 px-6 py-2.5 text-purple-700 transition-all hover:border-purple-400 hover:bg-purple-50 active:scale-[0.98] dark:border-purple-600 dark:text-purple-200 dark:hover:border-purple-500 dark:hover:bg-purple-950/40"
+              style={{ fontSize: "0.85rem", fontWeight: 600 }}
+            >
+              {customAllocations ? t(`${IV}editPortfolioCta`) : t(`${IV}customizeCta`)}{" "}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </button>
           </div>
         </div>
-        <a href={ADVISOR_CONTACT_HREF} className="btn btn-outline shrink-0 gap-2 self-start sm:self-center">
-          {t(`${IV}connectNow`)} <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-        </a>
+
+        <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 shadow-sm dark:border-amber-900/50 dark:from-amber-950/35 dark:via-orange-950/30 dark:to-yellow-950/25">
+          <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center gap-2">
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 dark:border-amber-800/50 dark:bg-amber-950/40">
+                <p
+                  className="text-amber-700 dark:text-amber-200"
+                  style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
+                >
+                  {t(`${IV}expertHelp`)}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
+                <Phone className="h-6 w-6 text-white" aria-hidden />
+              </div>
+            </div>
+            <div className="flex flex-1 items-center justify-between gap-6">
+              <div>
+                <h3 className="mb-2 text-gray-900 dark:text-gray-50" style={{ fontSize: "1.1rem", fontWeight: 700 }}>
+                  {t(`${IV}advisorTitle`)}
+                </h3>
+                <p className="mb-3 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.85rem", lineHeight: 1.6 }}>
+                  {t(`${IV}advisorDesc`)}
+                </p>
+                <div className="flex gap-6">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden />
+                    <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.75rem" }}>
+                      {t(`${IV}advisorBullet1`)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden />
+                    <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.75rem" }}>
+                      {t(`${IV}advisorBullet2`)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <a
+                href={ADVISOR_CONTACT_HREF}
+                className="flex shrink-0 items-center gap-2 rounded-xl border-2 border-amber-500 px-6 py-2.5 text-amber-700 transition-all hover:bg-amber-50 dark:border-amber-600 dark:text-amber-200 dark:hover:bg-amber-950/40"
+                style={{ fontSize: "0.85rem", fontWeight: 500 }}
+              >
+                {t(`${IV}connectNow`)} <ArrowRight className="h-4 w-4" aria-hidden />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div className="pb-2 pt-1" />
       </div>
 
-      {/* Build Portfolio Modal */}
-      <BuildPortfolioModal
-        isOpen={showBuildModal}
-        onClose={() => setShowBuildModal(false)}
-        defaultFunds={defaultFunds}
-        activeSources={activeSources}
-        inactiveSources={inactiveSources}
-        contributionSources={contributionSources}
-        monthlyTotal={monthlyTotal}
-        onSave={handleSaveCustom}
-      />
+      {showBuildModal ? (
+        <BuildPortfolioModal
+          wizardHasCustomPortfolio={customAllocations != null}
+          onClose={() => setShowBuildModal(false)}
+          defaultFunds={defaultFunds}
+          activeSources={activeSources}
+          inactiveSources={inactiveSources}
+          contributionSources={contributionSources}
+          monthlyTotal={monthlyTotal}
+          onSave={handleSaveCustom}
+        />
+      ) : null}
     </div>
   );
 }

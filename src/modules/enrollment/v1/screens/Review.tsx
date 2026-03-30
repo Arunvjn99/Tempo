@@ -13,7 +13,6 @@ import {
 import { pathForWizardStep } from "../flow/v1WizardPaths";
 import type { RiskLevel } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
-
 const R = "enrollment.v1.review.";
 const INV = "enrollment.v1.investment.";
 
@@ -35,10 +34,8 @@ export function Review() {
   const goToStep = useEnrollmentStore((s) => s.goToStep);
 
   const yearsToRetirement = data.retirementAge - data.currentAge;
-  const matchPercent = Math.min(data.contribution, 6);
-  const annualContribution = Math.round((data.salary * data.contribution) / 100);
-  const employerContribution = Math.round((data.salary * matchPercent) / 100);
-  const totalAnnual = annualContribution + employerContribution;
+  const annualContribution = Math.round(data.monthlyContribution * 12);
+  const employerContribution = Math.round(data.employerMatch * 12);
 
   const growthRates: Record<RiskLevel, number> = {
     conservative: 0.045,
@@ -49,10 +46,7 @@ export function Review() {
   const rl = data.riskLevel ?? "balanced";
   const growthRate = growthRates[rl] ?? 0.068;
 
-  let projectedBalance = data.currentSavings;
-  for (let i = 0; i < yearsToRetirement; i++) {
-    projectedBalance = (projectedBalance + totalAnnual) * (1 + growthRate);
-  }
+  const projectedBalance = data.projectedBalance;
 
   const formatCurrency = (val: number) => {
     if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(1)}M`;
@@ -113,38 +107,44 @@ export function Review() {
       : t(`${R}confidenceOnTrack`, { age: data.retirementAge });
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5">
+    <div className="w-full min-w-0 space-y-4 text-left">
       <div>
-        <h1 className="text-xl font-semibold text-foreground md:text-2xl">{t(`${R}pageTitle`)}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t(`${R}pageSubtitle`)}</p>
+        <h1 className="text-2xl font-semibold leading-tight text-foreground">{t(`${R}pageTitle`)}</h1>
+        <p className="mt-1 text-sm leading-snug text-muted-foreground">{t(`${R}pageSubtitle`)}</p>
       </div>
 
-      <div className="review-hero">
-        <p className="review-hero__muted--caps">{t(`${R}heroProjectedLabel`)}</p>
-        <p className="mt-1 text-4xl font-bold tabular-nums">{formatCurrency(projectedBalance)}</p>
-        <p className="review-hero__muted mt-0.5">{t(`${R}heroDisclaimer`, { years: yearsToRetirement })}</p>
+      <div className="rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-md">
+        <p className="text-[0.7rem] font-medium uppercase tracking-wider text-blue-200">
+          {t(`${R}heroProjectedLabel`)}
+        </p>
+        <p className="mt-0.5 text-3xl font-bold tabular-nums leading-tight tracking-tight sm:text-[2rem]">
+          {formatCurrency(projectedBalance)}
+        </p>
+        <p className="mt-1 text-xs leading-snug text-blue-200">
+          {t(`${R}heroDisclaimer`, { years: yearsToRetirement })}
+        </p>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Metric
-            icon={<DollarSign className="review-hero__icon h-3 w-3" aria-hidden />}
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+          <ReviewHeroMetric
+            icon={<DollarSign className="h-3 w-3 text-blue-200" aria-hidden />}
             label={t(`${R}metricYourContribution`)}
             value={`$${annualContribution.toLocaleString()}`}
             sub={t(`${R}perYear`)}
           />
-          <Metric
-            icon={<Briefcase className="review-hero__icon h-3 w-3" aria-hidden />}
+          <ReviewHeroMetric
+            icon={<Briefcase className="h-3 w-3 text-blue-200" aria-hidden />}
             label={t(`${R}metricEmployerMatch`)}
             value={`$${employerContribution.toLocaleString()}`}
             sub={t(`${R}perYear`)}
           />
-          <Metric
-            icon={<TrendingUp className="review-hero__icon h-3 w-3" aria-hidden />}
+          <ReviewHeroMetric
+            icon={<TrendingUp className="h-3 w-3 text-blue-200" aria-hidden />}
             label={t(`${R}metricExpectedGrowth`)}
             value={`~${(growthRate * 100).toFixed(1)}%`}
             sub={t(`${R}annualGrowthSub`, { risk: t(riskLabelKey(rl)).toLowerCase() })}
           />
-          <Metric
-            icon={<Clock className="review-hero__icon h-3 w-3" aria-hidden />}
+          <ReviewHeroMetric
+            icon={<Clock className="h-3 w-3 text-blue-200" aria-hidden />}
             label={t(`${R}metricTimeHorizon`)}
             value={t(`${R}yearsCount`, { count: yearsToRetirement })}
             sub={t(`${R}retireAtAge`, { age: data.retirementAge })}
@@ -153,8 +153,8 @@ export function Review() {
       </div>
 
       <div>
-        <p className="mb-3 text-sm font-semibold text-foreground">{t(`${R}planSetupTitle`)}</p>
-        <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
+        <p className="mb-2 text-sm font-semibold text-foreground">{t(`${R}planSetupTitle`)}</p>
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
           {planSections.map((section) => (
             <div key={section.label} className="card-setup-compact flex flex-col justify-between">
               <div>
@@ -201,7 +201,7 @@ export function Review() {
   );
 }
 
-function Metric({
+function ReviewHeroMetric({
   icon,
   label,
   value,
@@ -213,13 +213,13 @@ function Metric({
   sub: string;
 }) {
   return (
-    <div className="review-hero__metric">
+    <div className="rounded-xl bg-white/10 px-3.5 py-3 backdrop-blur-sm">
       <div className="mb-1 flex items-center gap-1.5">
         {icon}
-        <span className="review-hero__metric-label">{label}</span>
+        <span className="text-[0.62rem] font-medium text-blue-200">{label}</span>
       </div>
-      <p className="text-lg font-bold">{value}</p>
-      <p className="review-hero__muted">{sub}</p>
+      <p className="text-[1.05rem] font-bold tabular-nums">{value}</p>
+      <p className="text-[0.6rem] text-blue-200">{sub}</p>
     </div>
   );
 }
