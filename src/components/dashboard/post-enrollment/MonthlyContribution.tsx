@@ -56,11 +56,11 @@ export function MonthlyContribution({ userMonthly, employerMonthly, userPercent,
 
   return (
     <section className={cn(pePanel, className)}>
-      <h2 className="font-dashboard-heading text-lg font-semibold text-[var(--color-text)] sm:text-xl">
+      <h2 className="font-dashboard-heading text-base font-semibold text-gray-900">
         {t("dashboard.postEnrollment.monthlyContribution")}
       </h2>
 
-      <div className="mt-8 space-y-8">
+      <div className="mt-4 space-y-5">
         <Row
           label={t("dashboard.postEnrollment.peContribYou")}
           amount={money(userMonthly)}

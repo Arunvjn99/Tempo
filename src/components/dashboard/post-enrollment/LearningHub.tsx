@@ -15,9 +15,9 @@ export function LearningHub({ title, description, href, className }: Props) {
 
   return (
     <section className={cn(pePanel, "overflow-hidden", className)}>
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-10">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
         <div
-          className="flex h-28 w-full shrink-0 items-center justify-center rounded-2xl sm:h-32 lg:w-44"
+          className="flex h-24 w-full shrink-0 items-center justify-center rounded-lg sm:h-28 lg:w-36"
           style={{
             background:
               "linear-gradient(145deg, color-mix(in srgb, var(--color-primary) 14%, var(--color-background-secondary)), var(--color-background-secondary))",
@@ -26,8 +26,8 @@ export function LearningHub({ title, description, href, className }: Props) {
         >
           <BookOpen className="h-14 w-14 text-[var(--color-primary)] opacity-90" strokeWidth={1.15} />
         </div>
-        <div className="min-w-0 flex-1 space-y-3">
-          <h2 className="font-dashboard-heading text-lg font-semibold text-[var(--color-text)] sm:text-xl">{title}</h2>
+        <div className="min-w-0 flex-1 space-y-2">
+          <h2 className="font-dashboard-heading text-base font-semibold text-gray-900">{title}</h2>
           <p className="font-dashboard-body text-sm leading-relaxed text-[var(--color-text-secondary)]">{description}</p>
           <a
             href={href}

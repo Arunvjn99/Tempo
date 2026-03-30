@@ -28,15 +28,9 @@ export function ActiveLoanCard({ loan, onManage, className }: Props) {
   const paidRatio = loan.originalPrincipal > 0 ? loan.paidPrincipal / loan.originalPrincipal : 0;
 
   return (
-    <section
-      className={cn(pePanelTight, className)}
-      style={{
-        background:
-          "linear-gradient(180deg, var(--color-background) 0%, color-mix(in srgb, var(--color-background-secondary) 40%, var(--color-background)) 100%)",
-      }}
-    >
+    <section className={cn(pePanelTight, className)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <h2 className="font-dashboard-heading text-lg font-semibold text-[var(--color-text)]">
+        <h2 className="font-dashboard-heading text-base font-semibold text-gray-900">
           {t("dashboard.postEnrollment.peActiveLoanTitle")}
         </h2>
         <span
@@ -51,7 +45,7 @@ export function ActiveLoanCard({ loan, onManage, className }: Props) {
       </div>
       <p className="font-dashboard-body mt-2 text-sm text-[var(--color-text-secondary)]">{loan.productName}</p>
 
-      <dl className="mt-6 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+      <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="font-dashboard-body text-[var(--color-text-secondary)]">
             {t("dashboard.postEnrollment.peLoanRemaining")}
@@ -70,8 +64,8 @@ export function ActiveLoanCard({ loan, onManage, className }: Props) {
         </div>
       </dl>
 
-      <div className="mt-6">
-        <div className="mb-2 flex justify-between text-xs text-[var(--color-text-secondary)]">
+      <div className="mt-4">
+        <div className="mb-1.5 flex justify-between text-xs text-[var(--color-text-secondary)]">
           <span>{t("dashboard.postEnrollment.peLoanPaid")}</span>
           <span className="tabular-nums">{Math.round(paidRatio * 100)}%</span>
         </div>
@@ -93,7 +87,7 @@ export function ActiveLoanCard({ loan, onManage, className }: Props) {
       <button
         type="button"
         onClick={onManage}
-        className="font-dashboard-body mt-6 w-full rounded-xl bg-[var(--color-primary)] py-3 text-sm font-semibold text-[var(--color-text-on-primary)] shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
+        className="font-dashboard-body mt-4 w-full rounded-lg bg-[var(--color-primary)] py-2.5 text-sm font-semibold text-[var(--color-text-on-primary)] shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2"
       >
         {t("dashboard.postEnrollment.peLoanManage")}
       </button>

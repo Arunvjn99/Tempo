@@ -109,7 +109,7 @@ export function ContributionSource() {
   const total = sources.preTax + sources.roth + sources.afterTax;
 
   return (
-    <div className="w-full min-w-0 space-y-4">
+    <div className="w-full min-w-0 space-y-6">
       <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 text-left">
           <h1 className="text-2xl font-semibold leading-tight text-foreground">{t(`${A}title`)}</h1>
@@ -126,8 +126,8 @@ export function ContributionSource() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,35%)_minmax(0,1fr)] lg:items-start">
-        <div className="card card--pad-sm flex flex-col space-y-3 rounded-xl border border-border bg-card p-5 opacity-90 shadow-sm">
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,35%)_minmax(0,1fr)] lg:items-start">
+        <div className="flex flex-col space-y-3 rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
           <div>
             <div className="mb-2 flex items-center gap-2">
               <div className="rounded-md bg-secondary px-2.5 py-1">
@@ -173,7 +173,7 @@ export function ContributionSource() {
           </button>
         </div>
 
-        <div className="card card-border-accent flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm lg:flex-row">
+        <div className="flex flex-col gap-6 rounded-2xl border border-gray-200 bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-gray-700 dark:bg-gray-900 lg:flex-row">
           <div className="min-w-0 flex-1 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -218,7 +218,7 @@ export function ContributionSource() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <SliderRow
                 label={t(`${A}preTaxLabel`)}
                 sub={t(`${A}preTaxSub`)}
@@ -281,38 +281,53 @@ export function ContributionSource() {
               </button>
             )}
 
-            <div className="enroll-recommended-strip">
-              <div className="mb-2 flex items-start justify-between">
+            {/* ── Recommended Allocation — standalone high-impact module ── */}
+            <div className="mt-4 space-y-4 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-blue-900/50 dark:from-blue-950/30 dark:to-gray-900">
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" aria-hidden />
-                  <p className="text-sm font-bold text-foreground">{t(`${A}recommendedForYou`)}</p>
+                  <Sparkles className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
+                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t(`${A}recommendedForYou`)}</p>
                 </div>
-                <div className="badge-score">{t(`${A}scoreLabel`)}</div>
+                <div className="rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-extrabold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  {t(`${A}scoreLabel`)}
+                </div>
               </div>
-              <p className="text-sm leading-snug text-foreground/90">
-                {t(`${A}recommendedMix`, { preTax: recommended.preTax, roth: recommended.roth })}
-              </p>
-            </div>
 
-            <div className="tip-callout">
-              <div className="flex items-start gap-2.5">
-                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <p className="tip-callout__text">
-                  {data.currentAge > 50 ? t(`${A}tipPreTaxBetter`) : t(`${A}tipRothBetter`)}
+              <div className="space-y-2">
+                <p className="text-sm font-medium leading-snug text-gray-800 dark:text-gray-200">
+                  {t(`${A}recommendedMix`, { preTax: recommended.preTax, roth: recommended.roth })}
                 </p>
+                <div className="flex items-start gap-2">
+                  <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500 dark:text-blue-400" aria-hidden />
+                  <p className="text-xs font-medium leading-snug text-blue-700/80 dark:text-blue-300/80">
+                    {data.currentAge > 50 ? t(`${A}tipPreTaxBetter`) : t(`${A}tipRothBetter`)}
+                  </p>
+                </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setSources({ ...recommended })}
                 disabled={Math.abs(total - 100) > 0.001}
-                className="btn btn-outline mt-3 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-full items-center justify-center rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-600"
               >
                 {t(`${A}applyRecommendedCta`)}
               </button>
             </div>
+
+            {/* ── Secondary: keep custom allocation — clearly outside recommendation block ── */}
+            <div className="mt-4">
+              <button
+                type="button"
+                disabled={Math.abs(total - 100) > 0.001}
+                className="flex h-10 w-full items-center justify-center rounded-lg border border-gray-300 bg-transparent text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800/40"
+              >
+                {t(`${A}keepCustomAllocation`)}
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-col justify-between border-t border-border pt-5 lg:w-[32%] lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+          <div className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-gray-700 dark:bg-gray-900 lg:w-[32%] lg:self-start">
             <div className="space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">{t(`${A}yourMonthlyImpact`)}</h4>
               <div>
@@ -345,9 +360,9 @@ export function ContributionSource() {
         <p className="text-center text-sm font-medium text-destructive">{t(`${A}allocMustTotal`, { total })}</p>
       ) : null}
 
-      <div className="space-y-3 opacity-95">
-        <h2 className="text-xl font-bold text-foreground">{t(`${A}understandingTitle`)}</h2>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{t(`${A}understandingTitle`)}</h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ExplainCard
             title={t(`${A}preTaxLabel`)}
             icon={<TrendingUp className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
@@ -461,6 +476,12 @@ function SliderRow({
   );
 }
 
+const EXPLAIN_ACCENT: Record<"pretax" | "roth" | "aftertax", { icon: string; check: string }> = {
+  pretax: { icon: "bg-blue-600", check: "text-blue-600" },
+  roth: { icon: "bg-purple-600", check: "text-purple-600" },
+  aftertax: { icon: "bg-orange-500", check: "text-orange-500" },
+};
+
 function ExplainCard({
   title,
   icon,
@@ -474,24 +495,23 @@ function ExplainCard({
   items: string[];
   className?: string;
 }) {
+  const accent = EXPLAIN_ACCENT[variant];
   return (
     <div
       className={cn(
-        "explain-card",
-        variant === "roth" && "explain-card--roth",
-        variant === "aftertax" && "explain-card--aftertax",
+        "rounded-xl border border-gray-200 bg-white p-4 transition-all hover:-translate-y-[1px] hover:shadow-md dark:border-gray-700 dark:bg-gray-900",
         className,
       )}
     >
       <div className="mb-3 flex items-center gap-2.5">
-        <div className="explain-card__icon">{icon}</div>
-        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-white", accent.icon)}>{icon}</div>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">{title}</h3>
       </div>
       <div className="space-y-1.5">
         {items.map((line) => (
           <div key={line} className="flex items-start gap-2">
-            <Check className="explain-card__check" aria-hidden />
-            <p className="text-sm text-foreground/90">{line}</p>
+            <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", accent.check)} aria-hidden />
+            <p className="text-sm text-gray-700 dark:text-gray-300">{line}</p>
           </div>
         ))}
       </div>

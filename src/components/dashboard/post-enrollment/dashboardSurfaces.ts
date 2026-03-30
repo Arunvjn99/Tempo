@@ -1,7 +1,7 @@
-/** Shared post-enrollment dashboard surfaces — soft elevation, no sharp borders (token-backed). */
+/** Shared post-enrollment dashboard surfaces — structured, enterprise-grade (Figma-matched). */
 export const pePanel =
-  "rounded-2xl bg-[var(--color-background)] p-6 shadow-sm sm:p-8 sm:rounded-3xl";
+  "rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6";
 
-export const pePanelTight = "rounded-2xl bg-[var(--color-background)] p-5 shadow-sm sm:p-6 sm:rounded-3xl";
+export const pePanelTight = "rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5";
 
-export const pePageBg = "bg-[var(--ds-page-bg)]";
+export const pePageBg = "bg-[#F5F7FA]";

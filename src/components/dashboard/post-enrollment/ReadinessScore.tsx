@@ -19,25 +19,17 @@ export function ReadinessScore({ score, labelKey, onLaunchSimulator, className }
   ];
 
   return (
-    <section
-      className={cn(
-        pePanel,
-        "relative overflow-hidden",
-        className,
-      )}
-      style={{
-        background:
-          "linear-gradient(165deg, color-mix(in srgb, var(--color-primary) 7%, var(--color-background)) 0%, var(--color-background) 48%, var(--color-background) 100%)",
-      }}
-    >
-      <p className="font-dashboard-body text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
-        {t("dashboard.postEnrollment.peReadinessTitle")}
-      </p>
-      <p className="font-dashboard-body mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+    <section className={cn(pePanel, "relative", className)}>
+      <div className="flex items-center justify-between">
+        <p className="font-dashboard-body text-base font-semibold text-gray-900">
+          {t("dashboard.postEnrollment.peReadinessTitle")}
+        </p>
+      </div>
+      <p className="font-dashboard-body mt-1 text-xs text-gray-500">
         {t("dashboard.postEnrollment.peReadinessSubtitle")}
       </p>
 
-      <div className="relative mx-auto mt-8 h-[220px] w-[220px] shrink-0 sm:h-[240px] sm:w-[240px]">
+      <div className="relative mx-auto mt-5 h-[180px] w-[180px] shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -53,22 +45,29 @@ export function ReadinessScore({ score, labelKey, onLaunchSimulator, className }
               isAnimationActive
             >
               <Cell fill="var(--color-primary)" />
-              <Cell fill="var(--ds-readiness-track)" />
+              <Cell fill="#E5E7EB" />
             </Pie>
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-          <p className="font-dashboard-heading text-4xl font-bold tabular-nums text-[var(--color-text)] sm:text-5xl">{clamped}</p>
-          <p className="font-dashboard-body mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide text-[var(--color-success)]">
+          <p className="font-dashboard-heading text-4xl font-bold tabular-nums text-gray-900">{clamped}</p>
+          <p className="font-dashboard-body mt-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+            / 100
+          </p>
+          <p className="font-dashboard-body mt-1 text-xs font-semibold text-[var(--color-success)]">
             {t(labelKey)}
           </p>
         </div>
       </div>
 
+      <p className="font-dashboard-body mt-3 text-center text-xs text-gray-500">
+        {t("dashboard.postEnrollment.peReadinessSubtitle")}
+      </p>
+
       <button
         type="button"
         onClick={onLaunchSimulator}
-        className="font-dashboard-body mt-8 w-full rounded-xl bg-[var(--color-primary)] py-3.5 text-sm font-semibold text-[var(--color-text-on-primary)] shadow-sm transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]"
+        className="font-dashboard-body mt-4 w-full rounded-lg border border-gray-900 bg-gray-900 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 focus-visible:ring-offset-2"
       >
         {t("dashboard.postEnrollment.peLaunchSimulator")}
       </button>

@@ -16,13 +16,13 @@ export function NextBestActions({ actions, onAction, className }: Props) {
 
   return (
     <section className={cn(pePanelTight, className)}>
-      <h2 className="font-dashboard-heading text-lg font-semibold text-[var(--color-text)]">
+      <h2 className="font-dashboard-heading text-base font-semibold text-gray-900">
         {t("dashboard.postEnrollment.criticalInsights")}
       </h2>
-      <p className="font-dashboard-body mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+      <p className="font-dashboard-body mt-1 text-xs text-gray-500">
         {t("dashboard.postEnrollment.peNextBestSubtitle")}
       </p>
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-4 space-y-2">
         {sorted.map((action, index) => {
           const required = action.priority === "required";
           const isFirst = index === 0 && required;
@@ -32,50 +32,36 @@ export function NextBestActions({ actions, onAction, className }: Props) {
                 type="button"
                 onClick={() => onAction(action.route)}
                 className={cn(
-                  "group flex w-full items-start gap-3 rounded-2xl p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--ds-page-bg)] sm:p-5",
+                  "group flex w-full items-start gap-3 rounded-lg border p-3.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2",
                   isFirst
-                    ? "shadow-md"
-                    : "bg-[color-mix(in_srgb,var(--color-background-secondary)_55%,var(--color-background)_45%)] shadow-sm hover:shadow-md",
+                    ? "border-amber-200 bg-amber-50 hover:border-amber-300"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm",
                 )}
-                style={
-                  isFirst
-                    ? {
-                        background:
-                          "linear-gradient(135deg, color-mix(in srgb, var(--color-warning) 22%, var(--color-background)), color-mix(in srgb, var(--color-warning) 8%, var(--color-background)))",
-                        boxShadow: "var(--shadow-md)",
-                      }
-                    : undefined
-                }
               >
                 {required ? (
-                  <span
-                    className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--color-warning)]"
-                    style={{
-                      background: "color-mix(in srgb, var(--color-warning) 22%, var(--color-background))",
-                    }}
-                  >
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
                     <AlertCircle className="h-4 w-4" aria-hidden />
                   </span>
                 ) : (
-                  <span className="mt-0.5 w-9 shrink-0" aria-hidden />
+                  <span className="mt-0.5 w-8 shrink-0" aria-hidden />
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-dashboard-heading text-sm font-semibold text-[var(--color-text)] sm:text-base">
+                    <span className="font-dashboard-heading text-sm font-semibold text-gray-900">
                       {t(action.title)}
                     </span>
                     {required && (
-                      <span className="rounded-md bg-[color-mix(in_srgb,var(--color-warning)_20%,transparent)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-warning)]">
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
                         {t("dashboard.postEnrollment.peRequiredBadge")}
                       </span>
                     )}
                   </span>
-                  <span className="font-dashboard-body mt-1.5 block text-xs leading-relaxed text-[var(--color-text-secondary)] sm:text-sm">
+                  <span className="font-dashboard-body mt-1 block text-xs leading-snug text-gray-500">
                     {t(action.description)}
                   </span>
                 </span>
                 <ChevronRight
-                  className="mt-1 h-4 w-4 shrink-0 text-[var(--color-text-tertiary)] transition group-hover:translate-x-0.5 group-hover:text-[var(--color-primary)]"
+                  className="mt-0.5 h-4 w-4 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-[var(--color-primary)]"
                   aria-hidden
                 />
               </button>

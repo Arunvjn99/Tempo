@@ -22,7 +22,7 @@ export function PortfolioAllocation({ portfolio, onViewDetails, className }: Pro
   return (
     <section className={cn(pePanel, className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="font-dashboard-heading text-lg font-semibold text-[var(--color-text)] sm:text-xl">
+        <h2 className="font-dashboard-heading text-base font-semibold text-gray-900">
           {t("dashboard.postEnrollment.portfolioHealth")}
         </h2>
         {onViewDetails && (
@@ -37,7 +37,7 @@ export function PortfolioAllocation({ portfolio, onViewDetails, className }: Pro
       </div>
 
       <div
-        className="mt-8 flex h-3 w-full overflow-hidden rounded-full shadow-inner"
+        className="mt-4 flex h-2.5 w-full overflow-hidden rounded-full"
         style={{
           boxShadow: "inset 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent)",
         }}
@@ -56,7 +56,7 @@ export function PortfolioAllocation({ portfolio, onViewDetails, className }: Pro
         ))}
       </div>
 
-      <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
         {SEGMENTS.map(({ key, labelKey, colorVar }) => (
           <li key={key} className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: colorVar }} aria-hidden />

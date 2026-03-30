@@ -95,8 +95,8 @@ export const PostEnrollmentDashboard = () => {
 
   return (
     <DashboardLayout header={<DashboardHeader />} fullWidthChildren>
-      <div className="post-enrollment-dashboard min-h-full bg-[var(--ds-page-bg)] pb-24 font-dashboard-body text-[var(--color-text)]">
-        <main className="mx-auto max-w-[1440px] space-y-10 px-4 py-8 sm:px-6 lg:space-y-12 lg:px-8 lg:py-10">
+      <div className="post-enrollment-dashboard min-h-full bg-[#F5F7FA] pb-16 font-dashboard-body text-[var(--color-text)]">
+        <main className="mx-auto max-w-[1280px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
           <PostEnrollmentDashboardHeader
             userName={displayName}
             balance={data.balance}
@@ -106,8 +106,8 @@ export const PostEnrollmentDashboard = () => {
           />
 
           {/* Asymmetric primary / secondary columns (~70% / ~30%) */}
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)] lg:gap-10 xl:gap-12">
-            <div className="flex min-w-0 flex-col gap-10 lg:gap-12">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+            <div className="flex min-w-0 flex-col gap-6">
               <QuickActions actions={quickActions} />
               <MonthlyContribution
                 userMonthly={data.contributions.userMonthly}
@@ -125,7 +125,7 @@ export const PostEnrollmentDashboard = () => {
               <RecentActivity items={data.activities} />
             </div>
 
-            <aside className="flex min-w-0 flex-col gap-10 lg:gap-12">
+            <aside className="flex min-w-0 flex-col gap-6">
               <ReadinessScore
                 score={data.readinessScore}
                 labelKey={data.readinessLabelKey}

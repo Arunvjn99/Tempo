@@ -49,7 +49,7 @@ export function RecentActivity({ items, className }: Props) {
   return (
     <section className={cn(pePanel, className)}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-dashboard-heading text-lg font-semibold text-[var(--color-text)] sm:text-xl">
+        <h2 className="font-dashboard-heading text-base font-semibold text-gray-900">
           {t("dashboard.postEnrollment.recentTransactions")}
         </h2>
         <button
@@ -59,20 +59,20 @@ export function RecentActivity({ items, className }: Props) {
           {t("dashboard.postEnrollment.viewAll")}
         </button>
       </div>
-      <ul className="mt-6">
+      <ul className="mt-4">
         {items.map((item, i) => {
           const Icon = iconFor(item.type);
           const positive = item.amount != null && (item.amountIsPositive ?? item.amount >= 0);
           return (
             <li
               key={item.id}
-              className="flex gap-4 py-4 first:pt-0 last:pb-0"
+              className="flex gap-3 py-3 first:pt-0 last:pb-0"
               style={{
                 borderTop: i === 0 ? undefined : `1px solid ${divider}`,
               }}
             >
               <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                 style={{
                   background: "color-mix(in srgb, var(--color-primary) 10%, var(--color-background-secondary))",
                   color: "var(--color-primary)",

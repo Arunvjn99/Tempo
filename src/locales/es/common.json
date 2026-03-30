@@ -1569,6 +1569,7 @@
         ],
         "badgeMostCommon": "Opción más habitual",
         "selectPlanAria": "Seleccionar {{plan}}",
+        "selectedLabel": "Seleccionado",
         "ctaTraditional": "Continuar con 401(k) tradicional",
         "ctaRoth": "Elegir 401(k) Roth",
         "ctaContinueSingle": "Continuar a aportaciones",

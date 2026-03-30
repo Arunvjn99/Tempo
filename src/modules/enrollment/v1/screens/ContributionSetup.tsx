@@ -120,7 +120,9 @@ export function ContributionSetup() {
   };
 
   const cardShell =
-    "min-w-0 rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_10px_28px_-8px_rgba(15,23,42,0.1)] dark:border-gray-700 dark:bg-gray-900 dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.45)]";
+    "min-w-0 rounded-2xl border border-gray-200/60 bg-white p-6 " +
+    "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_6px_16px_rgba(0,0,0,0.06)] " +
+    "dark:border-gray-700 dark:bg-gray-900 dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.45)]";
 
   return (
     <div className="min-w-0 w-full space-y-6 bg-transparent">
@@ -133,7 +135,7 @@ export function ContributionSetup() {
 
       <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-start">
           {/* Left: single settings card */}
-          <div className={cn(cardShell, "flex min-w-0 flex-col gap-5")}>
+          <div className={cn(cardShell, "flex min-w-0 flex-col gap-5 shadow-sm transition-shadow hover:shadow-md")}>
             <div className="rounded-xl bg-blue-50 px-4 py-3.5 dark:bg-blue-950/35">
               <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
                 {t(`${S}monthlyPaycheck`)}
@@ -236,17 +238,17 @@ export function ContributionSetup() {
               </div>
             </div>
 
-            <div className="pt-0.5">
+            <div className="space-y-2 pt-1">
               <input
                 type="range"
                 min={1}
                 max={25}
                 value={percent}
                 onChange={(e) => updateField("contribution", Number(e.target.value))}
-                className="contribution-range h-2.5 w-full min-w-0"
+                className="contribution-range h-3 w-full min-w-0"
                 style={{ "--range-pct": rangePct } as CSSProperties}
               />
-              <div className="mt-2 flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
+              <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
                 <span>{t(`${S}rangeMin`)}</span>
                 <span>{t(`${S}rangeMax`)}</span>
               </div>
@@ -266,7 +268,14 @@ export function ContributionSetup() {
           </div>
 
           {/* Right: projection + chart + compare — one card */}
-          <div className={cn(cardShell, "flex min-w-0 flex-col gap-5")}>
+          <div
+            className={cn(
+              cardShell,
+              "flex min-w-0 flex-col gap-5",
+              "shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-gradient-to-b from-white to-blue-50/30",
+              "dark:from-gray-900 dark:to-gray-900",
+            )}
+          >
             <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{t(`${S}projectionTitle`)}</h2>
@@ -410,7 +419,7 @@ export function ContributionSetup() {
               </div>
             </div>
 
-            <div className="mt-1 rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-600 dark:bg-gray-950/50">
+            <div className="mt-1 rounded-xl border border-gray-200/60 bg-white px-4 py-3.5 shadow-sm dark:border-gray-600 dark:bg-gray-950/50">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                 <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-gray-700 dark:text-gray-300">
                   {t(`${S}compareScenarios`)}
