@@ -32,6 +32,15 @@ function formatAnnualShort(n: number): string {
 
 const I = "enrollment.v1.autoIncreaseInsights.";
 
+/** Treat near-equality as at cap (floats / slider vs store). */
+function isAtOrAboveMax(current: number, cap: number) {
+  return current >= cap - 1e-6;
+}
+
+function rowIsCappedAtMax(percent: number, cap: number) {
+  return percent >= cap - 0.051;
+}
+
 function buildTimelineRows(
   currentPercent: number,
   increasePerCycle: number,
@@ -40,7 +49,20 @@ function buildTimelineRows(
   salary: number,
   t: TFunction,
 ): AutoIncreaseTimelineRow[] {
-  if (increasePerCycle <= 0 || currentPercent >= maxContribution) return [];
+  if (increasePerCycle <= 0) return [];
+  /* Already at cap: still show one “now” row so the right rail isn’t empty (e.g. 10% current / 10% max). */
+  if (isAtOrAboveMax(currentPercent, maxContribution)) {
+    const pct = Math.min(currentPercent, maxContribution);
+    return [
+      {
+        yearKey: 0,
+        yearLabel: t(`${I}timelineNow`),
+        dateStr: formatIncrementDate(incrementCycle, 0),
+        percent: Math.round(pct * 10) / 10,
+        annual: Math.round((salary * pct) / 100),
+      },
+    ];
+  }
   const out: AutoIncreaseTimelineRow[] = [];
   let pct = currentPercent;
   let yr = 0;
@@ -92,10 +114,13 @@ export function AutoIncreaseInsights({
   const { t } = useTranslation();
   const growthRate = GROWTH[riskLevel ?? "balanced"];
 
+  const cappedForPath = Math.min(currentPercent, maxContribution);
+  const atCap = isAtOrAboveMax(currentPercent, maxContribution);
+
   const yearsToMax =
-    currentPercent >= maxContribution || increasePerCycle <= 0
+    atCap || increasePerCycle <= 0
       ? 0
-      : Math.ceil((maxContribution - currentPercent) / increasePerCycle);
+      : Math.ceil((maxContribution - cappedForPath) / increasePerCycle);
 
   const financialImpact = useAutoIncreaseFinancialImpact({
     currentPercent,
@@ -121,8 +146,8 @@ export function AutoIncreaseInsights({
     [currentPercent, increasePerCycle, maxContribution, incrementCycle, salary, t],
   );
 
-  const showImpact =
-    increasePerCycle > 0 && currentPercent < maxContribution && financialImpact.difference > 0;
+  /* Show comparison whenever an increase is selected; projection hook clamps above-cap current. */
+  const showImpact = increasePerCycle > 0;
 
   return (
     <aside
@@ -131,14 +156,14 @@ export function AutoIncreaseInsights({
     >
       <div className="auto-increase-insights-panel__section">
         <p className="auto-increase-insights-panel__summary">
-          {currentPercent >= maxContribution ? (
+          {atCap ? (
             t(`${I}atMax`)
           ) : increasePerCycle <= 0 ? (
             t(`${I}selectIncrease`)
           ) : (
             <Trans
               i18nKey={`${I}growthSummary`}
-              values={{ from: currentPercent, to: maxContribution, count: yearsToMax }}
+              values={{ from: cappedForPath, to: maxContribution, count: yearsToMax }}
               count={yearsToMax}
               components={{ from: <strong />, to: <strong />, y: <strong /> }}
             />
@@ -168,16 +193,18 @@ export function AutoIncreaseInsights({
               </p>
             </div>
           </div>
-          <div className="auto-increase-insights-banner">
-            <span className="shrink-0 text-base leading-none" style={{ color: "var(--success)" }} aria-hidden>
-              💵
-            </span>
-            <p className="m-0">
-              {t(`${I}bannerBefore`)}
-              <strong>{formatAutoIncreaseCurrency(financialImpact.difference)}</strong>
-              {t(`${I}bannerAfter`)}
-            </p>
-          </div>
+          {financialImpact.difference > 0 ? (
+            <div className="auto-increase-insights-banner">
+              <span className="shrink-0 text-base leading-none" style={{ color: "var(--success)" }} aria-hidden>
+                💵
+              </span>
+              <p className="m-0">
+                {t(`${I}bannerBefore`)}
+                <strong>{formatAutoIncreaseCurrency(financialImpact.difference)}</strong>
+                {t(`${I}bannerAfter`)}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -203,9 +230,9 @@ export function AutoIncreaseInsights({
                     <td>{row.dateStr}</td>
                     <td>
                       <span className="auto-increase-insights-table__pct">{row.percent}%</span>
-                      {row.percent === maxContribution && (
+                      {rowIsCappedAtMax(row.percent, maxContribution) ? (
                         <span className="auto-increase-insights-table__max-pill">{t(`${I}maxPill`)}</span>
-                      )}
+                      ) : null}
                     </td>
                     <td className="auto-increase-insights-table__pct">{formatAnnualShort(row.annual)}</td>
                   </tr>
@@ -213,16 +240,18 @@ export function AutoIncreaseInsights({
               </tbody>
             </table>
           </div>
-          <p className="mt-2.5 border-t border-[var(--border-subtle)] pt-2.5 text-[0.7rem]" style={{ color: "var(--text-secondary)" }}>
-            <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-              {t(`${I}timelineLabel`)}{" "}
-            </span>
-            {t(`${I}timelineFooter`, {
-              count: yearsToMax,
-              from: currentPercent,
-              to: maxContribution,
-            })}
-          </p>
+          {yearsToMax > 0 ? (
+            <p className="mt-2.5 border-t border-[var(--border-subtle)] pt-2.5 text-[0.7rem]" style={{ color: "var(--text-secondary)" }}>
+              <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                {t(`${I}timelineLabel`)}{" "}
+              </span>
+              {t(`${I}timelineFooter`, {
+                count: yearsToMax,
+                from: currentPercent,
+                to: maxContribution,
+              })}
+            </p>
+          ) : null}
         </div>
       )}
     </aside>

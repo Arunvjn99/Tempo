@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Copy,
   Gauge,
   Layers,
   Minus,
@@ -24,7 +23,6 @@ import {
   X,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { getGrowthRate } from "../flow/readinessMetrics";
 import { pathForWizardStep } from "../flow/v1WizardPaths";
 import type { RiskLevel } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
@@ -139,6 +137,20 @@ const RISK_DEF: { key: RiskLevel; labelKey: string; subKey: string }[] = [
   { key: "growth", labelKey: "riskGrowth", subKey: "riskSubGrowth" },
   { key: "aggressive", labelKey: "riskAggressive", subKey: "riskSubAggressive" },
 ];
+
+const RETURN_BAND_KEYS: Record<RiskLevel, string> = {
+  conservative: "returnBandConservative",
+  balanced: "returnBandBalanced",
+  growth: "returnBandGrowth",
+  aggressive: "returnBandAggressive",
+};
+
+const RISK_DISPLAY_KEYS: Record<RiskLevel, string> = {
+  conservative: "riskDisplayLow",
+  balanced: "riskDisplayLow",
+  growth: "riskDisplayModerate",
+  aggressive: "riskDisplayHigh",
+};
 
 const IV = "enrollment.v1.investment.";
 
@@ -433,70 +445,12 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
   );
 }
 
-/* ─── Copy portfolio menu ─── */
-
-function CopyPortfolioMenu({ currentSource, activeSources, contributionSources, onCopy }: {
-  currentSource: SourceKey;
-  activeSources: SourceKey[];
-  contributionSources: { preTax: number; roth: number; afterTax: number };
-  onCopy: (from: SourceKey) => void;
-}) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    if (open) document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
-
-  const others = activeSources.filter((s) => s !== currentSource);
-  if (others.length === 0) return null;
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 rounded-lg py-1 px-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-        style={{ fontSize: "0.75rem", fontWeight: 500 }}
-      >
-        <Copy className="w-3 h-3" /> {t(`${IV}copyFrom`)}
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 w-52 rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-gray-900">
-          {others.map((src) => (
-            <button
-              key={src}
-              type="button"
-              onClick={() => { onCopy(src); setOpen(false); }}
-              className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-            >
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[src] }} />
-                <span className="text-gray-700 dark:text-gray-200" style={{ fontSize: "0.78rem" }}>
-                  {sourceShort(t, src)} ({contributionSources[src]}%)
-                </span>
-              </div>
-              <ArrowRight className="w-3 h-3 text-gray-400" />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 /* ─── Portfolio editor content (shared between inline + modal) ─── */
 
-function PortfolioEditorContent({ allocs, setAllocs, activeSources, contributionSources, activeTab, setActiveTab }: {
+function PortfolioEditorContent({ allocs, setAllocs, activeSources, activeTab, setActiveTab }: {
   allocs: PerSourceAllocations;
   setAllocs: React.Dispatch<React.SetStateAction<PerSourceAllocations>>;
   activeSources: SourceKey[];
-  contributionSources: { preTax: number; roth: number; afterTax: number };
   activeTab: SourceKey;
   setActiveTab: (tab: SourceKey) => void;
 }) {
@@ -644,58 +598,60 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
         </div>
       ) : (
         <div>
-          {/* Source tabs */}
-          <div className="mb-4 flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800/80">
-            {activeSources.map((src) => {
-              const srcTotal = getSourceTotal(allocs.sources[src]);
-              const srcValid = srcTotal === 100;
-              return (
+          {activeSources.length > 1 ? (
+            <div className="mb-4 space-y-1.5">
+              <p
+                className="mb-1 text-gray-400 dark:text-gray-500"
+                style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
+              >
+                {t(`${IV}allSources`)}
+              </p>
+              {sourceTotals.map((s) => (
                 <button
-                  key={src}
+                  key={s.key}
                   type="button"
-                  onClick={() => setActiveTab(src)}
+                  onClick={() => setActiveTab(s.key)}
                   className={cn(
-                    "flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 transition-all",
-                    activeTab === src
-                      ? "bg-white shadow-sm dark:bg-gray-900 dark:shadow-none"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-700/60",
+                    "flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950",
+                    s.total === 100 ? "bg-green-50 dark:bg-green-950/40" : "bg-amber-50 dark:bg-amber-950/35",
+                    activeTab === s.key && "ring-2 ring-blue-500 ring-offset-2 dark:ring-blue-400 dark:ring-offset-gray-950",
                   )}
                 >
-                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[src] }} />
-                  <span
-                    className={cn(activeTab === src ? "text-gray-900 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}
-                    style={{ fontSize: "0.8rem", fontWeight: activeTab === src ? 600 : 400 }}
-                  >
-                    {sourceShort(t, src)}
-                  </span>
-                  {srcTotal > 0 && (
-                    <span className={cn("shrink-0", srcValid ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400")}>
-                      {srcValid ? <CheckCircle2 className="w-3 h-3" /> : <span style={{ fontSize: "0.65rem", fontWeight: 600 }}>{srcTotal}%</span>}
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: sourceColors[s.key] }} />
+                    {s.total === 100 ? (
+                      <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                    )}
+                    <span
+                      className={cn(
+                        s.total === 100 ? "text-green-700 dark:text-green-200" : "text-amber-700 dark:text-amber-200",
+                      )}
+                      style={{ fontSize: "0.75rem", fontWeight: 500 }}
+                    >
+                      {sourceShort(t, s.key)}
                     </span>
-                  )}
+                  </div>
+                  <span
+                    className={cn(
+                      "tabular-nums",
+                      s.total === 100 ? "text-green-800 dark:text-green-100" : "text-amber-800 dark:text-amber-100",
+                    )}
+                    style={{ fontSize: "0.8rem", fontWeight: 600 }}
+                  >
+                    {s.total}%
+                  </span>
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mb-3 text-gray-800 dark:text-gray-100" style={{ fontSize: "0.88rem", fontWeight: 600 }}>
+              {t(`${IV}sourcePortfolio`, { source: sourceShort(t, activeTab) })}
+            </p>
+          )}
 
           <div className="mb-2">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: sourceColors[activeTab] }} />
-                <p className="text-gray-800 dark:text-gray-100" style={{ fontSize: "0.88rem", fontWeight: 600 }}>
-                  {t(`${IV}sourcePortfolio`, { source: sourceShort(t, activeTab) })}
-                </p>
-              </div>
-              {activeSources.length > 1 && (
-                <CopyPortfolioMenu
-                  currentSource={activeTab}
-                  activeSources={activeSources}
-                  contributionSources={contributionSources}
-                  onCopy={(fromSource) => setAllocs((prev) => ({ ...prev, sources: { ...prev.sources, [activeTab]: prev.sources[fromSource].map((f) => ({ ...f })) } }))}
-                />
-              )}
-            </div>
-
             {allocs.sources[activeTab].length === 0 ? (
               <div className="rounded-xl bg-gray-50 py-6 text-center dark:bg-gray-800/50">
                 <p className="mb-2 text-gray-400 dark:text-gray-500" style={{ fontSize: "0.82rem" }}>
@@ -718,50 +674,6 @@ function PortfolioEditorContent({ allocs, setAllocs, activeSources, contribution
                 label={t(`${IV}sourceAllocationLabel`, { source: sourceShort(t, activeTab) })}
               />
             </div>
-          </div>
-
-          {/* All-source summary */}
-          <div className="mt-4 space-y-1.5 border-t border-gray-100 pt-3 dark:border-gray-700">
-            <p
-              className="mb-1 text-gray-400 dark:text-gray-500"
-              style={{ fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
-            >
-              {t(`${IV}allSources`)}
-            </p>
-            {sourceTotals.map((s) => (
-              <div
-                key={s.key}
-                className={cn(
-                  "flex items-center justify-between rounded-lg px-3 py-1.5",
-                  s.total === 100 ? "bg-green-50 dark:bg-green-950/40" : "bg-amber-50 dark:bg-amber-950/35",
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  {s.total === 100 ? (
-                    <CheckCircle2 className="h-3 w-3 text-green-600 dark:text-green-400" />
-                  ) : (
-                    <AlertTriangle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                  )}
-                  <span
-                    className={cn(
-                      s.total === 100 ? "text-green-700 dark:text-green-200" : "text-amber-700 dark:text-amber-200",
-                    )}
-                    style={{ fontSize: "0.75rem", fontWeight: 500 }}
-                  >
-                    {sourceShort(t, s.key)}
-                  </span>
-                </div>
-                <span
-                  className={cn(
-                    "tabular-nums",
-                    s.total === 100 ? "text-green-800 dark:text-green-100" : "text-amber-800 dark:text-amber-100",
-                  )}
-                  style={{ fontSize: "0.8rem", fontWeight: 600 }}
-                >
-                  {s.total}%
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       )}
@@ -1046,7 +958,6 @@ function BuildPortfolioModal({
                   allocs={inlineAllocs}
                   setAllocs={setInlineAllocs}
                   activeSources={activeSources}
-                  contributionSources={contributionSources}
                   activeTab={inlineActiveTab}
                   setActiveTab={setInlineActiveTab}
                 />
@@ -1150,8 +1061,7 @@ export function InvestmentStrategy() {
     updateField("useRecommendedPortfolio", false);
   };
 
-  const growthRate = getGrowthRate(riskLevel ?? "balanced");
-  const expectedReturnLabel = `~${(growthRate * 100).toFixed(1)}%`;
+  const expectedReturnLabel = t(`${IV}${RETURN_BAND_KEYS[activeRisk]}`);
   const riskDotFilled: Record<RiskLevel, number> = {
     conservative: 1,
     balanced: 2,
@@ -1162,7 +1072,7 @@ export function InvestmentStrategy() {
   const yearsToRet = Math.max(0, retirementAge - currentAge);
   const timelineLabel =
     yearsToRet >= 10 ? t(`${IV}timeline10Plus`) : t(`${IV}timelineYears`, { count: Math.max(1, yearsToRet) });
-  const riskProfileWord = t(`${IV}${RISK_DEF.find((r) => r.key === activeRisk)!.labelKey}`);
+  const riskLevelShort = t(`${IV}${RISK_DISPLAY_KEYS[activeRisk]}`);
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl">
@@ -1175,24 +1085,24 @@ export function InvestmentStrategy() {
         </p>
       </div>
 
-      <div className="space-y-5">
-        <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50">
-                <Gauge className="h-5 w-5 text-blue-600 dark:text-blue-400" aria-hidden />
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-gray-200 bg-white px-5 py-5 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
+          <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/50">
+                <Gauge className="h-6 w-6 text-blue-600 dark:text-blue-400" aria-hidden />
               </div>
               <div className="min-w-0">
                 <p
                   className="text-gray-400 dark:text-gray-500"
-                  style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
+                  style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}
                 >
                   {t(`${IV}styleEyebrow`)}
                 </p>
-                <p className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1.05rem", fontWeight: 700 }}>
+                <p className="mt-1 text-gray-900 dark:text-gray-50" style={{ fontSize: "1.125rem", fontWeight: 700 }}>
                   {t(`${IV}${STYLE_TITLE_KEYS[activeRisk]}`)}
                 </p>
-                <p className="mt-0.5 text-gray-500 dark:text-gray-400" style={{ fontSize: "0.78rem" }}>
+                <p className="mt-1 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.8125rem", lineHeight: 1.5 }}>
                   {t(`${IV}${STYLE_DESC_KEYS[activeRisk]}`)}
                 </p>
               </div>
@@ -1201,16 +1111,16 @@ export function InvestmentStrategy() {
               type="button"
               onClick={() => setEditorOpen(!editorOpen)}
               aria-expanded={editorOpen}
-              className="flex shrink-0 items-center gap-1.5 text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-              style={{ fontSize: "0.82rem", fontWeight: 500 }}
+              className="flex shrink-0 items-center gap-1.5 self-start text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 sm:self-center"
+              style={{ fontSize: "0.875rem", fontWeight: 500 }}
             >
-              <Pencil className="h-3.5 w-3.5" aria-hidden />
+              <Pencil className="h-4 w-4" aria-hidden />
               {t(`${IV}editStrategy`)}
             </button>
           </div>
 
           {editorOpen ? (
-            <div className="mt-4 border-t border-gray-100 pt-4 dark:border-gray-700">
+            <div className="mt-5 border-t border-gray-100 pt-5 dark:border-gray-700">
               <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-4">
                 {riskOptions.map((level) => (
                   <button
@@ -1243,89 +1153,83 @@ export function InvestmentStrategy() {
           ) : null}
         </div>
 
-        <div className="grid gap-4" style={{ gridTemplateColumns: "60% 40%" }}>
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
-            <div className="mb-4 flex items-start justify-between gap-6">
-              <div>
-                <div className="mb-2 flex items-center gap-2">
-                  <div className="rounded-md bg-blue-100 px-2.5 py-1 dark:bg-blue-950/60">
-                    <p
-                      className="text-blue-700 dark:text-blue-300"
-                      style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
-                    >
-                      {t(`${IV}recommendedBadge`)}
-                    </p>
-                  </div>
+        <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6 lg:items-stretch">
+          <div className="flex min-w-0 flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
+            <div className="mb-5 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <div className="mb-2 inline-flex rounded-md bg-blue-100 px-2.5 py-1 dark:bg-blue-950/60">
+                  <p
+                    className="text-blue-700 dark:text-blue-300"
+                    style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}
+                  >
+                    {t(`${IV}recommendedBadge`)}
+                  </p>
                 </div>
-                <h3 className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1.1rem", fontWeight: 700 }}>
+                <h3 className="text-gray-900 dark:text-gray-50" style={{ fontSize: "1.125rem", fontWeight: 700 }}>
                   {t(`${IV}planDefaultTitle`)}
                 </h3>
-                <p className="mt-1 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.8rem" }}>
+                <p className="mt-1 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.8125rem", lineHeight: 1.5 }}>
                   {t(`${IV}planDefaultDesc`)}
                 </p>
               </div>
 
-              <div className="shrink-0 space-y-1.5 rounded-lg bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-600 dark:text-gray-400" style={{ fontSize: "0.75rem" }}>
+              <div className="shrink-0 space-y-2 text-right sm:text-left">
+                <div className="flex flex-wrap items-baseline justify-end gap-x-2 sm:justify-start">
+                  <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.8125rem" }}>
                     {t(`${IV}metricReturn`)}
                   </span>
-                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.8125rem", fontWeight: 600 }}>
                     {expectedReturnLabel}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-600 dark:text-gray-400" style={{ fontSize: "0.75rem" }}>
+                <div className="flex flex-wrap items-center justify-end gap-x-2 sm:justify-start">
+                  <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.8125rem" }}>
                     {t(`${IV}metricRisk`)}
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
-                      {riskProfileWord}
-                    </span>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }, (_, i) => (
-                        <span
-                          key={i}
-                          className={`h-1.5 w-1.5 rounded-full ${i < filledDots ? "bg-gray-900 dark:bg-gray-100" : "bg-gray-200 dark:bg-gray-600"}`}
-                        />
-                      ))}
-                    </div>
+                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.8125rem", fontWeight: 600 }}>
+                    {riskLevelShort}
+                  </span>
+                  <div className="flex gap-1">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <span
+                        key={i}
+                        className={`h-2 w-2 rounded-full ${i < filledDots ? "bg-gray-900 dark:bg-gray-100" : "bg-gray-200 dark:bg-gray-600"}`}
+                      />
+                    ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-600 dark:text-gray-400" style={{ fontSize: "0.75rem" }}>
+                <div className="flex flex-wrap items-baseline justify-end gap-x-2 sm:justify-start">
+                  <span className="text-gray-500 dark:text-gray-400" style={{ fontSize: "0.8125rem" }}>
                     {t(`${IV}metricTimeline`)}
                   </span>
-                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                  <span className="text-gray-900 dark:text-gray-50" style={{ fontSize: "0.8125rem", fontWeight: 600 }}>
                     {timelineLabel}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
-              <div className="space-y-2.5">
-                {currentAllocation.map((a) => (
-                  <div key={a.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: a.color }} />
-                      <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.8rem" }}>
-                        {translateAllocName(t, a.name)}
-                      </span>
-                    </div>
-                    <span className="tabular-nums text-gray-900 dark:text-gray-50" style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-                      {a.value}%
+            <div className="mb-5 space-y-3 border-t border-gray-100 pt-5 dark:border-gray-700">
+              {currentAllocation.map((a) => (
+                <div key={a.name} className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: a.color }} />
+                    <span className="truncate text-gray-800 dark:text-gray-200" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                      {translateAllocName(t, a.name)}
                     </span>
                   </div>
-                ))}
-              </div>
+                  <span className="shrink-0 tabular-nums text-gray-900 dark:text-gray-50" style={{ fontSize: "0.875rem", fontWeight: 700 }}>
+                    {a.value}%
+                  </span>
+                </div>
+              ))}
             </div>
 
-            <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-3 dark:border-blue-900/50 dark:bg-blue-950/35">
-              <p className="mb-1 text-blue-900 dark:text-blue-100" style={{ fontSize: "0.78rem", fontWeight: 600 }}>
+            <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50/90 px-4 py-3 dark:border-blue-900/40 dark:bg-blue-950/40">
+              <p className="mb-1 text-blue-800 dark:text-blue-200" style={{ fontSize: "0.8125rem", fontWeight: 700 }}>
                 {t(`${IV}whyTitle`)}
               </p>
-              <p className="text-blue-800 dark:text-blue-200/95" style={{ fontSize: "0.75rem", lineHeight: 1.5 }}>
+              <p className="text-blue-700 dark:text-blue-300/95" style={{ fontSize: "0.8125rem", lineHeight: 1.55 }}>
                 {t(`${IV}${WHY_KEYS[activeRisk]}`)}
               </p>
             </div>
@@ -1333,96 +1237,103 @@ export function InvestmentStrategy() {
             <button
               type="button"
               onClick={handleContinueRecommended}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-white transition-all hover:bg-blue-700 active:scale-[0.98]"
-              style={{ fontSize: "0.85rem", fontWeight: 600 }}
+              className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-white transition-all hover:bg-blue-700 active:scale-[0.99]"
+              style={{ fontSize: "0.9375rem", fontWeight: 600 }}
             >
-              {t(`${IV}continueRecommended`)} <ArrowRight className="h-4 w-4" aria-hidden />
+              {t(`${IV}continueRecommended`)} <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
             </button>
           </div>
 
-          <div className="flex flex-col rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 via-white to-blue-50 p-6 shadow-sm dark:border-purple-800/60 dark:from-purple-950/40 dark:via-gray-900 dark:to-blue-950/40">
-            <div className="mb-3 flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-blue-500">
+          <div className="flex min-w-0 flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-600 dark:bg-gray-900/90">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-600 dark:bg-purple-500">
                 <Settings className="h-5 w-5 text-white" aria-hidden />
               </div>
-              <div className="rounded-md border border-purple-200 bg-gradient-to-r from-purple-100 to-blue-100 px-2.5 py-1 dark:border-purple-800/60 dark:from-purple-900/50 dark:to-blue-900/50">
+              <div className="rounded-md border border-purple-200 bg-purple-50 px-2.5 py-1 dark:border-purple-800/60 dark:bg-purple-950/50">
                 <p
-                  className="text-purple-700 dark:text-purple-200"
-                  style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
+                  className="text-purple-800 dark:text-purple-200"
+                  style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}
                 >
                   {t(`${IV}advancedUser`)}
                 </p>
               </div>
             </div>
 
-            <h3 className="mb-2 text-gray-900 dark:text-gray-50" style={{ fontSize: "1rem", fontWeight: 700 }}>
+            <h3 className="mb-2 text-gray-900 dark:text-gray-50" style={{ fontSize: "1.125rem", fontWeight: 700 }}>
               {t(`${IV}customizeTitle`)}
             </h3>
-            <p className="mb-3 text-gray-700 dark:text-gray-300" style={{ fontSize: "0.82rem", lineHeight: 1.6 }}>
+            <p className="mb-6 flex-1 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.875rem", lineHeight: 1.6 }}>
               {t(`${IV}customizeDesc`)}
-            </p>
-
-            <p className="mb-4 flex-1 text-gray-800 dark:text-gray-200" style={{ fontSize: "0.82rem", lineHeight: 1.5, fontWeight: 500 }}>
-              {t(`${IV}customizeBestFor`)}
             </p>
 
             <button
               type="button"
               onClick={() => setShowBuildModal(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-purple-300 px-6 py-2.5 text-purple-700 transition-all hover:border-purple-400 hover:bg-purple-50 active:scale-[0.98] dark:border-purple-600 dark:text-purple-200 dark:hover:border-purple-500 dark:hover:bg-purple-950/40"
-              style={{ fontSize: "0.85rem", fontWeight: 600 }}
+              className="mt-auto flex w-full items-center justify-center gap-2 rounded-xl border-2 border-purple-500 bg-white px-6 py-3 text-purple-700 transition-all hover:bg-purple-50 active:scale-[0.99] dark:border-purple-500 dark:bg-transparent dark:text-purple-300 dark:hover:bg-purple-950/40"
+              style={{ fontSize: "0.9375rem", fontWeight: 600 }}
             >
               {customAllocations ? t(`${IV}editPortfolioCta`) : t(`${IV}customizeCta`)}{" "}
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
             </button>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 shadow-sm dark:border-amber-900/50 dark:from-amber-950/35 dark:via-orange-950/30 dark:to-yellow-950/25">
-          <div className="flex items-start gap-4">
-            <div className="flex flex-col items-center gap-2">
-              <div className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 dark:border-amber-800/50 dark:bg-amber-950/40">
-                <p
-                  className="text-amber-700 dark:text-amber-200"
-                  style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}
-                >
-                  {t(`${IV}expertHelp`)}
-                </p>
-              </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
-                <Phone className="h-6 w-6 text-white" aria-hidden />
+        <div className="rounded-2xl border border-[#e5d9c8] bg-[#fff9eb] p-6 shadow-sm sm:p-8 dark:border-amber-800/50 dark:bg-gradient-to-br dark:from-amber-950/40 dark:to-[#1c1410] dark:shadow-none">
+          <div className="flex min-w-0 flex-col items-stretch gap-6 lg:flex-row lg:items-center lg:gap-8 xl:gap-10">
+            {/* Column 1: tag above phone; block centers vertically in the lg row */}
+            <div className="flex shrink-0 flex-col items-start gap-3">
+              <span
+                className="inline-flex w-fit rounded-full border border-orange-500/55 bg-transparent px-3 py-1 text-orange-800 dark:border-orange-400/60 dark:text-orange-200"
+                style={{ fontSize: "0.625rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}
+              >
+                {t(`${IV}expertHelp`)}
+              </span>
+              <div
+                className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-xl bg-orange-500 dark:bg-orange-600"
+                aria-hidden
+              >
+                <Phone className="h-6 w-6 text-white" strokeWidth={1.75} />
               </div>
             </div>
-            <div className="flex flex-1 items-center justify-between gap-6">
-              <div>
-                <h3 className="mb-2 text-gray-900 dark:text-gray-50" style={{ fontSize: "1.1rem", fontWeight: 700 }}>
-                  {t(`${IV}advisorTitle`)}
-                </h3>
-                <p className="mb-3 text-gray-600 dark:text-gray-400" style={{ fontSize: "0.85rem", lineHeight: 1.6 }}>
-                  {t(`${IV}advisorDesc`)}
-                </p>
-                <div className="flex gap-6">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden />
-                    <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.75rem" }}>
-                      {t(`${IV}advisorBullet1`)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden />
-                    <span className="text-gray-700 dark:text-gray-300" style={{ fontSize: "0.75rem" }}>
-                      {t(`${IV}advisorBullet2`)}
-                    </span>
-                  </div>
+
+            {/* Column 2: copy — left-aligned stack */}
+            <div className="min-w-0 flex-1 lg:py-0.5">
+              <h3
+                className="text-pretty text-slate-900 dark:text-amber-50"
+                style={{ fontSize: "1.125rem", fontWeight: 700, lineHeight: 1.3 }}
+              >
+                {t(`${IV}advisorTitle`)}
+              </h3>
+              <p
+                className="mt-2 max-w-2xl text-pretty text-stone-600 dark:text-stone-400"
+                style={{ fontSize: "0.9375rem", lineHeight: 1.55 }}
+              >
+                {t(`${IV}advisorDesc`)}
+              </p>
+              <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-1">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
+                  <span className="text-stone-800 dark:text-stone-200" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                    {t(`${IV}advisorBullet1`)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} aria-hidden />
+                  <span className="text-stone-800 dark:text-stone-200" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                    {t(`${IV}advisorBullet2`)}
+                  </span>
                 </div>
               </div>
+            </div>
 
+            {/* Column 3: full-width on small screens; right-aligned + vertically centered on lg */}
+            <div className="flex w-full shrink-0 justify-end lg:w-auto lg:self-center">
               <a
                 href={ADVISOR_CONTACT_HREF}
-                className="flex shrink-0 items-center gap-2 rounded-xl border-2 border-amber-500 px-6 py-2.5 text-amber-700 transition-all hover:bg-amber-50 dark:border-amber-600 dark:text-amber-200 dark:hover:bg-amber-950/40"
-                style={{ fontSize: "0.85rem", fontWeight: 500 }}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border-2 border-orange-500 bg-transparent px-6 py-3 !text-orange-700 transition-colors hover:border-orange-600 hover:bg-orange-500/[0.08] hover:!text-orange-800 active:scale-[0.99] visited:!text-orange-700 dark:border-orange-400 dark:!text-orange-200 dark:hover:bg-orange-400/10 dark:hover:!text-orange-100 sm:w-auto lg:min-w-[11rem] [&_svg]:!text-current"
+                style={{ fontSize: "0.9375rem", fontWeight: 600 }}
               >
-                {t(`${IV}connectNow`)} <ArrowRight className="h-4 w-4" aria-hidden />
+                {t(`${IV}connectNow`)} <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
               </a>
             </div>
           </div>

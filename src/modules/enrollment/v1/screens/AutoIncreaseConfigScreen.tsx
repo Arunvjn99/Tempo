@@ -37,10 +37,12 @@ export function AutoIncreaseConfigScreen() {
   const salary = data.salary;
   const currentMonthlyContribution = Math.round((salary * currentPercent) / 100 / 12);
 
+  const cappedForGrowth = Math.min(currentPercent, maxContribution);
+  const atContributionCap = currentPercent >= maxContribution - 1e-6;
   const yearsToMax =
-    currentPercent >= maxContribution || increaseAmount <= 0
+    atContributionCap || increaseAmount <= 0
       ? 0
-      : Math.ceil((maxContribution - currentPercent) / increaseAmount);
+      : Math.ceil((maxContribution - cappedForGrowth) / increaseAmount);
 
   const increaseRangePct = `${(increaseAmount / 3) * 100}%`;
   const maxRangePct = `${((maxContribution - 10) / 5) * 100}%`;
@@ -260,14 +262,14 @@ export function AutoIncreaseConfigScreen() {
             <div className="min-w-0 flex-1 space-y-2 text-[0.78rem] text-foreground-secondary [overflow-wrap:anywhere]">
               <p className="m-0">{t(`${C}infoP1`)}</p>
               <p className="m-0 font-medium text-foreground">
-                {currentPercent >= maxContribution ? (
+                {atContributionCap ? (
                   t(`${C}atMax`)
                 ) : increaseAmount <= 0 ? (
                   t(`${C}chooseIncrease`)
                 ) : (
                   t(`${C}growthYears`, {
                     count: yearsToMax,
-                    from: currentPercent,
+                    from: cappedForGrowth,
                     to: maxContribution,
                   })
                 )}

@@ -30,15 +30,23 @@ export function useAutoIncreaseFinancialImpact(params: {
   } = params;
 
   return useMemo(() => {
-    const yearsToRetirement = retirementAge - currentAge;
+    /* Whole years only; avoid fractional ages running wrong loop counts. */
+    const yearsToRetirement = Math.max(0, Math.trunc(retirementAge - currentAge));
+    /*
+     * Model both scenarios from the same starting rate capped at the stop limit.
+     * If current (e.g. 11%) is above max (10%), compare apples-to-apples at 10%
+     * so “with vs without” isn’t distorted and 10%/10% shows matching columns.
+     */
+    const baselinePct = Math.min(currentPercent, maxContribution);
+
     let balanceFixed = currentSavings;
     for (let y = 0; y < yearsToRetirement; y++) {
-      const contrib = (currentPercent / 100) * salary;
-      const match = (Math.min(currentPercent, 6) / 100) * salary;
+      const contrib = (baselinePct / 100) * salary;
+      const match = (Math.min(baselinePct, 6) / 100) * salary;
       balanceFixed = (balanceFixed + contrib + match) * (1 + growthRate);
     }
     let balanceAuto = currentSavings;
-    let autoPct = currentPercent;
+    let autoPct = baselinePct;
     for (let y = 0; y < yearsToRetirement; y++) {
       const contrib = (autoPct / 100) * salary;
       const match = (Math.min(autoPct, 6) / 100) * salary;
