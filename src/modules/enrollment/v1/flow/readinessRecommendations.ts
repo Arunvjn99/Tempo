@@ -89,8 +89,9 @@ export function generateRecommendations(
     const empAfter = Math.round((data.salary * Math.min(bumpPct, 6)) / 100);
     const addAnnual =
       Math.round(((bumpPct - data.contribution) * data.salary) / 100) + Math.max(0, empAfter - empBefore);
+    const bumpAmount = bumpPct - data.contribution;
     pushIf("increase-contribution", {
-      title: t(`${REC}increaseContributionTitle`),
+      title: `Increase contribution by ${bumpAmount}%`,
       description: t(`${REC}increaseContributionDesc`),
       impact: "High",
       projectedGain: formatDeltaPortfolio(deltaBal),
@@ -176,15 +177,17 @@ export function generateRecommendations(
     });
   }
 
-  if (data.riskLevel === "conservative") {
-    const balancedRate = getGrowthRate("balanced");
+  const currentRisk = data.riskLevel ?? "balanced";
+  if (currentRisk === "conservative" || currentRisk === "balanced") {
+    const nextRiskLevel = currentRisk === "conservative" ? "balanced" : "growth";
+    const nextRate = getGrowthRate(nextRiskLevel);
     const futureBal = data.autoIncrease
       ? projectBalanceWithAutoIncrease(
           data.salary,
           data.currentSavings,
           data.contribution,
           yearsToRetirement,
-          balancedRate,
+          nextRate,
           data.autoIncreaseRate,
           data.autoIncreaseMax,
         )
@@ -193,14 +196,20 @@ export function generateRecommendations(
           data.currentSavings,
           data.contribution,
           yearsToRetirement,
-          balancedRate,
+          nextRate,
         );
     const deltaBal = futureBal - projectedBalance;
     const newScore = computeReadinessScoreLinear(data.contribution, yearsToRetirement, futureBal);
     const dScore = newScore - score;
-    pushIf("strategy-balanced", {
-      title: t(`${REC}strategyBalancedTitle`),
-      description: t(`${REC}strategyBalancedDesc`),
+    
+    const title = "Adjust investment strategy";
+    const description = currentRisk === "conservative" 
+      ? "Switch from Conservative to Balanced for potentially higher long-term returns."
+      : "Switch from Balanced to Growth for potentially higher long-term returns.";
+
+    pushIf(`strategy-${nextRiskLevel}`, {
+      title,
+      description,
       impact: "Medium",
       projectedGain: formatDeltaPortfolio(deltaBal),
       scoreImpact: `${dScore >= 0 ? "+" : ""}${dScore} pts`,
@@ -208,8 +217,8 @@ export function generateRecommendations(
       newScore: Math.min(100, newScore),
       projectedBalanceAfter: futureBal,
       additionalAnnualSavings: 0,
-      Icon: Sparkles,
-      patch: { kind: "riskLevel", value: "balanced" },
+      Icon: TrendingUp,
+      patch: { kind: "riskLevel", value: nextRiskLevel },
     });
   }
 

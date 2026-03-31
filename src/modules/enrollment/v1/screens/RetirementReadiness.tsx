@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, DollarSign, Info, Percent, Sparkles, TrendingUp, type LucideIcon } from "lucide-react";
+import { ArrowRight, DollarSign, Info, Percent, Sparkles, TrendingUp, Target, type LucideIcon } from "lucide-react";
 import { useEnrollmentStore, type EnrollmentV1Store } from "../store/useEnrollmentStore";
 import {
   generateRecommendations,
@@ -91,10 +91,11 @@ function recommendationVisual(recId: string): { boxClass: string; iconClass: str
         Icon: Percent,
       };
     case "strategy-balanced":
+    case "strategy-growth":
       return {
         boxClass: "bg-violet-100 dark:bg-violet-950/40",
         iconClass: "text-violet-700 dark:text-violet-300",
-        Icon: Sparkles,
+        Icon: TrendingUp,
       };
     default:
       return {
@@ -129,6 +130,7 @@ export function RetirementReadiness() {
   const updateField = useEnrollmentStore((s) => s.updateField);
   const goToStep = useEnrollmentStore((s) => s.goToStep);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
+  const [selectedRecId, setSelectedRecId] = useState<string | null>(null);
 
   const yearsToRetirement = Math.max(0, data.retirementAge - data.currentAge);
 
@@ -184,13 +186,22 @@ export function RetirementReadiness() {
     setAppliedIds((prev) => (prev.includes(rec.id) ? prev : [...prev, rec.id]));
   };
 
-  const topActionableRec = actionableRecs[0];
-  const strategyRec = actionableRecs.find((rec) => rec.id === "strategy-balanced");
+  const strategyRec = actionableRecs.find((rec) => rec.id.startsWith("strategy-"));
   const orderedActionableRecs = useMemo(() => {
     if (actionableRecs.length <= 1) return actionableRecs;
     if (!strategyRec || strategyRec.id === actionableRecs[0]?.id) return actionableRecs;
     return [actionableRecs[0], strategyRec, ...actionableRecs.filter((rec) => rec.id !== actionableRecs[0]?.id && rec.id !== strategyRec.id)];
   }, [actionableRecs, strategyRec]);
+  const selectedActionableRec =
+    orderedActionableRecs.find((rec) => rec.id === selectedRecId) ?? orderedActionableRecs[0];
+
+  useEffect(() => {
+    if (orderedActionableRecs.length === 0) {
+      setSelectedRecId(null);
+      return;
+    }
+    setSelectedRecId((prev) => (prev && orderedActionableRecs.some((rec) => rec.id === prev) ? prev : orderedActionableRecs[0].id));
+  }, [orderedActionableRecs]);
 
   const handleContinueCustomAllocation = () => {
     const idx = ENROLLMENT_STEPS.indexOf("investment");
@@ -212,8 +223,6 @@ export function RetirementReadiness() {
         : "text-emerald-700 dark:text-emerald-300";
 
   const targetBarPct = Math.min(100, Math.round((score / READINESS_BENCHMARK) * 100));
-  const needsAttention = score < READINESS_BENCHMARK;
-
   const statusMessage = (s: number) => {
     if (s >= 80) return t(`${P}statusGreat`);
     if (s >= 70) return t(`${P}statusSolid`);
@@ -222,314 +231,292 @@ export function RetirementReadiness() {
   };
 
   return (
-    <div className="w-full min-w-0 bg-[#f5f7fa] px-6 py-6 text-left dark:bg-slate-950/60">
-      {/* Page header */}
-      <header className="mb-5">
-        <h1 className="text-[24px] font-medium leading-[36px] tracking-[0.07px] text-[#101828] dark:text-slate-50">
+    <div className="w-full min-w-0 bg-white px-8 py-8 text-left dark:bg-slate-950">
+
+      {/* ── Page header ── */}
+      <header className="mb-7">
+        <h1 className="text-[26px] font-bold leading-tight tracking-tight text-[#111827] dark:text-slate-50">
           {t(`${P}pageTitle`)}
         </h1>
-        <p className="mt-1 text-[14.4px] font-normal leading-[21.6px] tracking-[-0.18px] text-[#6a7282] dark:text-slate-300">
+        <p className="mt-1.5 text-[14px] text-[#6b7280] dark:text-slate-400">
           {t(`${P}pageSubtitle`)}
         </p>
       </header>
 
-      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,588px)_minmax(0,1fr)]">
+      {/* ── Two-column grid ── */}
+      <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
 
-        {/* ── LEFT COLUMN ── */}
-        <div className="min-w-0 space-y-3">
+        {/* ════════════ LEFT COLUMN ════════════ */}
+        <div className="flex flex-col gap-5">
 
           {/* Score card */}
-          <section className="rounded-[16px] border border-[#e5e7eb] bg-white px-[25px] pb-px pt-[25px] shadow-[0px_1px_3px_0px_rgba(0,0,0,0.1),0px_1px_2px_0px_rgba(0,0,0,0.1)] dark:border-slate-700 dark:bg-slate-950">
-            {/* Score ring + status text */}
-            <div className="flex flex-col items-center pb-3">
-              <div className="readiness-score-visual relative !h-[175px] !w-[175px]">
+          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="flex flex-col items-center">
+              {/* Score ring */}
+              <div className="readiness-score-visual relative !h-[170px] !w-[170px]">
                 <AnimatedScoreRing value={score} strokeClass={strokeClass} centerClassName={centerScoreClass} />
               </div>
-              <p className="mt-3 text-center text-[16.8px] font-semibold leading-[25.2px] tracking-[-0.41px] text-[#1e2939] dark:text-slate-50">
+
+              {/* "On Track" */}
+              <p className="mt-4 text-[18px] font-bold text-[#111827] dark:text-slate-50">
                 {statusMessage(score)}
               </p>
-              <p className="mt-1 text-center text-[13.6px] font-normal leading-[20.4px] tracking-[-0.12px] text-[#6a7282] dark:text-slate-300">
+
+              {/* "You are 67% on track for your goal." */}
+              <p className="mt-1 text-center text-[13.5px] text-[#6b7280] dark:text-slate-400">
                 <Trans
                   i18nKey={`${P}onTrackLine`}
                   values={{ score }}
-                  components={{ score: <span className="font-semibold text-[#1e2939] dark:text-slate-100" /> }}
+                  components={{ score: <span className="font-semibold text-[#111827] dark:text-slate-100" /> }}
                 />
               </p>
-              <p className="mt-1 text-center text-[12px] font-normal leading-[18px] text-[#99a1af] dark:text-slate-400">
-                {t(`${P}benchmarkLine`, { benchmark: READINESS_BENCHMARK })}
-              </p>
-              <div className="mt-3 flex w-full max-w-[240px] items-center gap-2">
-                <div className="h-[6px] min-w-0 flex-1 overflow-hidden rounded-full bg-[#f3f4f6] dark:bg-slate-700">
+
+              {/* Progress bar + "Target: 65" */}
+              <div className="mt-3 flex w-full max-w-[230px] items-center gap-2">
+                <div className="h-[7px] min-w-0 flex-1 overflow-hidden rounded-full bg-[#e5e7eb] dark:bg-slate-700">
                   <div
-                    className="h-full rounded-full bg-[#d1d5dc] transition-[width] duration-500 ease-out"
+                    className="h-full rounded-full bg-emerald-500 transition-[width] duration-500 ease-out"
                     style={{ width: `${targetBarPct}%` }}
                   />
                 </div>
-                <span className="shrink-0 text-[11.2px] font-medium tracking-[0.05px] text-[#99a1af]">
-                  {t(`${P}target`)} <span className="font-semibold">{READINESS_BENCHMARK}</span>
+                <span className="shrink-0 text-[12px] text-[#9ca3af]">
+                  {t(`${P}target`)} <span className="font-semibold text-[#6b7280]">{READINESS_BENCHMARK}</span>
                 </span>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="border-t border-[#f3f4f6]" />
+            <div className="my-5 border-t border-[#f3f4f6] dark:border-slate-800" />
 
             {/* Projected balance */}
-            <div className="py-4 text-center">
-              <div className="flex items-center justify-center gap-2">
-                <DollarSign className="h-4 w-4 text-[#6a7282]" aria-hidden />
-                <p className="text-[12.48px] font-medium leading-[18.72px] tracking-[-0.04px] text-[#6a7282]">
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center gap-1.5">
+                <Target className="h-3.5 w-3.5 text-[#9ca3af]" aria-hidden />
+                <span className="text-[10.5px] font-semibold uppercase tracking-widest text-[#9ca3af]">
                   {t(`${P}projectedBalanceLabel`)}
-                </p>
+                </span>
               </div>
-              <p className="mt-1 text-[28.8px] font-bold leading-[43.2px] tracking-[0.39px] tabular-nums text-[#101828] dark:text-slate-50">
+              <p className="mt-1 text-[34px] font-bold tabular-nums leading-none text-[#111827] dark:text-slate-50">
                 {formatCurrency(projectedBalance)}
               </p>
-              <p className="mt-1 text-[12px] font-normal leading-[18px] text-[#99a1af]">
-                {t(`${P}projectedBalanceSub`, { years: yearsToRetirement })}
+              <p className="mt-1.5 text-[12px] text-[#9ca3af]">
+                At age {data.retirementAge}
               </p>
             </div>
-          </section>
+          </div>
 
-          {/* Understanding Your Score */}
-          <div className="rounded-[10px] bg-[#f8fafc] px-3 py-3 dark:bg-slate-900/60">
-            <div className="flex items-center gap-[6px]">
-              <Info className="h-4 w-4 shrink-0 text-[#6a7282]" aria-hidden />
-              <p className="text-[18px] font-semibold leading-[28px] tracking-[-0.44px] text-[#0f172b] dark:text-slate-50">
+          {/* Understanding Your Score — no card bg, plain section */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Info className="h-4 w-4 shrink-0 text-[#3b82f6]" aria-hidden />
+              <p className="text-[15px] font-semibold text-[#111827] dark:text-slate-50">
                 {t(`${P}understandingTitle`)}
               </p>
             </div>
-            <p className="mt-1 text-[14px] font-normal leading-[19.25px] tracking-[-0.15px] text-[#45556c] dark:text-slate-300">
+            <p className="mt-1.5 text-[13px] leading-[1.6] text-[#4b5563] dark:text-slate-300">
               {t(`${P}understandingBody`, { score })}
             </p>
           </div>
 
           {/* Annual Funding Summary */}
-          <div
-            className="rounded-[14px] border border-[#bfdbfe] px-[17px] pb-px pt-[17px] dark:border-sky-900/50"
-            style={{ background: "linear-gradient(156.55deg, #eff6ff 0%, #ecfeff 100%)" }}
-          >
-            <p className="text-[16px] font-bold leading-[24px] tracking-[-0.31px] text-[#0f172b] dark:text-slate-50">
+          <div className="rounded-xl border border-[#bfdbfe] bg-[#eff8ff] px-5 py-4 dark:border-sky-900/50 dark:bg-sky-950/20">
+            <p className="text-[15px] font-bold text-[#111827] dark:text-slate-50">
               {t(`${P}fundingTitle`)}
             </p>
 
-            <div className="mt-[10px] space-y-[10px]">
-              {/* Goal row */}
-              <div className="flex h-6 items-center justify-between">
+            <div className="mt-3.5 space-y-3">
+              {/* Retirement Income Goal */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#64748b]" aria-hidden />
-                  <p className="text-[14px] font-medium leading-[20px] tracking-[-0.15px] text-[#475569] dark:text-slate-300">
-                    {t(`${P}fundingGoal`)}
-                  </p>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#64748b]" aria-hidden />
+                  <span className="text-[13.5px] text-[#374151] dark:text-slate-300">{t(`${P}fundingGoal`)}</span>
                 </div>
-                <p className="text-[16px] font-bold leading-[24px] tracking-[-0.31px] tabular-nums text-[#0f172b] dark:text-slate-50">
+                <span className="text-[14px] font-semibold tabular-nums text-[#111827] dark:text-slate-50">
                   ${formatCurrencyDetailed(retirementIncomeGoalAnnual)}
-                </p>
+                </span>
               </div>
 
-              {/* Current row */}
-              <div className="flex h-6 items-center justify-between">
+              {/* Current Annual Contributions */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#3b82f6]" aria-hidden />
-                  <p className="text-[14px] font-medium leading-[20px] tracking-[-0.15px] text-[#475569] dark:text-slate-300">
-                    {t(`${P}fundingCurrent`)}
-                  </p>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#3b82f6]" aria-hidden />
+                  <span className="text-[13.5px] text-[#374151] dark:text-slate-300">{t(`${P}fundingCurrent`)}</span>
                 </div>
-                <p className="text-[16px] font-bold leading-[24px] tracking-[-0.31px] tabular-nums text-[#0ea5e9] dark:text-sky-300">
+                <span className="text-[14px] font-semibold tabular-nums text-[#2563eb] dark:text-sky-300">
                   ${Math.round(currentAnnualContributions).toLocaleString()}
-                </p>
+                </span>
               </div>
 
-              {/* Thin divider */}
-              <div className="h-px bg-[#cbd5e1]" />
+              {/* Divider */}
+              <div className="h-px bg-[#bfdbfe]" />
 
-              {/* Gap row */}
-              <div className="flex h-6 items-center justify-between">
+              {/* Annual Savings Gap */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 shrink-0 rounded-full bg-[#ef4444]" aria-hidden />
-                  <p className="text-[14px] font-medium leading-[20px] tracking-[-0.15px] text-[#475569] dark:text-slate-300">
-                    {t(`${P}fundingGap`)}
-                  </p>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#ef4444]" aria-hidden />
+                  <span className="text-[13.5px] text-[#374151] dark:text-slate-300">{t(`${P}fundingGap`)}</span>
                 </div>
-                <p className="text-[16px] font-bold leading-[24px] tracking-[-0.31px] tabular-nums text-[#dc2626] dark:text-red-400">
+                <span className="text-[14px] font-semibold tabular-nums text-[#dc2626] dark:text-red-400">
                   ${formatCurrencyDetailed(annualSavingsGap)}
-                </p>
+                </span>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="mt-[13px] border-t border-[#cbd5e1] pt-[13px] pb-[13px]">
-              <p className="text-[12px] font-normal leading-[19.5px] text-[#64748b] dark:text-slate-300">
+            {/* Footer note */}
+            <div className="mt-3.5 border-t border-[#bfdbfe] pt-3 dark:border-sky-900/50">
+              <p className="text-[11.5px] leading-[1.6] text-[#64748b] dark:text-slate-400">
                 {t(`${P}fundingFooter`)}
               </p>
             </div>
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN ── */}
-        <div className="min-w-0">
-          <div className="flex flex-col gap-4">
+        {/* ════════════ RIGHT COLUMN ════════════ */}
+        <div className="flex flex-col gap-5">
 
-            {/* "Recommended for You" banner */}
-            {showRecommendedPanel ? (
-              <div
-                className="rounded-[16px] border-2 border-[#bedbff] px-[22px] pb-[18px] pt-[18px] dark:border-indigo-900/50"
-                style={{ background: "linear-gradient(159.3deg, #eff6ff 0%, #eef2ff 50%, #faf5ff 100%)" }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 shrink-0 text-[#1c398e]" aria-hidden />
-                    <p className="text-[14.4px] font-bold leading-[21.6px] tracking-[-0.18px] text-[#1c398e] dark:text-indigo-100">
-                      {t(`${P}recommendedTitle`)}
-                    </p>
+          {/* Boost banner */}
+          {showRecommendedPanel ? (
+            <div className="rounded-xl border border-[#dbeafe] bg-[#eff6ff] px-5 py-4 dark:border-indigo-900/50 dark:bg-indigo-950/20">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 shrink-0 text-[#2563eb]" aria-hidden />
+                <span className="text-[14px] font-semibold text-[#2563eb] dark:text-indigo-300">
+                  {`Boost your score to ${bestNewScore}`}
+                </span>
+              </div>
+              <p className="mt-2 text-[13.5px] leading-[1.6] text-[#374151] dark:text-slate-300">
+                {`Applying the recommended changes below can increase your readiness score by ${boostPoints} points and significantly improve your projected balance.`}
+              </p>
+            </div>
+          ) : null}
+
+          {/* Recommendations heading */}
+          <div>
+            <p className="text-[17px] font-bold text-[#111827] dark:text-slate-50">Recommendations</p>
+            <p className="mt-0.5 text-[13px] text-[#6b7280] dark:text-slate-400">
+              Select an option to see how it impacts your retirement.
+            </p>
+          </div>
+
+          {/* Recommendation cards */}
+          <div className="flex flex-col gap-3">
+            {orderedActionableRecs.map((rec, index) => {
+              const isFeatured = index === 0;
+              const isSelected = rec.id === selectedActionableRec?.id;
+              const { iconClass, Icon } = recommendationVisual(rec.id);
+              return (
+                <div
+                  key={rec.id}
+                  className={cn(
+                    "relative cursor-pointer rounded-xl border bg-white px-5 py-5 transition-all dark:bg-slate-900",
+                    isFeatured ? "mt-3" : "",
+                    isSelected
+                      ? "border-[#93c5fd] shadow-[0_0_0_1.5px_#93c5fd]"
+                      : "border-[#e5e7eb] hover:border-[#93c5fd] dark:border-slate-700",
+                  )}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  onClick={() => setSelectedRecId(rec.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedRecId(rec.id);
+                    }
+                  }}
+                >
+                  {/* RECOMMENDED badge — overlapping top border */}
+                  {isFeatured ? (
+                    <div className="absolute -top-3 left-4 inline-flex items-center gap-1.5 rounded-full bg-[#1d4ed8] px-3 py-1 shadow-sm">
+                      <Sparkles className="h-2.5 w-2.5 text-white" aria-hidden />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.6px] text-white">
+                        {t(`${P}recBadge`)}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {/* Icon + title + description */}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+                        rec.id.startsWith("strategy-") ? "bg-[#f5f3ff]" : "bg-[#eff6ff]",
+                      )}
+                    >
+                      <Icon className={cn("h-[18px] w-[18px]", rec.id.startsWith("strategy-") ? "text-[#8b5cf6]" : "text-[#2563eb]")} aria-hidden strokeWidth={2} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[15px] font-semibold leading-snug text-[#111827] dark:text-slate-50">
+                        {rec.title}
+                      </p>
+                      <p className="mt-0.5 text-[13px] leading-[1.5] text-[#6b7280] dark:text-slate-400">
+                        {rec.description}
+                      </p>
+                    </div>
                   </div>
-                  <span className="rounded-[10px] bg-[#dcfce7] px-2 py-1 text-[12px] font-extrabold leading-[18px] text-[#008236]">
-                    {t(`${P}scorePill`, { score: bestNewScore })}
-                  </span>
+
+                  {/* Metrics row — SCORE / SAVINGS / BALANCE */}
+                  <div className="mt-4 grid grid-cols-3 border-t border-[#f3f4f6] pt-3 dark:border-slate-800">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">
+                        {t(`${P}metricScore`)}
+                      </p>
+                      <div className="mt-1 flex items-center gap-1">
+                        <span className="text-[13px] font-medium tabular-nums text-[#9ca3af]">{score}</span>
+                        <ArrowRight className="h-3 w-3 shrink-0 text-[#9ca3af]" aria-hidden />
+                        <span className="text-[13px] font-bold tabular-nums text-[#16a34a]">{rec.newScore}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">
+                        {t(`${P}metricSavings`)}
+                      </p>
+                      <p className="mt-1 text-[13px] font-bold tabular-nums text-[#2563eb]">
+                        +${rec.additionalAnnualSavings.toLocaleString()}/yr
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">
+                        {t(`${P}metricBalance`)}
+                      </p>
+                      <p className="mt-1 text-[13px] font-bold tabular-nums text-[#111827] dark:text-slate-100">
+                        {formatCurrency(rec.projectedBalanceAfter)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-3 text-[12.8px] font-normal leading-[19.2px] tracking-[-0.06px] text-[#364153] dark:text-slate-300">
-                  <Trans
-                    i18nKey={`${P}recommendedBody`}
-                    values={{ score: bestNewScore, points: boostPoints }}
-                    components={{
-                      new: <span className="font-semibold text-[#1447e6]" />,
-                      pts: <span className="font-semibold text-[#1e2939] dark:text-slate-100" />,
-                    }}
-                  />
+              );
+            })}
+
+            {/* Fallback when no recs */}
+            {orderedActionableRecs.length === 0 ? (
+              <div className="rounded-xl border border-[#e5e7eb] bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                <p className="text-[13px] text-[#6b7280] dark:text-slate-400">
+                  {recommendations[0]?.description ?? t(`${P}fallbackRec`)}
                 </p>
               </div>
             ) : null}
-
-            {/* "Optional ways to improve" heading */}
-            <div className="flex flex-col gap-1">
-              <p className="text-[15.2px] font-semibold leading-[22.8px] tracking-[-0.25px] text-[#101828] dark:text-slate-100">
-                {t(`${P}optionalTitle`)}
-              </p>
-              <p className="text-[12px] font-normal leading-[18px] text-[#99a1af] dark:text-slate-400">
-                {t(`${P}optionalSub`)}
-              </p>
-            </div>
-
-            {/* Recommendation cards */}
-            <div className="flex flex-col gap-[10px]">
-              {orderedActionableRecs.map((rec, index) => {
-                const isFeatured = index === 0;
-                const { boxClass, iconClass, Icon } = recommendationVisual(rec.id);
-                return (
-                  <div
-                    key={rec.id}
-                    className={cn(
-                      "rounded-[14px] p-px",
-                      isFeatured
-                        ? "border border-[#bedbff] bg-white shadow-sm dark:border-indigo-900/40 dark:bg-slate-950/40"
-                        : "border border-[rgba(0,0,0,0.1)] bg-[rgba(249,250,251,0.6)] dark:border-slate-700 dark:bg-slate-900/40",
-                    )}
-                  >
-                    <div className="flex flex-col px-4 pt-4">
-                      {/* "RECOMMENDED" badge — first card only */}
-                      {isFeatured ? (
-                        <div className="mb-2 flex items-center gap-1">
-                          <Sparkles className="h-3 w-3 text-[#155dfc]" aria-hidden />
-                          <p className="text-[9.92px] font-semibold uppercase tracking-[0.52px] text-[#155dfc]">
-                            {t(`${P}recBadge`)}
-                          </p>
-                        </div>
-                      ) : null}
-
-                      {/* Icon + title + description */}
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={cn(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]",
-                            isFeatured ? "bg-[#eff6ff]" : "bg-[#f3f4f6]",
-                          )}
-                        >
-                          <Icon className={cn("h-4 w-4", iconClass)} aria-hidden strokeWidth={2.25} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13.6px] font-semibold leading-[20.4px] tracking-[-0.12px] text-[#101828] dark:text-slate-50">
-                            {rec.title}
-                          </p>
-                          <p className="mt-1 text-[12px] font-normal leading-[18px] text-[#6a7282] dark:text-slate-300">
-                            {rec.description}
-                          </p>
-
-                          {/* Score / Savings / Balance metrics */}
-                          <div className="mt-3 flex gap-6">
-                            <div className="flex flex-col gap-0.5">
-                              <p className="text-[9.92px] font-medium tracking-[0.12px] text-[#99a1af]">
-                                {t(`${P}metricScore`)}
-                              </p>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[13.6px] font-semibold tabular-nums text-[#99a1af]">{score}</span>
-                                <ArrowRight className="h-3 w-3 text-[#99a1af]" aria-hidden />
-                                <span className="text-[13.6px] font-bold tabular-nums text-[#008236]">{rec.newScore}</span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <p className="text-[9.92px] font-medium tracking-[0.12px] text-[#99a1af]">
-                                {t(`${P}metricSavings`)}
-                              </p>
-                              <p className="text-[13.6px] font-bold tabular-nums text-[#1447e6]">
-                                +${rec.additionalAnnualSavings.toLocaleString()}/yr
-                              </p>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <p className="text-[9.92px] font-medium tracking-[0.12px] text-[#99a1af]">
-                                {t(`${P}metricBalance`)}
-                              </p>
-                              <p className="text-[13.6px] font-bold tabular-nums text-[#101828] dark:text-slate-100">
-                                {formatCurrency(rec.projectedBalanceAfter)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Per-card "Apply Recommendation" button */}
-                      <button
-                        type="button"
-                        className="mb-3 mt-3 w-full rounded-[10px] border border-[#bedbff] bg-white py-2 text-[12.8px] font-semibold leading-[19.2px] tracking-[-0.06px] text-[#0a0a0a] transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                        onClick={() => applyRec(rec)}
-                      >
-                        {t(`${P}applyRec`)}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Fallback when no actionable recs */}
-              {orderedActionableRecs.length === 0 ? (
-                <div className="rounded-[14px] border border-[rgba(0,0,0,0.1)] bg-[rgba(249,250,251,0.6)] p-4 dark:border-slate-700 dark:bg-slate-900/40">
-                  <p className="text-[13.6px] font-normal leading-[20.4px] text-[#6a7282] dark:text-slate-300">
-                    {recommendations[0]?.description ?? t(`${P}fallbackRec`)}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Primary + Secondary CTA */}
-            {topActionableRec != null && topActionableRec.patch.kind !== "none" ? (
-              <div className="flex flex-col gap-[10px] border-t border-[#e5e7eb] pt-[17px] dark:border-slate-700">
-                <button
-                  type="button"
-                  className="flex h-[44px] w-full items-center justify-center gap-2 rounded-[14px] bg-[#155dfc] text-[13.6px] font-semibold leading-[20.4px] tracking-[-0.12px] text-white shadow-[0px_4px_6px_0px_rgba(0,0,0,0.1),0px_2px_4px_0px_rgba(0,0,0,0.1)] transition-colors hover:bg-blue-700 active:scale-[0.99]"
-                  onClick={() => applyRec(topActionableRec)}
-                >
-                  {t(`${P}applyRec`)} <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleContinueCustomAllocation}
-                  className="flex h-[46px] w-full items-center justify-center rounded-[14px] border border-[#e5e7eb] bg-white px-[17px] py-[13px] text-[13.6px] font-semibold leading-[20.4px] tracking-[-0.12px] text-[#364153] transition-colors hover:bg-slate-50 active:scale-[0.99] dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100"
-                >
-                  {t(`${P}continueCustomAllocation`)}
-                </button>
-              </div>
-            ) : null}
-
           </div>
+
+          {/* Bottom CTAs */}
+          {selectedActionableRec != null && selectedActionableRec.patch.kind !== "none" ? (
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1d4ed8] text-[14px] font-semibold text-white shadow-md transition-colors hover:bg-[#1e40af] active:scale-[0.99]"
+                onClick={() => applyRec(selectedActionableRec)}
+              >
+                Apply Selected <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={handleContinueCustomAllocation}
+                className="flex h-12 w-full items-center justify-center rounded-xl border border-[#e5e7eb] bg-white text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb] active:scale-[0.99] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              >
+                Customize Allocation
+              </button>
+            </div>
+          ) : null}
+
         </div>
       </div>
     </div>
