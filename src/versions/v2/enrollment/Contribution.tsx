@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useRef, useEffect } from "react";
+import { useMemo, useCallback, useState, useRef, useEffect, type CSSProperties, type ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
@@ -7,11 +7,10 @@ import { EnrollmentFooter } from "@/components/enrollment/EnrollmentFooter";
 import { loadEnrollmentDraft, saveEnrollmentDraft } from "@/enrollment/enrollmentDraftStore";
 import { useAIAssistantStore } from "@/stores/aiAssistantStore";
 import { EnrollmentAiHint } from "@/components/ai/EnrollmentAiHint";
-import Button from "@/components/ui/Button";
 import { EnrollmentPageContent } from "@/components/enrollment/EnrollmentPageContent";
 import { FinancialSlider } from "@/components/FinancialSlider";
-import { SegmentedToggle } from "@/components/ui/SegmentedToggle";
-import { Info } from "lucide-react";
+import { Info, Check, ChevronDown, ChevronUp, Wallet, SlidersHorizontal, ArrowRight, TrendingUp, Shield, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   PAYCHECKS_PER_YEAR,
   percentageToAnnualAmount,
@@ -47,6 +46,14 @@ const SOURCE_OPTIONS = [
   { id: "afterTax", mainKey: "enrollment.afterTax", subKey: "enrollment.afterTaxSub", key: "afterTax" as const },
 ] as const;
 
+/** Reuse V1 enrollment strings for the tax-split UI (same copy as `/v1/enrollment/source`). */
+const V1_SA = "enrollment.v1.sourceAllocation.";
+const PLAN_DEFAULT_TAX = { preTax: 60, roth: 40, afterTax: 0 } as const;
+
+function asStringArrayTax(v: unknown): string[] {
+  return Array.isArray(v) ? v.map(String) : [];
+}
+
 const LOCALE_MAP: Record<string, string> = {
   en: "en-US",
   fr: "fr-FR",
@@ -61,6 +68,63 @@ const LOCALE_MAP: Record<string, string> = {
 const CONTRIBUTION_ASK_AI_PROMPT =
   "Explain how retirement contributions work and how this affects my future savings.";
 
+const V2_EXPLAIN_ACCENT: Record<"pretax" | "roth" | "aftertax", { icon: string; check: string }> = {
+  pretax: { icon: "bg-blue-600", check: "text-blue-600" },
+  roth: { icon: "bg-purple-600", check: "text-purple-600" },
+  aftertax: { icon: "bg-orange-500", check: "text-orange-500" },
+};
+
+function V2TaxExplainCard({
+  title,
+  subtitle,
+  icon,
+  variant,
+  items,
+  className,
+}: {
+  title: string;
+  subtitle: string;
+  icon: ReactNode;
+  variant: "pretax" | "roth" | "aftertax";
+  items: string[];
+  className?: string;
+}) {
+  const accent = V2_EXPLAIN_ACCENT[variant];
+  return (
+    <div
+      className={cn(
+        "rounded-xl border p-4 transition-all hover:-translate-y-px hover:shadow-md",
+        className,
+      )}
+      style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-card-bg)" }}
+    >
+      <div className="mb-3 flex items-start gap-2.5">
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white", accent.icon)}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
+            {title}
+          </h3>
+          <p className="mt-0.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+            {subtitle}
+          </p>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {items.map((line) => (
+          <div key={line} className="flex items-start gap-2">
+            <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", accent.check)} aria-hidden />
+            <p className="text-sm" style={{ color: "var(--enroll-text-muted)" }}>
+              {line}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const Contribution = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -73,8 +137,6 @@ export const Contribution = () => {
     setContributionType,
     setContributionAmount,
     setSourceAllocation,
-    setSourcesEditMode,
-    setSourcesViewMode,
     perPaycheck,
   } = useEnrollment();
 
@@ -207,20 +269,52 @@ export const Contribution = () => {
     [state.sourceAllocation, lockedSourceIds, setSourceAllocation]
   );
 
-  /** Set source by effective % of salary; converts to split and rebalances. Clamps so allocation sum ≤ 100. */
-  const handleSourceEffectivePctChange = useCallback(
-    (key: "preTax" | "roth" | "afterTax", effectivePct: number) => {
-      if (contributionPct <= 0) {
-        handleSourcePercentChange(key, 0);
-        return;
-      }
-      const splitValue = Math.min(100, Math.max(0, (effectivePct / contributionPct) * 100));
-      handleSourcePercentChange(key, Math.round(splitValue * 100) / 100);
-    },
-    [contributionPct, handleSourcePercentChange]
+  const allocationValid = Math.abs(sourceTotal - 100) < 0.01;
+
+  const [taxShowAdvanced, setTaxShowAdvanced] = useState(state.sourceAllocation.afterTax > 0);
+
+  const planDefaultFeatures = useMemo(
+    () => asStringArrayTax(t(`${V1_SA}planDefaultFeatures`, { returnObjects: true })),
+    [t],
+  );
+  const customizeFeatures = useMemo(
+    () => asStringArrayTax(t(`${V1_SA}customizeFeatures`, { returnObjects: true })),
+    [t],
+  );
+  const explainPreTaxItems = useMemo(
+    () => asStringArrayTax(t(`${V1_SA}explainPreTaxItems`, { returnObjects: true })),
+    [t],
+  );
+  const explainRothItems = useMemo(
+    () => asStringArrayTax(t(`${V1_SA}explainRothItems`, { returnObjects: true })),
+    [t],
+  );
+  const explainAfterTaxItems = useMemo(
+    () => asStringArrayTax(t(`${V1_SA}explainAfterTaxItems`, { returnObjects: true })),
+    [t],
   );
 
-  const allocationValid = Math.abs(sourceTotal - 100) < 0.01;
+  const monthlyEmployee = derived.monthlyContribution;
+  const monthlyMatchTotal = derived.employerMatchMonthly;
+  const planDefaultPreMo = Math.round((monthlyEmployee * PLAN_DEFAULT_TAX.preTax) / 100);
+  const planDefaultRothMo = Math.round((monthlyEmployee * PLAN_DEFAULT_TAX.roth) / 100);
+  const planDefaultTotalMo = Math.round(monthlyEmployee + monthlyMatchTotal);
+  const curTotalMo = Math.round(monthlyEmployee + monthlyMatchTotal);
+  const hasAfterTaxSlice = state.sourceAllocation.afterTax > 0;
+
+  const applyPlanDefaultTax = () => {
+    hasUserEditedAllocationRef.current = true;
+    setSourceAllocation({ ...PLAN_DEFAULT_TAX });
+    setLockedSourceIds(new Set());
+    setTaxShowAdvanced(false);
+  };
+
+  const applyPreRothSplitOnly = (preTax: number) => {
+    const v = Math.min(100, Math.max(0, Math.round(preTax)));
+    hasUserEditedAllocationRef.current = true;
+    setSourceAllocation({ preTax: v, roth: 100 - v, afterTax: 0 });
+    setLockedSourceIds(new Set());
+  };
 
   const saveDraftForNextStep = useCallback(() => {
     try {
@@ -249,7 +343,6 @@ export const Contribution = () => {
 
   const sliderPct = ((Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, contributionPct)) - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100;
   const [focusedInput, setFocusedInput] = useState<"pct" | "dollar" | null>(null);
-  const monthlyAmount = annualAmount / 12;
   const inputsActive = focusedInput !== null;
   const employerMatchPerPaycheck = derived.employerMatchMonthly / 2;
   const totalPerPaycheck = perPaycheck + employerMatchPerPaycheck;
@@ -403,196 +496,343 @@ export const Contribution = () => {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Split contributions — merged into same card, always visible */}
-            <div className="pt-6 space-y-5" style={{ borderTop: "1px solid var(--enroll-card-border)" }}>
-              <div>
-                <h3 className="text-lg font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
-                  {t("enrollment.splitContributionsTitle")}
-                </h3>
-                <p className="text-sm mt-1" style={{ color: "var(--enroll-text-muted)" }}>
-                  {t("enrollment.splitContributionsSupporting")}
+          {/* Tax treatment — same layout as V1 source step (for users on /v2/enrollment/contribution). */}
+          <div className="space-y-8">
+            <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1 text-left">
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--enroll-text-primary)" }}>
+                  {t(`${V1_SA}title`)}
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-relaxed" style={{ color: "var(--enroll-text-muted)" }}>
+                  {t(`${V1_SA}subtitle`)}
                 </p>
               </div>
+              <div
+                className="inline-flex min-w-0 max-w-full shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5"
+                style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-soft-bg)" }}
+              >
+                <Wallet className="h-5 w-5 shrink-0 text-[var(--enroll-brand)]" aria-hidden />
+                <p className="text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
+                  {t(`${V1_SA}contributingSummary`, {
+                    percent: Math.round(contributionPct * 10) / 10,
+                    amount: `$${Math.round(monthlyEmployee).toLocaleString()}`,
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-stretch">
+              {/* Plan Default */}
+              <div
+                className="flex min-h-0 flex-col overflow-hidden rounded-2xl border shadow-sm"
+                style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-card-bg)" }}
+              >
+                <div className="bg-[#2563eb] px-5 py-3 text-center text-sm font-semibold text-white">
+                  {t(`${V1_SA}planDefaultHeader`)}
+                </div>
+                <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+                  <div>
+                    <h3 className="text-lg font-bold" style={{ color: "var(--enroll-text-primary)" }}>
+                      {t(`${V1_SA}planDefaultMixTitle`, { preTax: PLAN_DEFAULT_TAX.preTax, roth: PLAN_DEFAULT_TAX.roth })}
+                    </h3>
+                    <p className="mt-1 text-sm" style={{ color: "var(--enroll-text-muted)" }}>
+                      {t(`${V1_SA}planDefaultSubtitle`)}
+                    </p>
+                  </div>
+                  <div className="alloc-bar-plain">
+                    <div className="flex h-full w-full overflow-hidden rounded-full">
+                      <div className="alloc-seg-pretax" style={{ width: `${PLAN_DEFAULT_TAX.preTax}%` }} />
+                      <div className="alloc-seg-roth" style={{ width: `${PLAN_DEFAULT_TAX.roth}%` }} />
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm" style={{ color: "var(--enroll-text-primary)" }}>
+                    <div className="flex items-center gap-2">
+                      <span className="alloc-dot alloc-dot--md alloc-dot--pretax" />
+                      {t(`${V1_SA}preTaxLabel`)} ${planDefaultPreMo.toLocaleString()}/mo
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="alloc-dot alloc-dot--md alloc-dot--roth" />
+                      {t(`${V1_SA}rothLabel`)} ${planDefaultRothMo.toLocaleString()}/mo
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                      <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">{t(`${V1_SA}employerMatch`)}</p>
+                      <p className="mt-1 text-xl font-bold tabular-nums text-emerald-900 dark:text-emerald-100">
+                        +${Math.round(monthlyMatchTotal).toLocaleString()}
+                      </p>
+                      <p className="mt-0.5 text-xs font-medium text-emerald-800/90 dark:text-emerald-300/90">
+                        {t(`${V1_SA}employerMatchOnPreTax`)}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border p-4" style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-soft-bg)" }}>
+                      <p className="text-xs font-semibold" style={{ color: "var(--enroll-text-muted)" }}>
+                        {t(`${V1_SA}totalMonthlyLabel`)}
+                      </p>
+                      <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: "var(--enroll-text-primary)" }}>
+                        ${planDefaultTotalMo.toLocaleString()}
+                      </p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                        {t(`${V1_SA}totalMonthlyYouPlusEmployer`)}
+                      </p>
+                    </div>
+                  </div>
+                  <ul className="flex-1 space-y-2.5">
+                    {planDefaultFeatures.map((line) => (
+                      <li key={line} className="flex items-start gap-2.5 text-sm leading-snug" style={{ color: "var(--enroll-text-primary)" }}>
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]" aria-hidden />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={applyPlanDefaultTax}
+                    className="flex h-12 w-full items-center justify-center rounded-xl bg-[#2563eb] text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1d4ed8] active:scale-[0.99]"
+                  >
+                    {t(`${V1_SA}continuePlanDefaultCta`)}
+                  </button>
+                </div>
+              </div>
+
+              {/* Customize */}
+              <div
+                id="customize-tax-split-v2"
+                className="flex min-h-0 flex-col overflow-hidden rounded-2xl border shadow-sm"
+                style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-card-bg)" }}
+              >
+                <div
+                  className="flex items-center justify-center gap-2 border-b px-5 py-3 text-sm font-semibold"
+                  style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-soft-bg)", color: "var(--enroll-text-primary)" }}
+                >
+                  <SlidersHorizontal className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                  {t(`${V1_SA}customizeSplitHeader`)}
+                </div>
+                <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+                  <div>
+                    <h3 className="text-lg font-bold" style={{ color: "var(--enroll-text-primary)" }}>
+                      {t(`${V1_SA}customizeCardTitle`)}
+                    </h3>
+                    <p className="mt-1 text-sm" style={{ color: "var(--enroll-text-muted)" }}>
+                      {t(`${V1_SA}customizeCardSubtitle`)}
+                    </p>
+                  </div>
+
+                  <div className="alloc-bar-track">
+                    {state.sourceAllocation.preTax > 0 ? (
+                      <div className="alloc-seg-pretax transition-all" style={{ width: `${state.sourceAllocation.preTax}%` }} />
+                    ) : null}
+                    {state.sourceAllocation.roth > 0 ? (
+                      <div className="alloc-seg-roth transition-all" style={{ width: `${state.sourceAllocation.roth}%` }} />
+                    ) : null}
+                    {state.sourceAllocation.afterTax > 0 ? (
+                      <div className="alloc-seg-aftertax transition-all" style={{ width: `${state.sourceAllocation.afterTax}%` }} />
+                    ) : null}
+                  </div>
+
+                  {hasAfterTaxSlice ? (
                     <div className="space-y-5">
-                      <div className="flex flex-wrap justify-between items-center gap-3 sm:gap-4">
-                        <span className="text-sm font-semibold shrink-0" style={{ color: "var(--enroll-text-primary)" }}>
-                          {t("enrollment.contributionSources")}
-                        </span>
-                        <div className="flex flex-wrap items-center gap-3 shrink-0 min-w-0">
-                          <SegmentedToggle<"dollar" | "percent">
-                            options={[
-                              { value: "dollar", label: "$" },
-                              { value: "percent", label: "%" },
-                            ]}
-                            value={state.sourcesViewMode}
-                            onChange={setSourcesViewMode}
-                            aria-label={t("enrollment.sourcesInputMode")}
-                          />
-                          <label className="flex items-center gap-2 cursor-pointer shrink-0">
-                            <span className="text-xs font-medium" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.edit")}</span>
-                            <div className="relative inline-flex h-5 w-9 shrink-0 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={state.sourcesEditMode}
-                                onChange={(e) => setSourcesEditMode(e.target.checked)}
-                                className="peer sr-only"
-                              />
-                              <span className="relative block h-full w-full rounded-full transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-surface-primary after:shadow-sm after:transition-transform after:content-[''] peer-checked:after:translate-x-4"
-                                style={{
-                                  background: state.sourcesEditMode ? "var(--enroll-brand)" : "var(--enroll-soft-bg)",
-                                  border: state.sourcesEditMode ? "none" : "1px solid var(--enroll-card-border)",
-                                }}
-                              />
+                      {SOURCE_OPTIONS.map((opt) => {
+                        const splitPct = state.sourceAllocation[opt.key];
+                        return (
+                          <div key={opt.id} className="min-w-0">
+                            <div className="mb-1 flex justify-between gap-2 text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
+                              <span>{t(opt.mainKey)}</span>
+                              <span>{splitPct}%</span>
                             </div>
-                          </label>
+                            <FinancialSlider
+                              value={splitPct}
+                              fillPercent={splitPct}
+                              min={0}
+                              max={100}
+                              step={0.5}
+                              disabled={false}
+                              onChange={(e) => handleSourcePercentChange(opt.key, Number(e.target.value))}
+                              aria-label={t(opt.mainKey)}
+                              minLabel={t("enrollment.sliderMinLabel")}
+                              maxLabel={t("enrollment.sliderMaxLabel")}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-3">
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={state.sourceAllocation.preTax}
+                          onChange={(e) => applyPreRothSplitOnly(Number(e.target.value))}
+                          className={cn("source-allocation-range", "source-allocation-range--pretax")}
+                          style={{ "--range-pct": `${state.sourceAllocation.preTax}%` } as CSSProperties}
+                          aria-label={t(`${V1_SA}customizeCardTitle`)}
+                        />
+                        <div className="flex justify-between text-xs font-medium" style={{ color: "var(--enroll-text-muted)" }}>
+                          <span>{t(`${V1_SA}preTaxLabel`)}</span>
+                          <span>{t(`${V1_SA}rothLabel`)}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-5">
-                        {SOURCE_OPTIONS.map((opt) => {
-                          const paycheckTotal = annualAmount / PAYCHECKS_PER_YEAR;
-                          const splitPct = state.sourceAllocation[opt.key];
-                          const effectivePctOfSalary = (splitPct / 100) * contributionPct;
-                          const sourcePerPaycheck = (splitPct / 100) * paycheckTotal;
-                          const isSourceActive = splitPct > 0;
-                          const isSliderDisabled = !isSourceActive || !state.sourcesEditMode;
-                          const dollarValue = sourcePerPaycheck > 0 ? Math.round(sourcePerPaycheck) : "";
-                          return (
-                            <div key={opt.id} className="flex flex-col gap-2 min-w-0">
-                              <div className="flex justify-between items-center gap-4 min-w-0">
-                                <label
-                                  className={`flex items-center gap-2 cursor-pointer min-w-0 ${!state.sourcesEditMode ? "opacity-80 cursor-default" : ""}`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={isSourceActive}
-                                    disabled={!state.sourcesEditMode}
-                                    onChange={(e) => {
-                                      const keys = ["preTax", "roth", "afterTax"] as const;
-                                      const current = state.sourceAllocation;
-                                      if (e.target.checked) {
-                                        const activeKeys = keys.filter((k) => current[k] > 0 || k === opt.key);
-                                        const count = activeKeys.length;
-                                        const equalShare = Math.round((100 / count) * 10) / 10;
-                                        const remainder = 100 - equalShare * (count - 1);
-                                        const next: { preTax: number; roth: number; afterTax: number } = { preTax: 0, roth: 0, afterTax: 0 };
-                                        activeKeys.forEach((k, i) => { next[k] = i === 0 ? remainder : equalShare; });
-                                        setSourceAllocation(next);
-                                        setLockedSourceIds(new Set());
-                                      } else {
-                                        const next = { ...current, [opt.key]: 0 };
-                                        const remainingKeys = keys.filter((k) => next[k] > 0);
-                                        if (remainingKeys.length === 0) {
-                                          setSourceAllocation({ preTax: 100, roth: 0, afterTax: 0 });
-                                          setLockedSourceIds(new Set());
-                                        } else {
-                                          const total = remainingKeys.reduce((s, k) => s + next[k], 0);
-                                          const scale = total > 0 ? 100 / total : 1;
-                                          remainingKeys.forEach((k) => { next[k] = Math.round(next[k] * scale * 10) / 10; });
-                                          const diff = 100 - remainingKeys.reduce((s, k) => s + next[k], 0);
-                                          if (diff !== 0 && remainingKeys[0]) next[remainingKeys[0]] += diff;
-                                          setSourceAllocation(next);
-                                          setLockedSourceIds((prev) => {
-                                            const nextSet = new Set(prev);
-                                            nextSet.delete(opt.key);
-                                            return nextSet;
-                                          });
-                                        }
-                                      }
-                                    }}
-                                    className="h-4 w-4 shrink-0 rounded cursor-pointer disabled:cursor-not-allowed"
-                                    style={{ accentColor: "var(--enroll-brand)" }}
-                                  />
-                                  <div className="flex flex-col gap-0.5">
-                                    <span className="text-sm" style={{ color: "var(--enroll-text-primary)" }}>
-                                      <span className="font-semibold">{t(opt.mainKey)}</span>
-                                      {opt.subKey && <span className="font-normal" style={{ color: "var(--enroll-text-muted)" }}> {t(opt.subKey)}</span>}
-                                    </span>
-                                  </div>
-                                </label>
-                                <div className="flex flex-wrap items-center gap-2 shrink-0 min-w-0">
-                                  {state.sourcesViewMode === "percent" ? (
-                                    <div className="inline-flex overflow-hidden rounded-lg border border-[var(--enroll-card-border)] bg-[var(--enroll-card-bg)]">
-                                      <input
-                                        type="number"
-                                        min={0}
-                                        max={contributionPct}
-                                        step={0.1}
-                                        value={effectivePctOfSalary > 0 ? (Math.round(effectivePctOfSalary * 100) / 100) : ""}
-                                        onChange={(e) => {
-                                          const v = parseFloat(e.target.value);
-                                          if (!isNaN(v) && v >= 0) {
-                                            handleSourceEffectivePctChange(opt.key, Math.min(contributionPct, v));
-                                          } else if (e.target.value === "") {
-                                            handleSourceEffectivePctChange(opt.key, 0);
-                                          }
-                                        }}
-                                        disabled={!isSourceActive || !state.sourcesEditMode}
-                                        placeholder="0"
-                                        className="w-16 sm:w-20 border-0 bg-transparent px-2 py-1.5 text-sm font-semibold tabular-nums focus:outline-none focus:ring-0 disabled:opacity-60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        style={{ color: "var(--enroll-text-primary)" }}
-                                      />
-                                      <span className="flex items-center pr-2 text-sm font-medium" style={{ color: "var(--enroll-text-muted)" }}>%</span>
-                                    </div>
-                                  ) : (
-                                    <div className="inline-flex overflow-hidden rounded-lg border border-[var(--enroll-card-border)] bg-[var(--enroll-card-bg)]">
-                                      <span className="flex items-center pl-2 text-sm font-medium shrink-0" style={{ color: "var(--enroll-text-secondary)" }}>$</span>
-                                      <input
-                                        type="number"
-                                        value={dollarValue}
-                                        onChange={(e) => {
-                                          const v = parseFloat(e.target.value);
-                                          if (salary > 0 && !isNaN(v) && v >= 0 && paycheckTotal > 0) {
-                                            const pctFromDollar = (v / paycheckTotal) * 100;
-                                            handleSourcePercentChange(opt.key, Math.min(100, Math.max(0, pctFromDollar)));
-                                          } else if (e.target.value === "" || (typeof v === "number" && isNaN(v))) {
-                                            handleSourcePercentChange(opt.key, 0);
-                                          }
-                                        }}
-                                        min={0}
-                                        step={1}
-                                        disabled={!isSourceActive || !state.sourcesEditMode}
-                                        placeholder="0"
-                                        className="w-16 sm:w-20 min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm font-semibold tabular-nums focus:outline-none focus:ring-0 disabled:opacity-60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        style={{ color: "var(--enroll-text-primary)" }}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="mt-1 min-w-0 w-full">
-                                <FinancialSlider
-                                  value={splitPct}
-                                  fillPercent={splitPct}
-                                  min={0}
-                                  max={100}
-                                  step={0.5}
-                                  disabled={isSliderDisabled}
-                                  onChange={(e) => handleSourcePercentChange(opt.key, Number(e.target.value))}
-                                  aria-label={t(opt.mainKey)}
-                                  minLabel={t("enrollment.sliderMinLabel")}
-                                  maxLabel={t("enrollment.sliderMaxLabel")}
-                                />
-                              </div>
+                      {taxShowAdvanced ? (
+                        <div className="space-y-2 border-t pt-4" style={{ borderColor: "var(--enroll-card-border)" }}>
+                          <div className="enroll-advanced-tag">
+                            <p className="enroll-advanced-tag__text">{t(`${V1_SA}advancedTag`)}</p>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="mb-1 flex justify-between gap-2 text-sm font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
+                              <span>{t("enrollment.afterTax")}</span>
+                              <span>{state.sourceAllocation.afterTax}%</span>
                             </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex items-center justify-between pt-2" style={{ borderTop: "1px solid var(--enroll-card-border)" }}>
-                        <span className="text-sm font-medium" style={{ color: "var(--enroll-text-muted)" }}>{t("enrollment.totalContributionOfSalary")}</span>
-                        <span
-                          className="text-sm font-bold tabular-nums"
-                          style={{ color: allocationValid ? "var(--enroll-text-primary)" : "var(--color-warning)" }}
-                        >
-                          {Math.round(contributionPct * 10) / 10}%
-                        </span>
-                      </div>
-                      {!allocationValid && (
-                        <p className="text-sm mt-2" style={{ color: "var(--color-danger)" }}>
-                          Allocation must total 100% to continue.
-                        </p>
-                      )}
+                            <FinancialSlider
+                              value={state.sourceAllocation.afterTax}
+                              fillPercent={state.sourceAllocation.afterTax}
+                              min={0}
+                              max={100}
+                              step={0.5}
+                              disabled={false}
+                              onChange={(e) => handleSourcePercentChange("afterTax", Number(e.target.value))}
+                              aria-label={t("enrollment.afterTax")}
+                              minLabel={t("enrollment.sliderMinLabel")}
+                              maxLabel={t("enrollment.sliderMaxLabel")}
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => (taxShowAdvanced ? setTaxShowAdvanced(false) : setTaxShowAdvanced(true))}
+                        className="flex items-center gap-1.5 self-start text-sm font-medium"
+                        style={{ color: "var(--enroll-text-muted)" }}
+                      >
+                        {taxShowAdvanced ? <ChevronUp className="h-4 w-4" aria-hidden /> : <ChevronDown className="h-4 w-4" aria-hidden />}
+                        {taxShowAdvanced ? t(`${V1_SA}hideAdvanced`) : t(`${V1_SA}showAdvanced`)}
+                      </button>
+                    </>
+                  )}
+
+                  {hasAfterTaxSlice ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaxShowAdvanced(false);
+                        hasUserEditedAllocationRef.current = true;
+                        setSourceAllocation({
+                          preTax: state.sourceAllocation.preTax + state.sourceAllocation.afterTax,
+                          roth: state.sourceAllocation.roth,
+                          afterTax: 0,
+                        });
+                        setLockedSourceIds(new Set());
+                      }}
+                      className="flex items-center gap-1.5 self-start text-sm font-medium"
+                      style={{ color: "var(--enroll-text-muted)" }}
+                    >
+                      <ChevronUp className="h-4 w-4" aria-hidden />
+                      {t(`${V1_SA}hideAdvanced`)}
+                    </button>
+                  ) : null}
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border p-4" style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-soft-bg)" }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--enroll-text-muted)" }}>
+                        {t(`${V1_SA}employerMatch`)}
+                      </p>
+                      <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: "var(--enroll-text-primary)" }}>—</p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                        {t(`${V1_SA}employerMatchBasedOnSplit`)}
+                      </p>
                     </div>
+                    <div className="rounded-xl border p-4" style={{ borderColor: "var(--enroll-card-border)", background: "var(--enroll-soft-bg)" }}>
+                      <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--enroll-text-muted)" }}>
+                        {t(`${V1_SA}totalMonthlyLabel`)}
+                      </p>
+                      <p className="mt-1 text-xl font-bold tabular-nums" style={{ color: "var(--enroll-text-primary)" }}>—</p>
+                      <p className="mt-0.5 text-xs" style={{ color: "var(--enroll-text-muted)" }}>
+                        {t(`${V1_SA}totalMonthlyYouPlusEmployer`)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-2.5">
+                    {customizeFeatures.map((line) => (
+                      <li key={line} className="flex items-start gap-2.5 text-sm leading-snug" style={{ color: "var(--enroll-text-primary)" }}>
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]" aria-hidden />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="flex flex-wrap items-center gap-2 border-t pt-3 text-xs" style={{ borderColor: "var(--enroll-card-border)", color: "var(--enroll-text-muted)" }}>
+                    <span className="font-medium" style={{ color: "var(--enroll-text-primary)" }}>
+                      {t(`${V1_SA}learnPrefix`)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-600" aria-hidden />
+                      {t(`${V1_SA}preTaxLabel`)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-purple-600" aria-hidden />
+                      {t(`${V1_SA}rothLabel`)}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
+                      <span className="h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden />
+                      {t(`${V1_SA}afterTaxLabel`)}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!allocationValid}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{
+                      borderColor: "var(--enroll-card-border)",
+                      background: "var(--enroll-card-bg)",
+                      color: "var(--enroll-text-primary)",
+                    }}
+                  >
+                    {t(`${V1_SA}customizeAllocationCta`)}
+                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {!allocationValid ? (
+              <p className="text-center text-sm font-medium" style={{ color: "var(--color-danger)" }}>
+                {t(`${V1_SA}allocMustTotal`, { total: Math.round(sourceTotal * 10) / 10 })}
+              </p>
+            ) : null}
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold" style={{ color: "var(--enroll-text-primary)" }}>
+                {t(`${V1_SA}understandingTitle`)}
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <V2TaxExplainCard
+                  title={t(`${V1_SA}preTaxLabel`)}
+                  subtitle={t(`${V1_SA}explainPreTaxSub`)}
+                  icon={<TrendingUp className="h-4 w-4" aria-hidden />}
+                  variant="pretax"
+                  items={explainPreTaxItems}
+                />
+                <V2TaxExplainCard
+                  title={t(`${V1_SA}rothLabel`)}
+                  subtitle={t(`${V1_SA}explainRothSub`)}
+                  icon={<Shield className="h-4 w-4" aria-hidden />}
+                  variant="roth"
+                  items={explainRothItems}
+                />
+                <V2TaxExplainCard
+                  title={t(`${V1_SA}afterTaxLabel`)}
+                  subtitle={t(`${V1_SA}explainAfterTaxSub`)}
+                  icon={<DollarSign className="h-4 w-4" aria-hidden />}
+                  variant="aftertax"
+                  items={explainAfterTaxItems}
+                  className="md:col-span-2 lg:col-span-1"
+                />
+              </div>
             </div>
           </div>
         </motion.div>

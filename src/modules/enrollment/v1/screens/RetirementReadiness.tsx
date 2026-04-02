@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, DollarSign, Info, Percent, Sparkles, TrendingUp, Target, type LucideIcon } from "lucide-react";
+import { ArrowRight, Info, Percent, Sparkles, TrendingUp, Target, type LucideIcon } from "lucide-react";
 import { useEnrollmentStore, type EnrollmentV1Store } from "../store/useEnrollmentStore";
 import {
   generateRecommendations,
   type GeneratedRecommendation,
   type ReadinessApplyPatch,
 } from "../flow/readinessRecommendations";
-import { ENROLLMENT_STEPS } from "../flow/steps";
-import { pathForWizardStep } from "../flow/v1WizardPaths";
 import { cn } from "@/lib/utils";
 
 /** Participant benchmark shown in UI (Figma reference — target score line). */
@@ -125,10 +122,8 @@ function applyEnrollmentPatch(patch: ReadinessApplyPatch, updateField: Enrollmen
 
 export function RetirementReadiness() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
-  const goToStep = useEnrollmentStore((s) => s.goToStep);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [selectedRecId, setSelectedRecId] = useState<string | null>(null);
 
@@ -202,12 +197,6 @@ export function RetirementReadiness() {
     }
     setSelectedRecId((prev) => (prev && orderedActionableRecs.some((rec) => rec.id === prev) ? prev : orderedActionableRecs[0].id));
   }, [orderedActionableRecs]);
-
-  const handleContinueCustomAllocation = () => {
-    const idx = ENROLLMENT_STEPS.indexOf("investment");
-    goToStep(idx);
-    navigate(pathForWizardStep(idx));
-  };
 
   const alertIsCritical = score < 40;
   const strokeClass = alertIsCritical
@@ -499,20 +488,13 @@ export function RetirementReadiness() {
 
           {/* Bottom CTAs */}
           {selectedActionableRec != null && selectedActionableRec.patch.kind !== "none" ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div>
               <button
                 type="button"
                 className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1d4ed8] text-[14px] font-semibold text-white shadow-md transition-colors hover:bg-[#1e40af] active:scale-[0.99]"
                 onClick={() => applyRec(selectedActionableRec)}
               >
                 Apply Selected <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={handleContinueCustomAllocation}
-                className="flex h-12 w-full items-center justify-center rounded-xl border border-[#e5e7eb] bg-white text-[14px] font-semibold text-[#374151] transition-colors hover:bg-[#f9fafb] active:scale-[0.99] dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-              >
-                Customize Allocation
               </button>
             </div>
           ) : null}

@@ -1050,8 +1050,11 @@ progress.draft-progress-native::-moz-progress-bar {
 
 .source-allocation-range {
   --range-pct: 0%;
+  /* Smaller thumb than FinancialSlider; track + thumb ring match Pre-Tax / Roth / After-Tax row. */
+  --source-allocation-thumb-size: 1rem;
+  --source-allocation-track-fill: var(--color-primary);
   width: 100%;
-  height: calc(var(--financial-slider-thumb-size) + var(--spacing-2));
+  height: calc(var(--source-allocation-thumb-size) + 14px);
   cursor: pointer;
   appearance: none;
   background: transparent;
@@ -1061,7 +1064,11 @@ progress.draft-progress-native::-moz-progress-bar {
   height: var(--financial-slider-track-height, 8px);
   border-radius: var(--radius-full);
   background-color: var(--muted);
-  background-image: var(--brand-gradient);
+  background-image: linear-gradient(
+    to right,
+    var(--source-allocation-track-fill) 0%,
+    var(--source-allocation-track-fill) 100%
+  );
   background-size: var(--range-pct) 100%;
   background-repeat: no-repeat;
   background-position: left center;
@@ -1080,7 +1087,11 @@ progress.draft-progress-native::-moz-progress-bar {
   height: var(--financial-slider-track-height, 8px);
   border-radius: var(--radius-full);
   background-color: var(--muted);
-  background-image: var(--brand-gradient);
+  background-image: linear-gradient(
+    to right,
+    var(--source-allocation-track-fill) 0%,
+    var(--source-allocation-track-fill) 100%
+  );
   background-size: var(--range-pct) 100%;
   background-repeat: no-repeat;
   background-position: left center;
@@ -1095,50 +1106,56 @@ progress.draft-progress-native::-moz-progress-bar {
   filter: brightness(0.97);
 }
 
-/* Per-row accent (filled segment still uses brand-gradient; thumb uses row token) */
+/* Per-row: filled track + thumb ring match source (blue / purple / orange). */
 .source-allocation-range--pretax {
   --range-thumb-border: var(--color-primary);
+  --source-allocation-track-fill: var(--color-primary);
 }
 .source-allocation-range--roth {
-  --range-thumb-border: var(--chart-5);
+  --range-thumb-border: #7c3aed;
+  --source-allocation-track-fill: #7c3aed;
 }
 .source-allocation-range--aftertax {
-  --range-thumb-border: var(--chart-9);
+  --range-thumb-border: #ea580c;
+  --source-allocation-track-fill: #ea580c;
 }
 
 .source-allocation-range::-webkit-slider-thumb {
   appearance: none;
-  width: var(--financial-slider-thumb-size);
-  height: var(--financial-slider-thumb-size);
+  width: var(--source-allocation-thumb-size);
+  height: var(--source-allocation-thumb-size);
   border-radius: var(--radius-full);
   border: 2px solid var(--range-thumb-border, var(--color-primary));
-  background: var(--color-background);
-  box-shadow: var(--elevation-sm);
+  background: #ffffff;
+  margin-top: calc(
+    (var(--financial-slider-track-height, 8px) - var(--source-allocation-thumb-size)) / 2
+  );
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .source-allocation-range::-webkit-slider-thumb:hover {
-  transform: scale(1.08);
-  box-shadow: var(--elevation-md);
+  transform: scale(1.06);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.12);
 }
 
 .source-allocation-range::-webkit-slider-thumb:active {
-  transform: scale(0.96);
+  transform: scale(0.98);
 }
 
 .source-allocation-range::-moz-range-thumb {
-  width: var(--financial-slider-thumb-size);
-  height: var(--financial-slider-thumb-size);
+  width: var(--source-allocation-thumb-size);
+  height: var(--source-allocation-thumb-size);
   border-radius: var(--radius-full);
   border: 2px solid var(--range-thumb-border, var(--color-primary));
-  background: var(--color-background);
-  box-shadow: var(--elevation-sm);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.1);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .source-allocation-range::-moz-range-thumb:hover {
-  transform: scale(1.08);
-  box-shadow: var(--elevation-md);
+  transform: scale(1.06);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.12);
 }
 
 .source-allocation-range::-moz-range-thumb:active {
@@ -1161,14 +1178,14 @@ progress.draft-progress-native::-moz-progress-bar {
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 800;
-  color: var(--chart-5);
+  color: #7c3aed;
 }
 
 .alloc-value-aftertax {
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 800;
-  color: var(--chart-9);
+  color: #ea580c;
 }
 
 .explain-card {

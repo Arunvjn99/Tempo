@@ -506,17 +506,52 @@
       "compareVs": "with {{compare}}% vs {{current}}%"
     },
     "sourceAllocation": {
-      "title": "How do you want to pay taxes?",
+      "title": "When do you want to pay taxes?",
       "subtitle": "Choose when you want to pay taxes on your savings.",
-      "contributingSummary": "You're contributing {{percent}}% ({{amount}}/month)",
+      "contributingSummary": "Contributing {{percent}}% · {{amount}}/month",
       "defaultBadge": "Default",
+      "planDefaultHeader": "Plan Default",
+      "planDefaultMixTitle": "{{preTax}}% Pre-Tax · {{roth}}% Roth",
+      "planDefaultSubtitle": "Your employer's set allocation",
       "planDefaultTitle": "Plan default",
       "planDefaultHint": "Applied if no changes are made",
-      "preTaxLabel": "Pre-tax",
+      "preTaxLabel": "Pre-Tax",
       "rothLabel": "Roth",
-      "afterTaxLabel": "After-tax",
+      "afterTaxLabel": "After-Tax",
       "planDefaultFootnote": "Your employer's default allocation balances tax benefits.",
-      "usePlanDefaultCta": "Use plan default allocation",
+      "usePlanDefaultCta": "Continue with Plan Default",
+      "continuePlanDefaultCta": "Continue with Plan Default",
+      "customizeSplitHeader": "Customize Split",
+      "customizeCardTitle": "Set your own split",
+      "customizeCardSubtitle": "Adjust Pre-Tax and Roth to fit your preference",
+      "customizeAllocationCta": "Customize my allocation",
+      "customizeEditorSubtitle": "Drag each slider independently.",
+      "commonSplitsLabel": "Common splits",
+      "splitAllPreTax": "All Pre-Tax",
+      "split8020": "80 / 20",
+      "split5050": "50 / 50",
+      "split2080": "20 / 80",
+      "splitAllRoth": "All Roth",
+      "whatsThis": "what's this?",
+      "addAnotherSource": "Add another source",
+      "adjustSlidersToApply": "Adjust sliders to apply",
+      "resetToPlanDefault": "Reset to plan default",
+      "employerMatchOnPreTax": "100% on Pre-Tax",
+      "employerMatchBasedOnSplit": "Based on split",
+      "totalMonthlyLabel": "Total Monthly",
+      "totalMonthlyYouPlusEmployer": "you + employer",
+      "planDefaultFeatures": [
+        "Balances tax savings now and in retirement",
+        "Maximizes your employer match automatically",
+        "No action needed — takes effect immediately"
+      ],
+      "customizeFeatures": [
+        "Choose a Pre-Tax / Roth mix that fits you",
+        "See your employer match update in real time",
+        "Switch back to plan default anytime"
+      ],
+      "learnPrefix": "Learn:",
+      "sourceStepFooterNote": "You can update your tax strategy anytime in your account settings.",
       "yourTaxStrategy": "Your tax strategy",
       "totalAllocation": "Total allocation: {{total}}%",
       "recommendedBadge": "Recommended",
@@ -529,8 +564,8 @@
       "recommendedForYou": "Recommended for you",
       "scoreLabel": "Score: 72",
       "recommendedMix": "{{preTax}}% Pre-tax / {{roth}}% Roth — optimized for your profile",
-        "tipRothBetter": "Roth may be better — tax-free income later",
-        "tipPreTaxBetter": "Pre-tax may help more now — lowering taxable income as retirement gets closer",
+      "tipRothBetter": "Roth may be better — tax-free income later",
+      "tipPreTaxBetter": "Pre-tax may help more now — lowering taxable income as retirement gets closer",
       "applyRecommendedCta": "Apply recommended allocation",
       "keepCustomAllocation": "Continue with my custom allocation",
       "yourMonthlyImpact": "Your monthly impact",
@@ -541,20 +576,23 @@
       "perMonth": "per month",
       "allocMustTotal": "Allocations must total 100% (currently {{total}}%).",
       "understandingTitle": "Understanding the difference",
+      "explainPreTaxSub": "Pay taxes at retirement",
+      "explainRothSub": "Pay taxes now",
+      "explainAfterTaxSub": "Advanced strategy",
       "explainPreTaxItems": [
         "Lower taxes today",
-        "Reduces current taxable income",
+        "Reduces taxable income now",
         "Pay taxes when you withdraw"
       ],
       "explainRothItems": [
         "Tax-free withdrawals later",
-        "Pay taxes now at current rate",
-        "Growth is tax-free"
+        "Pay taxes at current rate",
+        "Growth is completely tax-free"
       ],
       "explainAfterTaxItems": [
         "For high earners",
-        "Mega backdoor Roth option",
-        "Advanced tax strategy"
+        "Enables mega backdoor Roth",
+        "Flexible tax planning"
       ]
     },
     "autoIncreaseDecision": {

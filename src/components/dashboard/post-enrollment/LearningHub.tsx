@@ -18,11 +18,11 @@ export function LearningHub({ title, description, href, className }: Props) {
   return (
     <section className={cn(pePanel, "overflow-hidden", className)}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
-        <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 sm:h-32 lg:h-32 lg:w-48 lg:shrink-0">
+        <div className="relative w-full shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white lg:w-48 lg:shrink-0">
           <img
             src={LEARNING_BANNER_SRC}
             alt=""
-            className="h-full w-full object-cover object-center"
+            className="h-auto w-full object-contain p-1"
             loading="lazy"
             decoding="async"
           />

@@ -37,7 +37,7 @@ export function FeaturedLearningSurface({ className }: { className?: string }) {
           <img
             src={LEARNING_IMAGE}
             alt={title}
-            className="h-28 w-full rounded-xl object-cover sm:h-32"
+            className="h-auto w-full rounded-xl bg-white object-contain p-1"
           />
         </div>
 

@@ -1,24 +1,39 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, type TFunction } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { computeSourceSplitMonthly } from "../flow/enrollmentDerivedEngine";
+import { isEnrollmentStepValid } from "../flow/stepValidation";
+import { ENROLLMENT_STEPS } from "../flow/steps";
+import { pathForWizardStep } from "../flow/v1WizardPaths";
 import {
+  ArrowLeft,
+  ArrowRight,
   Check,
   ChevronDown,
   ChevronUp,
-  Lightbulb,
+  DollarSign,
+  Plus,
   Shield,
-  Sparkles,
+  SlidersHorizontal,
   TrendingUp,
   Wallet,
-  DollarSign,
 } from "lucide-react";
 import type { ContributionSources } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
 
 const A = "enrollment.v1.sourceAllocation.";
+const SOURCE_STEP_INDEX = ENROLLMENT_STEPS.indexOf("source");
 
 const PLAN_DEFAULT: ContributionSources = { preTax: 60, roth: 40, afterTax: 0 };
+
+function allocationMatchesPlanDefault(s: ContributionSources): boolean {
+  return (
+    Math.abs(s.preTax - PLAN_DEFAULT.preTax) < 0.01 &&
+    Math.abs(s.roth - PLAN_DEFAULT.roth) < 0.01 &&
+    Math.abs(s.afterTax - PLAN_DEFAULT.afterTax) < 0.01
+  );
+}
 
 function asStringArray(v: unknown): string[] {
   return Array.isArray(v) ? v.map(String) : [];
@@ -26,36 +41,62 @@ function asStringArray(v: unknown): string[] {
 
 export function ContributionSource() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const data = useEnrollmentStore();
   const updateField = useEnrollmentStore((s) => s.updateField);
+  const nextStep = useEnrollmentStore((s) => s.nextStep);
   const sources = data.contributionSources;
   const monthlyTotal = data.monthlyContribution;
   const monthlyMatch = data.employerMatch;
   const percent = data.contribution;
   const supportsAfterTax = data.supportsAfterTax;
 
-  const recommended = useMemo((): ContributionSources => {
-    if (data.currentAge > 50) return { preTax: 70, roth: 30, afterTax: 0 };
-    if (data.currentAge < 40) return { preTax: 40, roth: 60, afterTax: 0 };
-    return { preTax: 55, roth: 45, afterTax: 0 };
-  }, [data.currentAge]);
-
+  const planDefaultFeatures = useMemo(() => asStringArray(t(`${A}planDefaultFeatures`, { returnObjects: true })), [t]);
+  const customizeFeatures = useMemo(() => asStringArray(t(`${A}customizeFeatures`, { returnObjects: true })), [t]);
   const explainPreTax = useMemo(() => asStringArray(t(`${A}explainPreTaxItems`, { returnObjects: true })), [t]);
   const explainRoth = useMemo(() => asStringArray(t(`${A}explainRothItems`, { returnObjects: true })), [t]);
   const explainAfterTax = useMemo(() => asStringArray(t(`${A}explainAfterTaxItems`, { returnObjects: true })), [t]);
 
   const [showAdvanced, setShowAdvanced] = useState(sources.afterTax > 0);
+  /** false = preview card; true = expanded editor (second design state). */
+  const [customizeEditorOpen, setCustomizeEditorOpen] = useState(false);
 
-  const matchPercent = Math.min(percent, 6);
   const { monthlyPreTax, monthlyRoth, monthlyAfterTax } = computeSourceSplitMonthly(monthlyTotal, sources);
   const totalMonthlyInvestment = monthlyTotal + monthlyMatch;
 
   const planDefaultSplit = computeSourceSplitMonthly(monthlyTotal, PLAN_DEFAULT);
-  const planDefaultPreTax = planDefaultSplit.monthlyPreTax;
-  const planDefaultRoth = planDefaultSplit.monthlyRoth;
+  const planDefaultTotalMonthly = monthlyTotal + monthlyMatch;
 
   const setSources = (next: ContributionSources) => {
     updateField("contributionSources", next);
+  };
+
+  const tryAdvanceFromSource = () => {
+    const state = useEnrollmentStore.getState();
+    if (!isEnrollmentStepValid(SOURCE_STEP_INDEX, state)) return;
+    nextStep();
+    navigate(pathForWizardStep(useEnrollmentStore.getState().currentStep));
+  };
+
+  const handleContinuePlanDefault = () => {
+    setSources({ ...PLAN_DEFAULT });
+    setShowAdvanced(false);
+    tryAdvanceFromSource();
+  };
+
+  const openCustomizeEditor = () => {
+    setCustomizeEditorOpen(true);
+    setShowAdvanced(false);
+    setSources({ ...PLAN_DEFAULT });
+  };
+
+  const handleApplyCustomSplit = () => {
+    if (Math.abs(total - 100) < 0.001) tryAdvanceFromSource();
+  };
+
+  const handleResetToPlanDefault = () => {
+    setSources({ ...PLAN_DEFAULT });
+    setShowAdvanced(false);
   };
 
   const handlePreTaxChange = (value: number) => {
@@ -106,18 +147,33 @@ export function ContributionSource() {
     }
   };
 
+  const handleCombinedPreRoth = (preTax: number) => {
+    const v = Math.min(100, Math.max(0, preTax));
+    setSources({ preTax: v, roth: 100 - v, afterTax: 0 });
+  };
+
   const total = sources.preTax + sources.roth + sources.afterTax;
+  const hasAfterTaxSlice = sources.afterTax > 0;
+  const applyCustomDisabled =
+    Math.abs(total - 100) > 0.001 || allocationMatchesPlanDefault(sources);
+
+  const scrollToExplain = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
 
   return (
-    <div className="w-full min-w-0 space-y-6">
-      <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div className="w-full min-w-0 space-y-8 pb-2">
+      {/* Page header + contributing badge */}
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1 text-left">
-          <h1 className="text-2xl font-semibold leading-tight text-foreground">{t(`${A}title`)}</h1>
-          <p className="mt-1 max-w-xl text-sm leading-snug text-muted-foreground">{t(`${A}subtitle`)}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-[26px] md:leading-tight">
+            {t(`${A}title`)}
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">{t(`${A}subtitle`)}</p>
         </div>
-        <div className="inline-flex min-w-0 max-w-full shrink-0 flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] px-4 py-2.5 shadow-sm">
-          <Wallet className="h-5 w-5 text-primary" aria-hidden />
-          <p className="text-sm font-bold text-foreground">
+        <div className="inline-flex min-w-0 max-w-full shrink-0 items-center gap-2 rounded-xl border border-border bg-muted/40 px-4 py-2.5">
+          <Wallet className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+          <p className="text-sm font-semibold text-foreground">
             {t(`${A}contributingSummary`, {
               percent,
               amount: `$${monthlyTotal.toLocaleString()}`,
@@ -126,258 +182,219 @@ export function ContributionSource() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,35%)_minmax(0,1fr)] lg:items-start">
-        <div className="flex flex-col space-y-3 rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-900">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <div className="rounded-md bg-secondary px-2.5 py-1">
-                <p className="text-[0.65rem] font-bold uppercase tracking-wide text-muted-foreground">
-                  {t(`${A}defaultBadge`)}
-                </p>
+      {/* Two-column cards */}
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-stretch">
+        {/* Plan Default */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-[#2563eb]/35 bg-card shadow-[0_0_0_1px_rgba(37,99,235,0.12)]">
+          <div className="bg-[#2563eb] px-5 py-3 text-center text-sm font-semibold text-white">
+            {t(`${A}planDefaultHeader`)}
+          </div>
+          <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">
+                {t(`${A}planDefaultMixTitle`, { preTax: PLAN_DEFAULT.preTax, roth: PLAN_DEFAULT.roth })}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t(`${A}planDefaultSubtitle`)}</p>
+            </div>
+
+            <div className="alloc-bar-plain">
+              <div className="flex h-full w-full overflow-hidden rounded-full">
+                <div className="alloc-seg-pretax" style={{ width: `${PLAN_DEFAULT.preTax}%` }} />
+                <div className="alloc-seg-roth" style={{ width: `${PLAN_DEFAULT.roth}%` }} />
               </div>
             </div>
-            <h3 className="text-base font-bold text-foreground">{t(`${A}planDefaultTitle`)}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{t(`${A}planDefaultHint`)}</p>
-          </div>
-          <div className="alloc-bar-plain">
-            <div className="flex h-full w-full">
-              <div className="alloc-seg-pretax" style={{ width: `${PLAN_DEFAULT.preTax}%` }} />
-              <div className="alloc-seg-roth" style={{ width: `${PLAN_DEFAULT.roth}%` }} />
+
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-foreground">
+                  <span className="alloc-dot alloc-dot--md alloc-dot--pretax" />
+                  {t(`${A}preTaxLabel`)} ${planDefaultSplit.monthlyPreTax.toLocaleString()}/mo
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-foreground">
+                  <span className="alloc-dot alloc-dot--md alloc-dot--roth" />
+                  {t(`${A}rothLabel`)} ${planDefaultSplit.monthlyRoth.toLocaleString()}/mo
+                </span>
+              </div>
             </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="alloc-dot alloc-dot--md alloc-dot--pretax" />
-                <p className="text-sm text-foreground">
-                  {t(`${A}preTaxLabel`)} ({PLAN_DEFAULT.preTax}%)
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-200">{t(`${A}employerMatch`)}</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-emerald-900 dark:text-emerald-100">
+                  +${monthlyMatch.toLocaleString()}
+                </p>
+                <p className="mt-0.5 text-xs font-medium text-emerald-800/90 dark:text-emerald-300/90">
+                  {t(`${A}employerMatchOnPreTax`)}
                 </p>
               </div>
-              <p className="text-sm font-semibold">${planDefaultPreTax.toLocaleString()}</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="alloc-dot alloc-dot--md alloc-dot--roth" />
-                <p className="text-sm text-foreground">
-                  {t(`${A}rothLabel`)} ({PLAN_DEFAULT.roth}%)
+              <div className="rounded-xl border border-border bg-muted/50 p-4">
+                <p className="text-xs font-semibold text-muted-foreground">{t(`${A}totalMonthlyLabel`)}</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-foreground">
+                  ${planDefaultTotalMonthly.toLocaleString()}
                 </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{t(`${A}totalMonthlyYouPlusEmployer`)}</p>
               </div>
-              <p className="text-sm font-semibold">${planDefaultRoth.toLocaleString()}</p>
             </div>
+
+            <ul className="flex-1 space-y-2.5">
+              {planDefaultFeatures.map((line) => (
+                <li key={line} className="flex items-start gap-2.5 text-sm leading-snug text-foreground">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#2563eb]" aria-hidden />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              type="button"
+              onClick={handleContinuePlanDefault}
+              className="flex h-12 w-full items-center justify-center rounded-xl bg-[#2563eb] text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1d4ed8] active:scale-[0.99]"
+            >
+              {t(`${A}continuePlanDefaultCta`)}
+            </button>
           </div>
-          <p className="flex-1 pt-2 text-left text-[0.7rem] leading-snug text-muted-foreground">
-            {t(`${A}planDefaultFootnote`)}
-          </p>
-          <button type="button" onClick={() => setSources({ ...PLAN_DEFAULT })} className="btn btn-primary h-10 w-full text-sm">
-            {t(`${A}usePlanDefaultCta`)}
-          </button>
         </div>
 
-        <div className="flex flex-col gap-6 rounded-2xl border border-gray-200 bg-white p-7 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-gray-700 dark:bg-gray-900 lg:flex-row">
-          <div className="min-w-0 flex-1 space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{t(`${A}yourTaxStrategy`)}</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">{t(`${A}totalAllocation`, { total })}</p>
-              </div>
-              <div className="badge-recommended-enroll">
-                <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
-                <p className="text-[0.7rem] font-bold uppercase tracking-wide text-foreground">
-                  {t(`${A}recommendedBadge`)}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="alloc-bar-track">
-                {sources.preTax > 0 ? (
-                  <div className="alloc-seg-pretax transition-all" style={{ width: `${sources.preTax}%` }} />
-                ) : null}
-                {sources.roth > 0 ? (
-                  <div className="alloc-seg-roth transition-all" style={{ width: `${sources.roth}%` }} />
-                ) : null}
-                {sources.afterTax > 0 ? (
-                  <div className="alloc-seg-aftertax transition-all" style={{ width: `${sources.afterTax}%` }} />
-                ) : null}
-              </div>
-              <div className="flex flex-wrap gap-3 text-xs">
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="alloc-dot alloc-dot--pretax" />
-                  {sources.preTax}% {t(`${A}preTaxLabel`)}
-                </span>
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="alloc-dot alloc-dot--roth" />
-                  {sources.roth}% {t(`${A}rothLabel`)}
-                </span>
-                {sources.afterTax > 0 ? (
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <span className="alloc-dot alloc-dot--aftertax" />
-                    {sources.afterTax}% {t(`${A}afterTaxLabel`)}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <SliderRow
-                label={t(`${A}preTaxLabel`)}
-                sub={t(`${A}preTaxSub`)}
-                color="blue"
-                value={sources.preTax}
-                monthly={monthlyPreTax}
-                onChange={handlePreTaxChange}
-              />
-              <SliderRow
-                label={t(`${A}rothLabel`)}
-                sub={t(`${A}rothSub`)}
-                color="purple"
-                value={sources.roth}
-                monthly={monthlyRoth}
-                onChange={handleRothChange}
-              />
-              {showAdvanced && supportsAfterTax ? (
-                <div className="space-y-2 border-t border-border pt-4">
-                  <div className="enroll-advanced-tag">
-                    <p className="enroll-advanced-tag__text">{t(`${A}advancedTag`)}</p>
-                  </div>
-                  <SliderRow
-                    label={t(`${A}afterTaxLabel`)}
-                    sub={t(`${A}afterTaxSub`)}
-                    color="orange"
-                    value={sources.afterTax}
-                    monthly={monthlyAfterTax}
-                    onChange={handleAfterTaxChange}
-                  />
-                </div>
-              ) : null}
-            </div>
-
-            {!showAdvanced ? (
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(true)}
-                className="flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                <ChevronDown className="h-4 w-4" aria-hidden />
-                {t(`${A}showAdvanced`)}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAdvanced(false);
-                  if (sources.afterTax > 0) {
-                    setSources({
-                      preTax: sources.preTax + sources.afterTax,
-                      roth: sources.roth,
-                      afterTax: 0,
-                    });
-                  }
-                }}
-                className="flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                <ChevronUp className="h-4 w-4" aria-hidden />
-                {t(`${A}hideAdvanced`)}
-              </button>
-            )}
-
-            {/* ── Recommended Allocation — standalone high-impact module ── */}
-            <div className="mt-4 space-y-4 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-blue-900/50 dark:from-blue-950/30 dark:to-gray-900">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" aria-hidden />
-                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t(`${A}recommendedForYou`)}</p>
-                </div>
-                <div className="rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-extrabold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                  {t(`${A}scoreLabel`)}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium leading-snug text-gray-800 dark:text-gray-200">
-                  {t(`${A}recommendedMix`, { preTax: recommended.preTax, roth: recommended.roth })}
-                </p>
-                <div className="flex items-start gap-2">
-                  <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500 dark:text-blue-400" aria-hidden />
-                  <p className="text-xs font-medium leading-snug text-blue-700/80 dark:text-blue-300/80">
-                    {data.currentAge > 50 ? t(`${A}tipPreTaxBetter`) : t(`${A}tipRothBetter`)}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSources({ ...recommended })}
-                disabled={Math.abs(total - 100) > 0.001}
-                className="flex h-11 w-full items-center justify-center rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-700 dark:hover:bg-blue-600"
-              >
-                {t(`${A}applyRecommendedCta`)}
-              </button>
-            </div>
-
-            {/* ── Secondary: keep custom allocation — clearly outside recommendation block ── */}
-            <div className="mt-4">
-              <button
-                type="button"
-                disabled={Math.abs(total - 100) > 0.001}
-                className="flex h-10 w-full items-center justify-center rounded-lg border border-gray-300 bg-transparent text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800/40"
-              >
-                {t(`${A}keepCustomAllocation`)}
-              </button>
-            </div>
+        {/* Customize Split */}
+        <div
+          id="customize-tax-split"
+          className={cn(
+            "flex min-h-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-sm transition-[box-shadow,border-color]",
+            customizeEditorOpen ? "border-[#2563eb]/50 shadow-md ring-2 ring-[#2563eb]/20" : "border-border",
+          )}
+        >
+          <div className="flex items-center justify-center gap-2 border-b border-border bg-muted/60 px-5 py-3 text-sm font-semibold text-foreground">
+            <SlidersHorizontal className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+            {t(`${A}customizeSplitHeader`)}
           </div>
-
-          <div className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)] dark:border-gray-700 dark:bg-gray-900 lg:w-[32%] lg:self-start">
-            <div className="space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wide text-foreground">{t(`${A}yourMonthlyImpact`)}</h4>
-              <div>
-                <p className="text-xs text-muted-foreground">{t(`${A}youContributeColon`)}</p>
-                <p className="text-xl font-extrabold text-foreground">${monthlyTotal.toLocaleString()}</p>
-                <div className="mt-2 space-y-1.5 border-l-2 border-border pl-3">
-                  <RowMini label={t(`${A}preTaxLabel`)} amount={monthlyPreTax} variant="pretax" />
-                  <RowMini label={t(`${A}rothLabel`)} amount={monthlyRoth} variant="roth" />
-                  {monthlyAfterTax > 0 ? (
-                    <RowMini label={t(`${A}afterTaxLabel`)} amount={monthlyAfterTax} variant="aftertax" />
-                  ) : null}
+          <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+            {!customizeEditorOpen ? (
+              <>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">{t(`${A}customizeCardTitle`)}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{t(`${A}customizeCardSubtitle`)}</p>
                 </div>
-              </div>
-              <div className="success-card success-card--compact">
-                <p className="success-card-emphasis">{t(`${A}employerMatch`)}</p>
-                <p className="success-card-emphasis-lg">+${monthlyMatch.toLocaleString()}/month</p>
-                <p className="success-card-footnote">{t(`${A}employerMatchFootnote`, { percent: matchPercent })}</p>
-              </div>
-              <div className="card-soft card-soft--tight">
-                <p className="text-[0.7rem] font-semibold text-muted-foreground">{t(`${A}totalInvestment`)}</p>
-                <p className="text-2xl font-extrabold text-foreground">${totalMonthlyInvestment.toLocaleString()}</p>
-                <p className="text-[0.65rem] text-muted-foreground">{t(`${A}perMonth`)}</p>
-              </div>
-            </div>
+
+                <div className="space-y-2 opacity-50">
+                  <div className="alloc-bar-track">
+                    <div className="alloc-seg-pretax" style={{ width: `${PLAN_DEFAULT.preTax}%` }} />
+                    <div className="alloc-seg-roth" style={{ width: `${PLAN_DEFAULT.roth}%` }} />
+                  </div>
+                  <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                    <span>{t(`${A}preTaxLabel`)}</span>
+                    <span>{t(`${A}rothLabel`)}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border bg-muted/50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${A}employerMatch`)}</p>
+                    <p className="mt-1 text-xl font-bold tabular-nums text-muted-foreground">—</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{t(`${A}employerMatchBasedOnSplit`)}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${A}totalMonthlyLabel`)}</p>
+                    <p className="mt-1 text-xl font-bold tabular-nums text-muted-foreground">—</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{t(`${A}totalMonthlyYouPlusEmployer`)}</p>
+                  </div>
+                </div>
+
+                <ul className="space-y-2.5">
+                  {customizeFeatures.map((line) => (
+                    <li key={line} className="flex items-start gap-2.5 text-sm leading-snug text-muted-foreground">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/70" aria-hidden />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">{t(`${A}learnPrefix`)}</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-600" aria-hidden />
+                    {t(`${A}preTaxLabel`)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-purple-600" aria-hidden />
+                    {t(`${A}rothLabel`)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-950/50 dark:text-orange-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden />
+                    {t(`${A}afterTaxLabel`)}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={openCustomizeEditor}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background text-sm font-semibold text-foreground transition-colors hover:bg-muted/60"
+                >
+                  {t(`${A}customizeAllocationCta`)}
+                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+                </button>
+              </>
+            ) : (
+              <CustomizeEditorPanel
+                t={t}
+                A={A}
+                sources={sources}
+                monthlyMatch={monthlyMatch}
+                totalMonthlyInvestment={totalMonthlyInvestment}
+                monthlyPreTax={monthlyPreTax}
+                monthlyRoth={monthlyRoth}
+                monthlyAfterTax={monthlyAfterTax}
+                hasAfterTaxSlice={hasAfterTaxSlice}
+                supportsAfterTax={supportsAfterTax}
+                showAdvanced={showAdvanced}
+                setShowAdvanced={setShowAdvanced}
+                applyCustomDisabled={applyCustomDisabled}
+                totalValid={Math.abs(total - 100) < 0.001}
+                onPreTaxSlider={handleCombinedPreRoth}
+                onRothSlider={(v) => setSources({ preTax: 100 - v, roth: v, afterTax: 0 })}
+                onPreset={(preTax, roth) => setSources({ preTax, roth, afterTax: 0 })}
+                onPreTaxChange={handlePreTaxChange}
+                onRothChange={handleRothChange}
+                onAfterTaxChange={handleAfterTaxChange}
+                onApply={handleApplyCustomSplit}
+                onReset={handleResetToPlanDefault}
+                onAddSource={() => setShowAdvanced(true)}
+                onScrollExplain={scrollToExplain}
+              />
+            )}
           </div>
         </div>
       </div>
 
-      {Math.abs(total - 100) > 0.001 ? (
+      {customizeEditorOpen && Math.abs(total - 100) > 0.001 ? (
         <p className="text-center text-sm font-medium text-destructive">{t(`${A}allocMustTotal`, { total })}</p>
       ) : null}
 
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{t(`${A}understandingTitle`)}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t(`${A}understandingTitle`)}</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <ExplainCard
+            id="source-explain-pretax"
             title={t(`${A}preTaxLabel`)}
-            icon={<TrendingUp className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
+            subtitle={t(`${A}explainPreTaxSub`)}
+            icon={<TrendingUp className="h-4 w-4" aria-hidden />}
             variant="pretax"
             items={explainPreTax}
           />
           <ExplainCard
+            id="source-explain-roth"
             title={t(`${A}rothLabel`)}
-            icon={<Shield className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
+            subtitle={t(`${A}explainRothSub`)}
+            icon={<Shield className="h-4 w-4" aria-hidden />}
             variant="roth"
             items={explainRoth}
           />
           <ExplainCard
+            id="source-explain-aftertax"
             title={t(`${A}afterTaxLabel`)}
-            icon={<DollarSign className="enroll-on-accent-icon h-4 w-4" aria-hidden />}
+            subtitle={t(`${A}explainAfterTaxSub`)}
+            icon={<DollarSign className="h-4 w-4" aria-hidden />}
             variant="aftertax"
             items={explainAfterTax}
             className="md:col-span-2 lg:col-span-1"
@@ -388,29 +405,356 @@ export function ContributionSource() {
   );
 }
 
-function RowMini({
+function CustomizeEditorPanel({
+  t,
+  A,
+  sources,
+  monthlyMatch,
+  totalMonthlyInvestment,
+  monthlyPreTax,
+  monthlyRoth,
+  monthlyAfterTax,
+  hasAfterTaxSlice,
+  supportsAfterTax,
+  showAdvanced,
+  setShowAdvanced,
+  applyCustomDisabled,
+  totalValid,
+  onPreTaxSlider,
+  onRothSlider,
+  onPreset,
+  onPreTaxChange,
+  onRothChange,
+  onAfterTaxChange,
+  onApply,
+  onReset,
+  onAddSource,
+  onScrollExplain,
+}: {
+  t: TFunction;
+  A: string;
+  sources: ContributionSources;
+  monthlyMatch: number;
+  totalMonthlyInvestment: number;
+  monthlyPreTax: number;
+  monthlyRoth: number;
+  monthlyAfterTax: number;
+  hasAfterTaxSlice: boolean;
+  supportsAfterTax: boolean;
+  showAdvanced: boolean;
+  setShowAdvanced: (v: boolean) => void;
+  applyCustomDisabled: boolean;
+  totalValid: boolean;
+  onPreTaxSlider: (n: number) => void;
+  onRothSlider: (n: number) => void;
+  onPreset: (preTax: number, roth: number) => void;
+  onPreTaxChange: (n: number) => void;
+  onRothChange: (n: number) => void;
+  onAfterTaxChange: (n: number) => void;
+  onApply: () => void;
+  onReset: () => void;
+  onAddSource: () => void;
+  onScrollExplain: (id: string) => void;
+}) {
+  const commonPresets = useMemo(
+    () =>
+      [
+        { preTax: 100, roth: 0, label: t(`${A}splitAllPreTax`) },
+        { preTax: 80, roth: 20, label: t(`${A}split8020`) },
+        { preTax: 50, roth: 50, label: t(`${A}split5050`) },
+        { preTax: 20, roth: 80, label: t(`${A}split2080`) },
+        { preTax: 0, roth: 100, label: t(`${A}splitAllRoth`) },
+      ] as const,
+    [t, A],
+  );
+
+  const mixTitle = hasAfterTaxSlice
+    ? `${Math.round(sources.preTax)}% ${t(`${A}preTaxLabel`)} · ${Math.round(sources.roth)}% ${t(`${A}rothLabel`)} · ${Math.round(sources.afterTax)}% ${t(`${A}afterTaxLabel`)}`
+    : t(`${A}planDefaultMixTitle`, { preTax: Math.round(sources.preTax), roth: Math.round(sources.roth) });
+
+  const applyDisabled = applyCustomDisabled || !totalValid;
+
+  return (
+    <>
+      <div>
+        <h2 className="text-lg font-bold text-foreground">{mixTitle}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t(`${A}customizeEditorSubtitle`)}</p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="alloc-bar-plain">
+          <div className="flex h-full w-full overflow-hidden rounded-full">
+            {sources.preTax > 0 ? (
+              <div className="alloc-seg-pretax transition-all" style={{ width: `${sources.preTax}%` }} />
+            ) : null}
+            {sources.roth > 0 ? (
+              <div className="alloc-seg-roth transition-all" style={{ width: `${sources.roth}%` }} />
+            ) : null}
+            {sources.afterTax > 0 ? (
+              <div className="alloc-seg-aftertax transition-all" style={{ width: `${sources.afterTax}%` }} />
+            ) : null}
+          </div>
+        </div>
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2 text-foreground">
+            <span className="alloc-dot alloc-dot--md alloc-dot--pretax" />
+            {t(`${A}preTaxLabel`)} ${monthlyPreTax.toLocaleString()}/mo
+          </div>
+          <div className="flex items-center gap-2 text-foreground">
+            <span className="alloc-dot alloc-dot--md alloc-dot--roth" />
+            {t(`${A}rothLabel`)} ${monthlyRoth.toLocaleString()}/mo
+          </div>
+          {hasAfterTaxSlice ? (
+            <div className="flex items-center gap-2 text-foreground">
+              <span className="alloc-dot alloc-dot--md alloc-dot--aftertax" />
+              {t(`${A}afterTaxLabel`)} {monthlyAfterTax.toLocaleString()}/mo
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {hasAfterTaxSlice ? (
+        <div className="space-y-5">
+          <SliderRow
+            label={t(`${A}preTaxLabel`)}
+            sub={t(`${A}preTaxSub`)}
+            color="blue"
+            value={sources.preTax}
+            monthly={monthlyPreTax}
+            onChange={onPreTaxChange}
+          />
+          <SliderRow
+            label={t(`${A}rothLabel`)}
+            sub={t(`${A}rothSub`)}
+            color="purple"
+            value={sources.roth}
+            monthly={monthlyRoth}
+            onChange={onRothChange}
+          />
+          <SliderRow
+            label={t(`${A}afterTaxLabel`)}
+            sub={t(`${A}afterTaxSub`)}
+            color="orange"
+            value={sources.afterTax}
+            monthly={monthlyAfterTax}
+            onChange={onAfterTaxChange}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="space-y-6">
+            <ExpandDualSlider
+              label={t(`${A}preTaxLabel`)}
+              color="blue"
+              value={sources.preTax}
+              onChange={onPreTaxSlider}
+              whatsThisLabel={t(`${A}whatsThis`)}
+              onWhatsThis={() => onScrollExplain("source-explain-pretax")}
+            />
+            <ExpandDualSlider
+              label={t(`${A}rothLabel`)}
+              color="purple"
+              value={sources.roth}
+              onChange={onRothSlider}
+              whatsThisLabel={t(`${A}whatsThis`)}
+              onWhatsThis={() => onScrollExplain("source-explain-roth")}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t(`${A}commonSplitsLabel`)}</p>
+            <div className="flex flex-wrap gap-2">
+              {commonPresets.map((p) => (
+                <button
+                  key={p.label}
+                  type="button"
+                  onClick={() => onPreset(p.preTax, p.roth)}
+                  className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted/70"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {supportsAfterTax && showAdvanced ? (
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="enroll-advanced-tag">
+                <p className="enroll-advanced-tag__text">{t(`${A}advancedTag`)}</p>
+              </div>
+              <SliderRow
+                label={t(`${A}afterTaxLabel`)}
+                sub={t(`${A}afterTaxSub`)}
+                color="orange"
+                value={sources.afterTax}
+                monthly={monthlyAfterTax}
+                onChange={onAfterTaxChange}
+              />
+            </div>
+          ) : null}
+        </>
+      )}
+
+      {supportsAfterTax && !hasAfterTaxSlice ? (
+        <div className="flex flex-col gap-2">
+          {!showAdvanced ? (
+            <button
+              type="button"
+              onClick={onAddSource}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted/40 hover:text-foreground"
+            >
+              <Plus className="h-4 w-4 shrink-0" aria-hidden />
+              {t(`${A}addAnotherSource`)}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setShowAdvanced(false);
+                if (sources.afterTax > 0) {
+                  onPreset(sources.preTax + sources.afterTax, sources.roth);
+                }
+              }}
+              className="flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <ChevronUp className="h-4 w-4" aria-hidden />
+              {t(`${A}hideAdvanced`)}
+            </button>
+          )}
+        </div>
+      ) : null}
+
+      {hasAfterTaxSlice && supportsAfterTax ? (
+        <button
+          type="button"
+          onClick={() => {
+            setShowAdvanced(false);
+            onPreset(sources.preTax + sources.afterTax, sources.roth);
+          }}
+          className="flex items-center gap-1.5 self-start text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ChevronUp className="h-4 w-4" aria-hidden />
+          {t(`${A}hideAdvanced`)}
+        </button>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 p-4 dark:border-emerald-900/50 dark:bg-emerald-950/30">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">{t(`${A}employerMatch`)}</p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-emerald-900 dark:text-emerald-100">+${monthlyMatch.toLocaleString()}</p>
+          <p className="mt-0.5 text-xs font-medium text-emerald-800/90 dark:text-emerald-300/90">{t(`${A}employerMatchOnPreTax`)}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-muted/50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`${A}totalMonthlyLabel`)}</p>
+          <p className="mt-1 text-xl font-bold tabular-nums text-foreground">${totalMonthlyInvestment.toLocaleString()}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t(`${A}totalMonthlyYouPlusEmployer`)}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{t(`${A}learnPrefix`)}</span>
+        <button
+          type="button"
+          onClick={() => onScrollExplain("source-explain-pretax")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-blue-600" aria-hidden />
+          {t(`${A}preTaxLabel`)}
+        </button>
+        <button
+          type="button"
+          onClick={() => onScrollExplain("source-explain-roth")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 font-medium text-purple-700 dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-purple-600" aria-hidden />
+          {t(`${A}rothLabel`)}
+        </button>
+        <button
+          type="button"
+          onClick={() => onScrollExplain("source-explain-aftertax")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-0.5 font-medium text-orange-700 dark:border-orange-800 dark:bg-orange-950/50 dark:text-orange-300"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden />
+          {t(`${A}afterTaxLabel`)}
+        </button>
+      </div>
+
+      <button
+        type="button"
+        onClick={onApply}
+        disabled={applyDisabled}
+        className={cn(
+          "flex h-12 w-full items-center justify-center rounded-xl text-sm font-semibold transition-colors",
+          applyDisabled
+            ? "cursor-not-allowed bg-muted text-muted-foreground"
+            : "bg-[#2563eb] text-white shadow-sm hover:bg-[#1d4ed8]",
+        )}
+      >
+        {t(`${A}adjustSlidersToApply`)}
+      </button>
+
+      <button
+        type="button"
+        onClick={onReset}
+        className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+        {t(`${A}resetToPlanDefault`)}
+      </button>
+    </>
+  );
+}
+
+function ExpandDualSlider({
   label,
-  amount,
-  variant,
+  color,
+  value,
+  onChange,
+  whatsThisLabel,
+  onWhatsThis,
 }: {
   label: string;
-  amount: number;
-  variant: "pretax" | "roth" | "aftertax";
+  color: "blue" | "purple";
+  value: number;
+  onChange: (n: number) => void;
+  whatsThisLabel: string;
+  onWhatsThis: () => void;
 }) {
+  const displayPct = Math.round(value);
+  const rangeMod = color === "blue" ? "source-allocation-range--pretax" : "source-allocation-range--roth";
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-1.5">
-        <div
-          className={cn(
-            "alloc-dot",
-            variant === "pretax" && "alloc-dot--pretax",
-            variant === "roth" && "alloc-dot--roth",
-            variant === "aftertax" && "alloc-dot--aftertax",
-          )}
-        />
-        <p className="text-xs text-muted-foreground">{label}</p>
+    <div className="space-y-2">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "alloc-dot alloc-dot--md shrink-0",
+              color === "blue" ? "alloc-dot--pretax" : "alloc-dot--roth",
+            )}
+          />
+          <span className="text-sm font-semibold text-foreground">{label}</span>
+          <button type="button" onClick={onWhatsThis} className="text-xs font-medium text-primary hover:underline">
+            {whatsThisLabel}
+          </button>
+        </div>
+        <p className={cn("shrink-0 tabular-nums", color === "blue" ? "alloc-value-pretax" : "alloc-value-roth")}>
+          {displayPct}%
+        </p>
       </div>
-      <p className="text-xs font-semibold">${amount.toLocaleString()}</p>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={Math.min(100, Math.max(0, value))}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className={cn("source-allocation-range w-full min-w-0", rangeMod)}
+        style={{ "--range-pct": `${Math.min(100, Math.max(0, value))}%` } as CSSProperties}
+        aria-label={label}
+      />
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>0%</span>
+        <span>100%</span>
+      </div>
     </div>
   );
 }
@@ -438,7 +782,11 @@ function SliderRow({
 }) {
   const { valueClass } = ACCENT_BY_COLOR[color];
   const rangeMod =
-    color === "blue" ? "source-allocation-range--pretax" : color === "purple" ? "source-allocation-range--roth" : "source-allocation-range--aftertax";
+    color === "blue"
+      ? "source-allocation-range--pretax"
+      : color === "purple"
+        ? "source-allocation-range--roth"
+        : "source-allocation-range--aftertax";
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -483,13 +831,17 @@ const EXPLAIN_ACCENT: Record<"pretax" | "roth" | "aftertax", { icon: string; che
 };
 
 function ExplainCard({
+  id,
   title,
+  subtitle,
   icon,
   variant,
   items,
   className,
 }: {
+  id?: string;
   title: string;
+  subtitle: string;
   icon: ReactNode;
   variant: "pretax" | "roth" | "aftertax";
   items: string[];
@@ -498,20 +850,26 @@ function ExplainCard({
   const accent = EXPLAIN_ACCENT[variant];
   return (
     <div
+      id={id}
       className={cn(
-        "rounded-xl border border-gray-200 bg-white p-4 transition-all hover:-translate-y-[1px] hover:shadow-md dark:border-gray-700 dark:bg-gray-900",
+        "rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-px hover:shadow-md",
         className,
       )}
     >
-      <div className="mb-3 flex items-center gap-2.5">
-        <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg text-white", accent.icon)}>{icon}</div>
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-50">{title}</h3>
+      <div className="mb-3 flex items-start gap-2.5">
+        <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white", accent.icon)}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+        </div>
       </div>
       <div className="space-y-1.5">
         {items.map((line) => (
           <div key={line} className="flex items-start gap-2">
             <Check className={cn("mt-0.5 h-3.5 w-3.5 shrink-0", accent.check)} aria-hidden />
-            <p className="text-sm text-gray-700 dark:text-gray-300">{line}</p>
+            <p className="text-sm text-muted-foreground">{line}</p>
           </div>
         ))}
       </div>
