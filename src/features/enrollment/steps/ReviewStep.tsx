@@ -132,10 +132,11 @@ export function ReviewStep() {
 
       {/* Hero card with gradient */}
       <div
-        className="rounded-xl p-5 text-white shadow-md"
+        className="rounded-xl p-5 shadow-md"
         style={{
+          color: "var(--color-text-on-primary)",
           background:
-            "linear-gradient(135deg, var(--enroll-brand), color-mix(in srgb, var(--enroll-brand) 70%, #4338ca))",
+            "linear-gradient(135deg, var(--enroll-brand), color-mix(in srgb, var(--enroll-brand) 70%, var(--enroll-accent, var(--enroll-brand))))",
         }}
       >
         <p className="text-[0.7rem] font-medium uppercase tracking-wider opacity-80">
@@ -293,7 +294,7 @@ function HeroMetric({
   sub: string;
 }) {
   return (
-    <div className="rounded-xl px-3.5 py-3 backdrop-blur-sm" style={{ background: "rgba(255,255,255,0.1)" }}>
+    <div className="rounded-xl px-3.5 py-3 backdrop-blur-sm" style={{ background: "color-mix(in srgb, var(--color-text-on-primary) 10%, transparent)" }}>
       <div className="mb-1 flex items-center gap-1.5">
         {icon}
         <span className="text-[0.62rem] font-medium opacity-70">{label}</span>

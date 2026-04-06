@@ -27,8 +27,6 @@ import { pathForWizardStep } from "../flow/v1WizardPaths";
 import type { RiskLevel } from "../store/useEnrollmentStore";
 import { useEnrollmentStore } from "../store/useEnrollmentStore";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/context/ThemeContext";
-
 /* ─── Types ─── */
 
 interface FundDetail {
@@ -331,11 +329,11 @@ function FundPicker({ existingTickers, onAdd }: { existingTickers: string[]; onA
                 >
                   <div>
                     <p className="text-gray-800 dark:text-gray-100" style={{ fontSize: "0.8rem" }}>{fund.name}</p>
-                    <p className="text-gray-400" style={{ fontSize: "0.68rem" }}>
+                    <p className="text-gray-400 dark:text-gray-500" style={{ fontSize: "0.68rem" }}>
                       {fund.ticker} · {t(`${IV}erLabel`)} {fund.expense}
                     </p>
                   </div>
-                  <Plus className="w-3.5 h-3.5 text-gray-400" />
+                  <Plus className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
                 </button>
               ))}
             </div>
@@ -355,8 +353,7 @@ function SourceFundList({ funds, onUpdate, onRemove, onAdd }: {
   onAdd: (fund: SourceFundAllocation) => void;
 }) {
   const { t } = useTranslation();
-  const { effectiveMode } = useTheme();
-  const trackMuted = effectiveMode === "dark" ? "#4b5563" : "#e5e7eb";
+  const trackMuted = "var(--enroll-card-border)";
   const grouped = funds.reduce<Record<string, SourceFundAllocation[]>>((acc, f) => {
     if (!acc[f.assetClass]) acc[f.assetClass] = [];
     acc[f.assetClass].push(f);

@@ -52,7 +52,7 @@ export function StepFooter({
           className={cn(
             "btn h-10 min-h-10 min-w-[5.5rem] rounded-md px-4 text-sm sm:min-w-0",
             wizardChrome && saveExit
-              ? "btn-ghost text-[#364153] hover:bg-black/5 dark:text-foreground dark:hover:bg-white/10"
+              ? "btn-ghost text-[var(--enroll-text-secondary)] hover:bg-[var(--enroll-soft-bg)] dark:text-foreground dark:hover:bg-[var(--enroll-soft-bg)]"
               : "btn-outline",
           )}
         >

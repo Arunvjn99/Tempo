@@ -187,7 +187,13 @@ export function ContributionSource() {
       {/* Two-column cards */}
       <div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-stretch">
         {/* Plan Default */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--enroll-brand)]/35 bg-background shadow-[0_0_0_1px_rgba(37,99,235,0.12)]">
+        <div
+          className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-background"
+          style={{
+            border: "1px solid color-mix(in srgb, var(--enroll-brand) 35%, var(--enroll-card-border))",
+            boxShadow: "0 0 0 1px color-mix(in srgb, var(--enroll-brand) 12%, transparent)",
+          }}
+        >
           <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
             <div>
               <h2 className="m-0 text-base font-semibold leading-none">

@@ -1070,7 +1070,8 @@ export function ReadinessStep() {
                       ease,
                       delay: 0.3 + recommendations.length * 0.08,
                     }}
-                    className="overflow-hidden rounded-2xl p-5 text-white shadow-lg"
+                    className="overflow-hidden rounded-2xl p-5 shadow-lg"
+                    style={{ color: "var(--color-text-on-primary)" }}
                     style={{
                       background: `linear-gradient(135deg, color-mix(in srgb, var(--color-success) 88%, black) 0%, color-mix(in srgb, var(--enroll-brand) 55%, var(--color-success)) 100%)`,
                     }}
@@ -1078,7 +1079,7 @@ export function ReadinessStep() {
                     <div className="flex items-center gap-2">
                       <Sparkles
                         className="size-4"
-                        style={{ color: "color-mix(in srgb, white 85%, transparent)" }}
+                        style={{ color: "color-mix(in srgb, var(--color-text-on-primary) 85%, transparent)" }}
                         aria-hidden
                       />
                       <h3 className="text-sm font-semibold tracking-wide opacity-90">
@@ -1112,9 +1113,13 @@ export function ReadinessStep() {
                         </div>
                       </div>
                     </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/20">
+                    <div
+                      className="mt-4 h-2 overflow-hidden rounded-full"
+                      style={{ background: "color-mix(in srgb, var(--color-text-on-primary) 20%, transparent)" }}
+                    >
                       <motion.div
-                        className="h-full rounded-full bg-white/80"
+                        className="h-full rounded-full"
+                        style={{ background: "color-mix(in srgb, var(--color-text-on-primary) 80%, transparent)" }}
                         initial={{ width: 0 }}
                         animate={{
                           width: `${Math.min(100, Math.round((combinedNewScore / 100) * 100))}%`,
@@ -1125,7 +1130,19 @@ export function ReadinessStep() {
                     <button
                       type="button"
                       onClick={handleApplyAll}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25"
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold backdrop-blur-sm transition"
+                      style={{
+                        background: "color-mix(in srgb, var(--color-text-on-primary) 15%, transparent)",
+                        color: "var(--color-text-on-primary)",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background =
+                          "color-mix(in srgb, var(--color-text-on-primary) 25%, transparent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.background =
+                          "color-mix(in srgb, var(--color-text-on-primary) 15%, transparent)";
+                      }}
                     >
                       <Sparkles className="size-4" aria-hidden />
                       {t(`${PW}applyAllCta`)}

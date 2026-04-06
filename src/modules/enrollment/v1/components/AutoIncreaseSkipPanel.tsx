@@ -163,9 +163,28 @@ export function AutoIncreaseSkipPanel({ variant, onDismiss }: AutoIncreaseSkipPa
       <button
         type="button"
         onClick={handleEnableAutoIncrease}
-        className="group relative w-full rounded-xl border-2 border-green-500 bg-green-50/80 px-4 py-4 text-left shadow-sm transition-colors hover:bg-green-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 dark:border-green-500 dark:bg-green-950/30 dark:hover:bg-green-950/45"
+        className="group relative w-full rounded-xl border-2 px-4 py-4 text-left shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        style={{
+          borderColor: "var(--color-success)",
+          background: "color-mix(in srgb, var(--color-success) 8%, var(--enroll-card-bg))",
+          outlineColor: "var(--color-success)",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "color-mix(in srgb, var(--color-success) 12%, var(--enroll-card-bg))";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "color-mix(in srgb, var(--color-success) 8%, var(--enroll-card-bg))";
+        }}
       >
-        <span className="absolute -top-2.5 left-4 inline-flex rounded-full bg-green-600 px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white dark:bg-green-500">
+        <span
+          className="absolute -top-2.5 left-4 inline-flex rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide"
+          style={{
+            background: "var(--color-success)",
+            color: "var(--color-text-on-primary)",
+          }}
+        >
           {t(`${S}recommended`)}
         </span>
         <div className="mt-2">
@@ -209,7 +228,12 @@ export function AutoIncreaseSkipPanel({ variant, onDismiss }: AutoIncreaseSkipPa
         <button
           type="button"
           onClick={handleEnableAutoIncrease}
-          className="flex h-12 w-full items-center justify-center rounded-xl bg-green-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 dark:bg-green-600 dark:hover:bg-green-500"
+          className="flex h-12 w-full items-center justify-center rounded-xl px-4 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 hover:opacity-90"
+          style={{
+            background: "var(--color-success)",
+            color: "var(--color-text-on-primary)",
+            outlineColor: "var(--color-success)",
+          }}
         >
           {t(`${S}ctaEnable`)}
         </button>
