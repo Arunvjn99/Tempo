@@ -166,6 +166,8 @@ export function EnrollmentV1Layout() {
     />
   );
 
+  const readinessStepIndex = ENROLLMENT_STEPS.indexOf("readiness");
+
   return (
     <DashboardLayout
       header={<DashboardHeader />}
@@ -175,7 +177,17 @@ export function EnrollmentV1Layout() {
       allowMainOverflowX
     >
       <div className="flex h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] w-full min-h-0 min-w-0 flex-col">
-        <EnrollmentContainer stepper={stepper} footer={stepFooter} className="min-h-0 flex-1">
+        <EnrollmentContainer
+          stepper={stepper}
+          footer={stepFooter}
+          className={stepIndex === readinessStepIndex ? "min-h-0 flex-1 max-w-[1180px]" : "min-h-0 flex-1"}
+          footerTopBorder={
+            stepIndex !== ENROLLMENT_STEPS.indexOf("contribution") &&
+            stepIndex !== ENROLLMENT_STEPS.indexOf("autoIncrease") &&
+            stepIndex !== ENROLLMENT_STEPS.indexOf("investment") &&
+            stepIndex !== ENROLLMENT_STEPS.indexOf("review")
+          }
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}

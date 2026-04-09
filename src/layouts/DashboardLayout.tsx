@@ -10,6 +10,8 @@ interface DashboardLayoutProps {
   mainCompactTop?: boolean;
   /** When true, do not apply bg-background so a parent page wrapper can provide the background. */
   transparentBackground?: boolean;
+  /** When `transparentBackground`, applied to the flex-1 content wrapper (default: theme background). */
+  transparentMainClassName?: string;
   /** When true, do not render the footer (e.g. test pages that use header only). */
   hideFooter?: boolean;
   /** When true, children are not wrapped in the max-w-7xl container (page controls its own grid). */
@@ -35,6 +37,7 @@ export const DashboardLayout = ({
   children,
   mainCompactTop = false,
   transparentBackground = false,
+  transparentMainClassName = "bg-[var(--color-background)]",
   hideFooter = false,
   fullWidthChildren = false,
   allowMainOverflowX = false,
@@ -65,7 +68,7 @@ export const DashboardLayout = ({
           </header>
         )}
         <div
-          className={`flex-1 min-h-0 bg-[var(--color-background)] ${allowMainOverflowX ? "overflow-x-visible" : "overflow-x-hidden"}`}
+          className={`flex-1 min-h-0 ${transparentMainClassName} ${allowMainOverflowX ? "overflow-x-visible" : "overflow-x-hidden"}`}
         >
           {contentWrapper}
         </div>
