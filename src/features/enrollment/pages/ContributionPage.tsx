@@ -8,6 +8,7 @@ import { useEnrollmentStore, useEnrollmentDerived } from "../store";
 import { ContributionPageHeader } from "@/ui/patterns/sections/enrollment/contribution/ContributionPageHeader";
 import { ContributionProjectionRightPanel } from "@/ui/patterns/sections/enrollment/contribution/ContributionProjectionRightPanel";
 import { ContributionSavingsLeftPanel } from "@/ui/patterns/sections/enrollment/contribution/ContributionSavingsLeftPanel";
+import { Button } from "@/ui/components/Button";
 
 export function ContributionPage() {
   const enrollment = useEnrollmentStore((s) => s.enrollment);
@@ -92,14 +93,16 @@ export function ContributionPage() {
       </div>
 
       <div className="space-y-2">
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="custom"
           onClick={nextStep}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-[1rem] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.99]"
+          className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-[1rem] font-semibold transition-all hover:opacity-90 active:scale-[0.99]"
         >
           Save &amp; Continue
           <ArrowRight className="h-5 w-5" aria-hidden />
-        </button>
+        </Button>
         <p className="text-center text-[0.8rem] text-muted-foreground">You can adjust anytime</p>
       </div>
     </div>

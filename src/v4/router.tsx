@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 import { lazy, Suspense } from "react";
-import { createBrowserRouter, Navigate, useLocation, useParams } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import { isValidVersion } from "@/core/version";
 import { ProtectedRoute } from "@/ui/auth/ProtectedRoute";
 import { V4RootLayout } from "@/v4/layouts/RootLayout";
 import { AuthLayoutRoute } from "@/v4/layouts/AuthLayoutRoute";
-import { V4AppShell } from "@/v4/layouts/AppShell";
 /** Auth + shared pages — async chunks to keep the entry bundle small. */
 const Login = lazy(() =>
   import("@/v4/pages/auth/Login").then((m) => ({ default: m.Login })),
@@ -28,31 +27,10 @@ const ResetPassword = lazy(() =>
 const HelpCenter = lazy(() =>
   import("@/v4/pages/auth/HelpCenter").then((m) => ({ default: m.HelpCenter })),
 );
-const PlaceholderPage = lazy(() =>
-  import("@/v4/pages/PlaceholderPage").then((m) => ({ default: m.PlaceholderPage })),
-);
-const TransactionRouter = lazy(() =>
-  import("@/features/transactions/pages/TransactionRouter").then((m) => ({ default: m.TransactionRouter })),
-);
 
-/** Heavy / feature routes — code-split for smaller initial bundle. */
-const DashboardPage = lazy(() =>
-  import("@/features/workspace/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
-);
-const ProfilePage = lazy(() =>
-  import("@/features/workspace/pages/ProfilePage").then((m) => ({ default: m.ProfilePage })),
-);
-const InvestmentsPage = lazy(() =>
-  import("@/features/workspace/pages/InvestmentsPage").then((m) => ({ default: m.InvestmentsPage })),
-);
-const TransactionHubPage = lazy(() =>
-  import("@/features/transactions/pages/TransactionHubPage").then((m) => ({ default: m.TransactionHubPage })),
-);
-const TransactionFlowPage = lazy(() =>
-  import("@/features/transactions/pages/TransactionFlowPage").then((m) => ({ default: m.TransactionFlowPage })),
-);
-const EnrollmentRouter = lazy(() =>
-  import("@/features/enrollment/pages/EnrollmentRouter").then((m) => ({ default: m.EnrollmentRouter })),
+/** TEMP (debug): single surface — RetireWise pre-enrollment sandbox (replaces legacy workspace dashboard). */
+const PreEnrollmentSandbox = lazy(() =>
+  import("@/features/enrollment/pages/PreEnrollmentSandbox").then((m) => ({ default: m.PreEnrollmentSandbox })),
 );
 
 function RouteSuspenseFallback() {
@@ -96,6 +74,11 @@ function RedirectToV1Login() {
 function RedirectToV1Verify() {
   const { search } = useLocation();
   return <Navigate to={`/v1/verify${search}`} replace />;
+}
+
+/** Legacy workspace URLs → canonical pre-enrollment surface. */
+function RedirectToPreEnrollmentHome() {
+  return <Navigate to="/dashboard" replace />;
 }
 
 export const v4Router = createBrowserRouter([
@@ -170,10 +153,14 @@ export const v4Router = createBrowserRouter([
           </SuspensePage>
         ),
       },
+      /**
+       * TEMP (debug): one protected route — full-screen PreEnrollmentSandbox only (no V4AppShell).
+       * Legacy workspace routes redirect here until the new UI ships broadly.
+       */
       {
         element: (
           <ProtectedRoute>
-            <V4AppShell />
+            <Outlet />
           </ProtectedRoute>
         ),
         children: [
@@ -181,76 +168,22 @@ export const v4Router = createBrowserRouter([
             path: "dashboard",
             element: (
               <SuspensePage>
-                <DashboardPage />
+                <PreEnrollmentSandbox />
               </SuspensePage>
             ),
           },
-          {
-            path: "plans",
-            element: (
-              <SuspensePage>
-                <PlaceholderPage titleKey="header.nav.plans" defaultTitle="Plans" />
-              </SuspensePage>
-            ),
-          },
-          {
-            path: "profile",
-            element: (
-              <SuspensePage>
-                <ProfilePage />
-              </SuspensePage>
-            ),
-          },
-          {
-            path: "investments",
-            element: (
-              <SuspensePage>
-                <InvestmentsPage />
-              </SuspensePage>
-            ),
-          },
-          {
-            path: "transactions",
-            element: (
-              <SuspensePage>
-                <TransactionRouter />
-              </SuspensePage>
-            ),
-            children: [
-              {
-                index: true,
-                element: (
-                  <SuspensePage>
-                    <TransactionHubPage />
-                  </SuspensePage>
-                ),
-              },
-              {
-                path: ":txType",
-                element: (
-                  <SuspensePage>
-                    <TransactionFlowPage />
-                  </SuspensePage>
-                ),
-              },
-            ],
-          },
-          {
-            path: "enrollment",
-            element: (
-              <SuspensePage>
-                <EnrollmentRouter />
-              </SuspensePage>
-            ),
-          },
-          {
-            path: "settings",
-            element: (
-              <SuspensePage>
-                <PlaceholderPage titleKey="header.nav.settings" defaultTitle="Settings" />
-              </SuspensePage>
-            ),
-          },
+          { path: "plans", element: <RedirectToPreEnrollmentHome /> },
+          { path: "profile", element: <RedirectToPreEnrollmentHome /> },
+          { path: "profile/*", element: <RedirectToPreEnrollmentHome /> },
+          { path: "investments", element: <RedirectToPreEnrollmentHome /> },
+          { path: "investments/*", element: <RedirectToPreEnrollmentHome /> },
+          { path: "transactions", element: <RedirectToPreEnrollmentHome /> },
+          { path: "transactions/*", element: <RedirectToPreEnrollmentHome /> },
+          { path: "enrollment", element: <RedirectToPreEnrollmentHome /> },
+          { path: "enrollment/*", element: <RedirectToPreEnrollmentHome /> },
+          { path: "pre-enrollment", element: <RedirectToPreEnrollmentHome /> },
+          { path: "pre-enrollment/sandbox", element: <RedirectToPreEnrollmentHome /> },
+          { path: "settings", element: <RedirectToPreEnrollmentHome /> },
         ],
       },
       { path: "*", element: <Navigate to="/dashboard" replace /> },

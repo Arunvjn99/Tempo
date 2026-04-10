@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 
 const QUICK_ACTIONS = [
   "Start Enrollment",
@@ -98,14 +99,16 @@ export function GlobalSearchOverlay({
               <p className="global-search-dialog__hint">What can we help you with?</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {QUICK_ACTIONS.map((item) => (
-                  <button
+                  <Button
                     key={item}
                     type="button"
+                    variant="custom"
+                    size="custom"
                     onClick={() => runSearch(item)}
                     className="global-search-dialog__action"
                   >
                     {item}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -116,9 +119,9 @@ export function GlobalSearchOverlay({
                 <ul className="space-y-1">
                   {TRENDING.map((q) => (
                     <li key={q}>
-                      <button type="button" onClick={() => runSearch(q)} className="global-search-dialog__link">
+                      <Button type="button" variant="custom" size="custom" onClick={() => runSearch(q)} className="global-search-dialog__link">
                         {q}
-                      </button>
+                      </Button>
                     </li>
                   ))}
                 </ul>

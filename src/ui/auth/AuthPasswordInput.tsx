@@ -1,6 +1,7 @@
 import * as Label from "@radix-ui/react-label";
 import { Eye, EyeOff } from "lucide-react";
 import { useState, useId } from "react";
+import { Button } from "@/ui/components/Button";
 import type { InputHTMLAttributes, ChangeEvent } from "react";
 
 export interface AuthPasswordInputProps
@@ -48,10 +49,12 @@ export const AuthPasswordInput = ({
           `}
           {...props}
         />
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="iconSm"
           onClick={() => setIsVisible((prev) => !prev)}
-          className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded text-[var(--color-textSecondary)] transition-colors hover:text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-textSecondary)] hover:bg-transparent hover:text-[var(--color-text)]"
           aria-label={isVisible ? "Hide password" : "Show password"}
           aria-pressed={isVisible}
         >
@@ -60,7 +63,7 @@ export const AuthPasswordInput = ({
           ) : (
             <Eye className="h-4 w-4 shrink-0" aria-hidden />
           )}
-        </button>
+        </Button>
       </div>
       {error && (
         <span id={errorId} className="text-sm text-[var(--color-danger)]" role="alert">

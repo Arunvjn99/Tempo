@@ -5,6 +5,7 @@
 import { AlertTriangle, TrendingUp, Minus, ArrowRight } from "lucide-react";
 import { useEnrollmentStore, useEnrollmentDerived } from "../store";
 import { formatCurrency } from "../store/derived";
+import { Button } from "@/ui/components/Button";
 
 export function AutoIncreaseSkipPage() {
   const enrollment = useEnrollmentStore((s) => s.enrollment);
@@ -118,20 +119,24 @@ export function AutoIncreaseSkipPage() {
 
       {/* Action Buttons */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={handleEnable}
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3.5 text-[0.9rem] font-semibold text-primary-foreground shadow-sm transition-opacity hover:opacity-90 active:scale-[0.98]"
         >
           Enable Auto-Increase <ArrowRight className="h-4 w-4" />
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="secondary"
+          size="custom"
           onClick={handleSkip}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-card py-3.5 text-[0.9rem] font-medium text-foreground transition-colors hover:bg-muted active:scale-[0.98]"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-[0.9rem] font-medium transition-colors hover:bg-muted active:scale-[0.98]"
         >
           Skip for Now
-        </button>
+        </Button>
       </div>
     </div>
   );

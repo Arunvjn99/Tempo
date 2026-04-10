@@ -5,6 +5,7 @@ import { Bot } from "lucide-react";
 import { useCoreAIModal } from "@/core/context/CoreAIModalContext";
 import { useResolvedUIAsset } from "@/core/hooks/useResolvedUIAsset";
 import { FLOATING_SEARCH_BOTTOM_OFFSET_REM, shouldShowFloatingSearch } from "@/core/lib/floatingSearchVisibility";
+import { Button } from "@/ui/components/Button";
 
 /**
  * CoreAIFab — Single floating "Ask Core AI" pill button.
@@ -48,10 +49,12 @@ export const CoreAIFab = () => {
             aria-hidden="true"
           />
 
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={open}
-            className="ai-assistant core-ai-fab-btn elevation-3 relative flex items-center gap-2.5 rounded-full px-5 py-3 text-white transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="ai-assistant core-ai-fab-btn elevation-3 relative inline-flex items-center gap-2.5 rounded-full border-0 px-5 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
             aria-label={t("coreAi.fabAria")}
           >
             {aiAssistantUrl.trim() ? (
@@ -76,7 +79,7 @@ export const CoreAIFab = () => {
               </motion.span>
             )}
             <span className="text-sm font-semibold">{t("coreAi.fabLabel")}</span>
-          </button>
+          </Button>
         </motion.div>
       )}
     </AnimatePresence>

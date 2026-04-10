@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import type { CoreAIStructuredPayload, SuccessCardPayload } from "@/features/ai/store/interactiveTypes";
 
 const BURST_PARTICLES = 12;
@@ -76,13 +77,15 @@ export function LoanSuccessCard({ payload, onAction, enableConfetti = true }: Lo
 
       {payload.actionLabel && (
         <div className="mt-4 border-t border-[var(--color-success)]/20 pt-3">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => onAction({ action: "success_card_dismiss" })}
             className="w-full rounded-xl bg-[var(--color-success)] py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90"
           >
             {payload.actionLabel}
-          </button>
+          </Button>
         </div>
       )}
     </motion.div>

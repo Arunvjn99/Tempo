@@ -1,5 +1,6 @@
 import type { WithdrawalData } from "@/features/transactions/store/types";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface WithdrawalStepEligibilityProps {
@@ -30,15 +31,19 @@ export function WithdrawalStepEligibility({
     >
       <FormSection title="Status">
         <div className="flex flex-wrap gap-sm">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className={transactionChoiceButtonClass(w.isEligible === true)}
             onClick={() => updateWithdrawal({ isEligible: true, eligibilityReason: "" })}
           >
             Eligible
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className={transactionChoiceButtonClass(w.isEligible === false)}
             onClick={() =>
               updateWithdrawal({
@@ -48,7 +53,7 @@ export function WithdrawalStepEligibility({
             }
           >
             Not eligible
-          </button>
+          </Button>
         </div>
         {errors.eligibility && (
           <p className="mt-sm text-xs text-danger" role="alert">

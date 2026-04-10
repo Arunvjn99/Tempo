@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type K
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import { HERO_SEARCH_FOCUS_EVENT } from "@/core/lib/heroSearchFocus";
 import { useSearch } from "@/core/hooks/useSearch";
 import { useAIAssistantStore } from "@/core/globalStores/aiAssistantStore";
@@ -171,9 +172,9 @@ export function SearchBar({ className }: SearchBarProps) {
               className="search-input"
             />
 
-            <button type="submit" className="search-action" aria-label={t("preEnrollment.heroSearchSubmitAria")}>
+            <Button type="submit" variant="custom" size="custom" className="search-action" aria-label={t("preEnrollment.heroSearchSubmitAria")}>
               <ArrowRight className="size-5" strokeWidth={2} aria-hidden />
-            </button>
+            </Button>
           </div>
         </div>
       </form>
@@ -196,8 +197,10 @@ export function SearchBar({ className }: SearchBarProps) {
                   const isActive = index === activeIndex;
                   return (
                     <li key={s.id} role="presentation">
-                      <button
+                      <Button
                         type="button"
+                        variant="custom"
+                        size="custom"
                         role="option"
                         id={oid}
                         aria-selected={isActive}
@@ -208,7 +211,7 @@ export function SearchBar({ className }: SearchBarProps) {
                         }}
                       >
                         {s.label}
-                      </button>
+                      </Button>
                     </li>
                   );
                 })}

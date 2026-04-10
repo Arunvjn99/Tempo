@@ -1,4 +1,5 @@
 import { UIState } from "@/core/types/voice";
+import { Button } from "@/ui/components/Button";
 
 interface VoiceControlsProps {
   uiState: UIState;
@@ -53,19 +54,23 @@ export const VoiceControls = ({
             autoFocus
             disabled={uiState === UIState.THINKING || uiState === UIState.SPEAKING}
           />
-          <button
+          <Button
             type="submit"
+            variant="custom"
+            size="custom"
             disabled={!textInput.trim() || uiState === UIState.THINKING || uiState === UIState.SPEAKING}
             className="voice-controls__text-submit"
           >
             Send
-          </button>
+          </Button>
         </form>
       )}
 
       <div className="voice-controls__primary">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={onMicToggle}
           disabled={!canUseMic}
           className={`voice-controls__mic ${isListening ? "voice-controls__mic--active" : ""}`}
@@ -87,46 +92,54 @@ export const VoiceControls = ({
               </>
             )}
           </svg>
-        </button>
+        </Button>
       </div>
 
       <div className="voice-controls__secondary">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onGlobalCommand("repeat")}
           disabled={uiState === UIState.IDLE || uiState === UIState.THINKING}
           className="voice-controls__command"
           title="Repeat last message"
         >
           Repeat
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onGlobalCommand("go_back")}
           disabled={uiState === UIState.IDLE || uiState === UIState.THINKING}
           className="voice-controls__command"
           title="Go back"
         >
           Go Back
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onGlobalCommand("cancel")}
           disabled={uiState === UIState.IDLE || uiState === UIState.THINKING}
           className="voice-controls__command"
           title="Cancel"
         >
           Cancel
-        </button>
+        </Button>
         {!isTypingMode && (
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={onSwitchToTyping}
             className="voice-controls__command"
             title="Switch to typing"
           >
             Type
-          </button>
+          </Button>
         )}
       </div>
     </div>

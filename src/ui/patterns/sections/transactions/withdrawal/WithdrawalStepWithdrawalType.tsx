@@ -1,6 +1,7 @@
 import type { WithdrawalData } from "@/features/transactions/store/types";
 import { WD_TYPES } from "@/features/transactions/store/constants/withdrawalFlowConstants";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface WithdrawalStepWithdrawalTypeProps {
@@ -32,15 +33,17 @@ export function WithdrawalStepWithdrawalType({
       <FormSection>
         <div className="grid gap-sm sm:grid-cols-2">
           {WD_TYPES.map((t) => (
-            <button
+            <Button
               key={t.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(w.withdrawalType === t.id)}
               onClick={() => updateWithdrawal({ withdrawalType: t.id })}
             >
               <span className="block font-semibold">{t.label}</span>
               <span className="mt-xs block text-xs font-normal text-muted-foreground">{t.hint}</span>
-            </button>
+            </Button>
           ))}
         </div>
         {errors.withdrawalType && (

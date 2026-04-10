@@ -1,4 +1,5 @@
 import { ArrowRight, Compass, Sparkles } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { cn } from "@/core/lib/utils";
 
 const TRENDING = [
@@ -33,16 +34,18 @@ export function SearchDiscoveryPanel({ onFillSearch, onRunScenario, className }:
         </div>
         <div className="search-discovery-chips" role="list">
           {TRENDING.map((label) => (
-            <button
+            <Button
               key={label}
               type="button"
+              variant="custom"
+              size="custom"
               role="listitem"
               className="search-discovery-chip"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onFillSearch(label)}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -54,16 +57,18 @@ export function SearchDiscoveryPanel({ onFillSearch, onRunScenario, className }:
         </div>
         <div className="search-discovery-actions">
           {QUICK_ACTIONS.map((a) => (
-            <button
+            <Button
               key={a.scenarioId}
               type="button"
+              variant="custom"
+              size="custom"
               className="search-discovery-action"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onRunScenario(a.scenarioId, a.prompt)}
             >
               <span className="search-discovery-action__label">{a.label}</span>
               <ArrowRight className="search-discovery-action__arrow" aria-hidden />
-            </button>
+            </Button>
           ))}
         </div>
       </div>

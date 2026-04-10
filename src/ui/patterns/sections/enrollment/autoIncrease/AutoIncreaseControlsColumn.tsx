@@ -1,5 +1,6 @@
 import { Calendar, Info, Target } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import { CYCLE_OPTIONS } from "@/features/enrollment/store/constants/autoIncreaseSetupConstants";
 import { formatPercent } from "@/features/enrollment/store/derived";
 import type { IncrementCycle } from "@/features/enrollment/store/types";
@@ -35,9 +36,11 @@ export function AutoIncreaseControlsColumn({
           {CYCLE_OPTIONS.map((opt) => {
             const selected = incrementCycle === opt.value;
             return (
-              <button
+              <Button
                 key={opt.value}
                 type="button"
+                variant="custom"
+                size="custom"
                 onClick={() => onUpdateEnrollment({ incrementCycle: opt.value })}
                 className={cn(
                   "flex flex-col gap-2 rounded-xl border-2 p-3 text-left transition-all",
@@ -55,7 +58,7 @@ export function AutoIncreaseControlsColumn({
                   <p className="text-[0.85rem] font-semibold text-foreground">{opt.label}</p>
                 </div>
                 <p className="ml-6 text-[0.7rem] text-muted-foreground">{opt.sub}</p>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -94,9 +97,11 @@ export function AutoIncreaseControlsColumn({
             </div>
             <div className="mt-2 flex gap-2">
               {[1, 2, 3].map((v) => (
-                <button
+                <Button
                   key={v}
                   type="button"
+                  variant="custom"
+                  size="custom"
                   onClick={() => onUpdateEnrollment({ autoIncreaseAmount: v })}
                   className={cn(
                     "flex-1 rounded-lg py-1.5 text-[0.75rem] font-medium transition-all",
@@ -106,7 +111,7 @@ export function AutoIncreaseControlsColumn({
                   )}
                 >
                   {v}%
-                </button>
+                </Button>
               ))}
             </div>
           </div>

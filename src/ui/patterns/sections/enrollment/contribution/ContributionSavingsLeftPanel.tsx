@@ -1,5 +1,6 @@
 import { Minus, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import { formatCurrency } from "@/features/enrollment/store/derived";
 import { QUICK_OPTIONS } from "@/features/enrollment/store/constants/contributionPageConstants";
 
@@ -40,25 +41,29 @@ export function ContributionSavingsLeftPanel({
           Your Contribution
         </p>
         <div className="flex items-center justify-center gap-4">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => adjustPercent(-1)}
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 transition-colors hover:bg-primary/20"
             aria-label="Decrease percentage"
           >
             <Minus className="h-5 w-5 text-primary" aria-hidden />
-          </button>
+          </Button>
           <span className="text-[4rem] font-black leading-none text-primary" style={{ letterSpacing: "-0.02em" }}>
             {contributionPercent}%
           </span>
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => adjustPercent(1)}
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 transition-colors hover:bg-primary/20"
             aria-label="Increase percentage"
           >
             <Plus className="h-5 w-5 text-primary" aria-hidden />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -94,9 +99,11 @@ export function ContributionSavingsLeftPanel({
         <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wider text-muted-foreground">Quick Select</p>
         <div className="flex flex-wrap gap-2">
           {QUICK_OPTIONS.map((q) => (
-            <button
+            <Button
               key={q.value}
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => applyPercent(q.value)}
               className={cn(
                 "rounded-lg px-2.5 py-1.5 text-[0.75rem] font-semibold transition-colors",
@@ -107,7 +114,7 @@ export function ContributionSavingsLeftPanel({
             >
               {q.icon ? `${q.icon} ` : ""}
               {q.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

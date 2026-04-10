@@ -1,5 +1,6 @@
 import { Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 interface WizardRetirementAgeSectionProps {
   currentAge: number;
@@ -45,9 +46,11 @@ export function WizardRetirementAgeSection({
 
       <div className="flex justify-center gap-2">
         {[60, 65, 67].map((age) => (
-          <button
+          <Button
             key={age}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => onRetirementAgeChange(age)}
             className={cn(
               "rounded-xl px-5 py-2.5 text-[0.9rem] font-medium transition-colors",
@@ -57,7 +60,7 @@ export function WizardRetirementAgeSection({
             )}
           >
             {age}
-          </button>
+          </Button>
         ))}
       </div>
 

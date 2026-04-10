@@ -1,5 +1,6 @@
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 interface PercentageInputProps {
   value: number;
@@ -50,8 +51,10 @@ export function PercentageInput({
     <div className={cn("space-y-xs", className)}>
       {label && <label className="block text-sm font-medium text-foreground">{label}</label>}
       <div className="flex items-center gap-sm">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={decrement}
           disabled={value <= min}
           className={cn(
@@ -63,7 +66,7 @@ export function PercentageInput({
           aria-label="Decrease"
         >
           <Minus className="h-4 w-4" />
-        </button>
+        </Button>
 
         <div className="relative flex items-center">
           <input
@@ -90,8 +93,10 @@ export function PercentageInput({
           </span>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={increment}
           disabled={value >= max}
           className={cn(
@@ -103,7 +108,7 @@ export function PercentageInput({
           aria-label="Increase"
         >
           <Plus className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
       {error && (
         <p className="text-xs text-danger" role="alert">

@@ -1,8 +1,8 @@
 export const branding = {
   appName: "Participant Portal",
   authAppName: "CORE",
+  /** Image URLs come from `useBrandedLogo` / company + theme; use text fallbacks when empty. */
   logo: {
-    src: "/image/core-logo.png",
     alt: "CORE",
   },
   footer: {
@@ -12,6 +12,6 @@ export const branding = {
     privacyLink: { label: "Privacy Policy", href: "#" },
     termsLink: { label: "Terms of Service", href: "#" },
     supportLink: { label: "Support", href: "#" },
-    core: { label: "CORE", src: "/image/core-logo.png" },
+    core: { label: "CORE" },
   },
 };

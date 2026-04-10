@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import {
   type HeaderNavMode,
   type NavConfigEntry,
@@ -65,13 +66,15 @@ function DesktopNavDropdown({
 
   return (
     <div className="relative flex items-center" ref={ref}>
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="sm"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="true"
         className={cn(
-          "inline-flex items-center gap-xs whitespace-nowrap border-b-2 border-transparent px-sm py-xs text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+          "h-auto min-h-0 gap-xs whitespace-nowrap rounded-none border-b-2 border-transparent px-sm py-xs font-medium text-muted-foreground hover:bg-transparent",
           focusRing,
           open && "border-transparent bg-muted/80 text-foreground",
           !open && anyActive && "border-primary text-primary",
@@ -79,7 +82,7 @@ function DesktopNavDropdown({
       >
         {t(entry.labelKey)}
         <ChevronDown className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-      </button>
+      </Button>
       {open ? (
         <div
           className="absolute left-0 top-full z-50 mt-sm min-w-40 rounded-lg border border-border bg-card py-sm shadow-elevation-md lg:left-1/2 lg:-translate-x-1/2"
@@ -193,16 +196,18 @@ export function HeaderMobileNavDialog({ mode }: { mode: HeaderNavMode }) {
 
   return (
     <>
-      <button
+      <Button
         type="button"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:bg-muted md:hidden"
+        variant="secondary"
+        size="iconMd"
+        className="rounded-lg md:hidden"
         aria-label={t("header.openMenu")}
         aria-expanded={open}
         aria-controls={open ? "header-mobile-nav-panel" : undefined}
         onClick={() => setOpen(true)}
       >
         <Menu className="h-5 w-5" aria-hidden />
-      </button>
+      </Button>
       {open
         ? createPortal(
             <div
@@ -211,9 +216,11 @@ export function HeaderMobileNavDialog({ mode }: { mode: HeaderNavMode }) {
               aria-modal="true"
               aria-labelledby={titleId}
             >
-              <button
+              <Button
                 type="button"
-                className="absolute inset-0 z-0 bg-background/80 backdrop-blur-sm"
+                variant="custom"
+                size="custom"
+                className="absolute inset-0 z-0 h-full min-h-0 w-full rounded-none border-0 bg-background/80 p-0 font-normal backdrop-blur-sm hover:bg-background/80"
                 aria-label={t("header.closeMenu")}
                 onClick={() => setOpen(false)}
               />
@@ -225,14 +232,16 @@ export function HeaderMobileNavDialog({ mode }: { mode: HeaderNavMode }) {
                   <h2 id={titleId} className="text-sm font-semibold text-foreground">
                     {t("header.menuTitle")}
                   </h2>
-                  <button
+                  <Button
                     type="button"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    variant="secondary"
+                    size="iconMd"
+                    className="rounded-lg"
                     aria-label={t("header.closeMenu")}
                     onClick={() => setOpen(false)}
                   >
                     <X className="h-5 w-5" />
-                  </button>
+                  </Button>
                 </div>
                 <HeaderNav mode={mode} variant="mobile" onMobileNavigate={() => setOpen(false)} />
               </div>

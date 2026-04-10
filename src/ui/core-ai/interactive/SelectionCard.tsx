@@ -1,4 +1,5 @@
 import type { CoreAIStructuredPayload, SelectionCardPayload } from "@/features/ai/store/interactiveTypes";
+import { Button } from "@/ui/components/Button";
 import { InsightBox } from "./InsightBox";
 
 export interface SelectionCardProps {
@@ -16,9 +17,11 @@ export function SelectionCard({ payload, onAction }: SelectionCardProps) {
       {payload.insight && <InsightBox insight={payload.insight} />}
       <div className="mt-4 flex flex-col gap-2">
         {payload.options.map((opt) => (
-          <button
+          <Button
             key={opt.value}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() =>
               onAction({
                 action: "selection_card_pick",
@@ -29,7 +32,7 @@ export function SelectionCard({ payload, onAction }: SelectionCardProps) {
             className="rounded-xl border border-[var(--color-border)] px-4 py-3 text-left text-sm font-medium text-[var(--color-text)] transition-colors hover:border-primary hover:bg-[var(--color-surface)]"
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { RolloverData } from "@/features/transactions/store/types";
 import { ROLLOVER_TYPES } from "@/features/transactions/store/constants/rolloverFlowConstants";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FieldGroup, FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface RolloverStepPriorPlanProps {
@@ -66,14 +67,16 @@ export function RolloverStepPriorPlan({
         <p className="mt-md text-sm text-muted-foreground">Account type</p>
         <div className="mt-sm grid gap-sm sm:grid-cols-3">
           {ROLLOVER_TYPES.map((t) => (
-            <button
+            <Button
               key={t.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(r.rolloverType === t.id)}
               onClick={() => updateRollover({ rolloverType: t.id })}
             >
               {t.label}
-            </button>
+            </Button>
           ))}
         </div>
       </FormSection>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Sparkles, ArrowRight, MessageCircle, Info } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import type { PlanType } from "@/features/enrollment/store/types";
 import type { PlanSelectionCopyEntry } from "./PlanSelectionSinglePlanView";
 
@@ -68,8 +69,10 @@ export function PlanSelectionDualPlanView({
             ))}
           </ul>
 
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={(e) => {
               e.stopPropagation();
               onContinueWithPlan("traditional");
@@ -77,7 +80,7 @@ export function PlanSelectionDualPlanView({
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-[0.9rem] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
           >
             Continue with Traditional 401(k) <ArrowRight className="h-4 w-4" aria-hidden />
-          </button>
+          </Button>
         </div>
 
         <div
@@ -104,8 +107,10 @@ export function PlanSelectionDualPlanView({
             ))}
           </ul>
 
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={(e) => {
               e.stopPropagation();
               onContinueWithPlan("roth");
@@ -118,7 +123,7 @@ export function PlanSelectionDualPlanView({
             )}
           >
             Choose Roth 401(k) <ArrowRight className="h-4 w-4" aria-hidden />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -133,21 +138,25 @@ export function PlanSelectionDualPlanView({
             <span className="text-[0.875rem] font-medium text-foreground">Not sure which to pick?</span>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => setShowAsk((o) => !o)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-[0.8rem] font-medium text-white transition-all hover:bg-purple-700"
             >
               <MessageCircle className="h-3.5 w-3.5" aria-hidden />
               Ask AI
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => setShowCompare((o) => !o)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-[0.8rem] font-medium text-foreground transition-all hover:bg-muted"
             >
               Compare Plans
-            </button>
+            </Button>
           </div>
         </div>
 

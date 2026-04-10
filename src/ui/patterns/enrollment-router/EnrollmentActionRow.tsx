@@ -4,6 +4,7 @@
 
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 interface EnrollmentActionRowProps {
   onNext?: () => void;
@@ -25,19 +26,23 @@ export function EnrollmentActionRow({
   return (
     <div className={cn("mt-8 flex items-center justify-between gap-4", className)}>
       {!hideBack && onBack ? (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="custom"
           onClick={onBack}
-          className="inline-flex items-center gap-1 text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex h-auto min-h-0 items-center gap-1 px-0 py-0 text-[0.85rem] font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
       ) : (
         <span aria-hidden className="w-px" />
       )}
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={onNext}
         disabled={nextDisabled}
         className={cn(
@@ -49,7 +54,7 @@ export function EnrollmentActionRow({
       >
         {nextLabel}
         <ArrowRight className="h-4 w-4" aria-hidden />
-      </button>
+      </Button>
     </div>
   );
 }

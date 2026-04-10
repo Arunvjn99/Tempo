@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import { Slider } from "@/ui/components/Slider";
 import type { CoreAIStructuredPayload, EnrollmentSetupPayload } from "@/features/ai/store/interactiveTypes";
 import { getContributionInsight } from "@/features/ai/services/insights";
@@ -49,9 +50,11 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
       <p className="mt-2 text-sm font-medium text-[var(--color-text)]">Plan</p>
       <div className="mt-2 flex gap-2">
         {payload.planOptions.map((opt) => (
-          <button
+          <Button
             key={opt.value}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => setPlan(opt.value)}
             className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
               plan === opt.value
@@ -60,7 +63,7 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
             }`}
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -80,9 +83,11 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
       <p className="mt-4 text-sm font-medium text-[var(--color-text)]">Investment</p>
       <div className="mt-2 flex flex-col gap-2">
         {payload.investmentOptions.map((label) => (
-          <button
+          <Button
             key={label}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => setInvestment(INV_VALUE[label] ?? label)}
             className={`rounded-xl border px-4 py-2 text-left text-sm font-medium transition-colors ${
               investment === (INV_VALUE[label] ?? label)
@@ -91,7 +96,7 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
             }`}
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -104,13 +109,15 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
         }
       />
 
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={handleContinue}
         className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
       >
         Continue
-      </button>
+      </Button>
     </motion.div>
   );
 }

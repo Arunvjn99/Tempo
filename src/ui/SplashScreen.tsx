@@ -1,8 +1,9 @@
 /**
  * Full-screen splash shown on initial app load (~1.5s), once per session.
- * Uses CSS variables and minimal layout; no hardcoded colors.
+ * Logo from {@link useBrandedLogo}; text fallback when no URL.
  */
 import { useEffect, useState } from "react";
+import { useBrandedLogo } from "@/core/hooks/useBrandedLogo";
 
 const SPLASH_DURATION_MS = 1500;
 const SPLASH_SHOWN_KEY = "splash_shown";
@@ -12,6 +13,8 @@ export const SplashScreen = () => {
     if (typeof sessionStorage === "undefined") return true;
     return !sessionStorage.getItem(SPLASH_SHOWN_KEY);
   });
+
+  const { logoUrl, hasImage, brandLabel, onImageError } = useBrandedLogo();
 
   useEffect(() => {
     if (!visible) return;
@@ -35,11 +38,19 @@ export const SplashScreen = () => {
       aria-hidden="true"
     >
       <div className="flex flex-col items-center gap-6">
-        <img
-          src="/image/core-logo.png"
-          alt=""
-          className="h-12 w-auto object-contain dark:[filter:brightness(0)_invert(1)]"
-        />
+        {hasImage ? (
+          <img
+            src={logoUrl}
+            alt=""
+            onError={onImageError}
+            className="h-12 w-auto object-contain dark:[filter:brightness(0)_invert(1)]"
+            decoding="async"
+          />
+        ) : (
+          <span className="text-2xl font-bold tracking-tight text-foreground">
+            {brandLabel}
+          </span>
+        )}
         <div className="flex gap-1">
           <span
             className="h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse"

@@ -1,4 +1,5 @@
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FieldGroup, FormSection, StepLayout } from "@/ui/patterns";
 import { transactionChoiceButtonClass } from "../transactionChoiceStyles";
 import { DISBURSE, FREQ, LOAN_TYPES, REPAY } from "./loanConstants";
@@ -28,54 +29,62 @@ export function LoanConfigurationStep({
       <FormSection title="Loan type">
         <div className="grid gap-sm sm:grid-cols-3">
           {LOAN_TYPES.map((t) => (
-            <button
+            <Button
               key={t.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(loan.loanType === t.id)}
               onClick={() => updateLoan({ loanType: t.id })}
             >
               {t.label}
-            </button>
+            </Button>
           ))}
         </div>
       </FormSection>
       <FormSection title="Disbursement">
         <div className="grid gap-sm sm:grid-cols-2">
           {DISBURSE.map((d) => (
-            <button
+            <Button
               key={d.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(loan.disbursementMethod === d.id)}
               onClick={() => updateLoan({ disbursementMethod: d.id })}
             >
               {d.label}
-            </button>
+            </Button>
           ))}
         </div>
       </FormSection>
       <FormSection title="Repayment">
         <div className="mb-md grid gap-sm sm:grid-cols-3">
           {FREQ.map((f) => (
-            <button
+            <Button
               key={f.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(loan.repaymentFrequency === f.id)}
               onClick={() => updateLoan({ repaymentFrequency: f.id })}
             >
               {f.label}
-            </button>
+            </Button>
           ))}
         </div>
         <div className="grid gap-sm sm:grid-cols-3">
           {REPAY.map((r) => (
-            <button
+            <Button
               key={r.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(loan.repaymentMethod === r.id)}
               onClick={() => updateLoan({ repaymentMethod: r.id })}
             >
               {r.label}
-            </button>
+            </Button>
           ))}
         </div>
       </FormSection>

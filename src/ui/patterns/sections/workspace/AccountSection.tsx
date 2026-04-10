@@ -1,4 +1,5 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { Button } from "@/ui/components/Button";
 import { Mail, Phone, MapPin, Pencil, Check } from "lucide-react";
 import { FormSection, FieldGroup } from "@/ui/patterns";
 import type { ProfileMockData, ProfileNotificationsState, ProfileContactFormState } from "./profileTypes";
@@ -56,21 +57,25 @@ export function AccountSection({
                 />
               </FieldGroup>
               <div className="flex gap-sm">
-                <button
+                <Button
                   type="button"
+                  variant="custom"
+                  size="custom"
                   onClick={() => setEditingContact(false)}
                   className="rounded-button bg-primary px-md py-sm text-sm font-semibold text-primary-foreground hover:opacity-90"
                 >
                   <Check className="mr-xs inline h-4 w-4" aria-hidden />
                   Save
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="custom"
+                  size="custom"
                   onClick={() => setEditingContact(false)}
                   className="rounded-button border border-border px-md py-sm text-sm font-medium text-foreground hover:bg-muted"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
@@ -88,14 +93,16 @@ export function AccountSection({
                   </div>
                 </div>
               ))}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="custom"
                 onClick={() => setEditingContact(true)}
-                className="inline-flex items-center gap-xs text-sm font-medium text-primary hover:underline"
+                className="inline-flex h-auto min-h-0 items-center gap-xs px-0 py-0 text-sm font-medium text-primary hover:bg-transparent hover:underline"
               >
                 <Pencil className="h-3.5 w-3.5" aria-hidden />
                 Edit contact info
-              </button>
+              </Button>
             </div>
           )}
         </FormSection>

@@ -1,6 +1,7 @@
 import type { WithdrawalData } from "@/features/transactions/store/types";
 import { PAY } from "@/features/transactions/store/constants/withdrawalFlowConstants";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FieldGroup, FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface WithdrawalStepPaymentMethodProps {
@@ -32,14 +33,16 @@ export function WithdrawalStepPaymentMethod({
       <FormSection title="Method">
         <div className="grid gap-sm sm:grid-cols-2">
           {PAY.map((p) => (
-            <button
+            <Button
               key={p.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(w.paymentMethod === p.id)}
               onClick={() => updateWithdrawal({ paymentMethod: p.id })}
             >
               {p.label}
-            </button>
+            </Button>
           ))}
         </div>
         {errors.paymentMethod && (

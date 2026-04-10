@@ -1,4 +1,5 @@
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import type { PersonalizationState } from "@/features/enrollment/store/types";
 import { COMFORT_LEVELS } from "./wizardConstants";
 
@@ -24,9 +25,11 @@ export function WizardInvestmentComfortSection({
 
       <div className="grid grid-cols-2 gap-3">
         {COMFORT_LEVELS.map((level) => (
-          <button
+          <Button
             key={level.key}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => onSelectComfort(level.key)}
             className={cn(
               "relative rounded-xl border-2 p-4 text-left transition-all",
@@ -57,7 +60,7 @@ export function WizardInvestmentComfortSection({
               </span>
             </div>
             <p className="text-[0.8rem] text-muted-foreground">{level.desc}</p>
-          </button>
+          </Button>
         ))}
       </div>
     </div>

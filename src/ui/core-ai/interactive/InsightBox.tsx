@@ -3,6 +3,8 @@
  * Max 2 lines, never blocking.
  */
 
+import { Button } from "@/ui/components/Button";
+
 export interface InsightBoxProps {
   insight: string;
   /** Optional clickable suggestion (e.g. "Try increasing to 8%") */
@@ -19,13 +21,15 @@ export function InsightBox({ insight, suggestion }: InsightBoxProps) {
         <div className="min-w-0 flex-1">
           <p className="text-xs leading-snug text-[var(--color-text)]">{insight}</p>
           {suggestion && (
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               onClick={suggestion.onClick}
-              className="mt-1.5 text-xs font-medium text-amber-700 underline decoration-amber-500/60 hover:decoration-amber-600 dark:text-amber-400 dark:decoration-amber-500/50 dark:hover:decoration-amber-400"
+              className="mt-1.5 inline-flex h-auto min-h-0 justify-start rounded-none p-0 text-xs font-medium text-amber-700 underline decoration-amber-500/60 hover:decoration-amber-600 dark:text-amber-400 dark:decoration-amber-500/50 dark:hover:decoration-amber-400"
             >
               {suggestion.label}
-            </button>
+            </Button>
           )}
         </div>
       </div>

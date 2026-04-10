@@ -7,12 +7,20 @@ const variants = {
     "border border-border bg-surface text-foreground hover:bg-muted",
   ghost: "text-foreground hover:bg-muted",
   danger: "bg-danger text-white hover:opacity-90",
+  /** Visual styles supplied entirely via `className` (focus ring + layout base still applied). */
+  custom: "",
 } as const;
 
 const sizes = {
   sm: "h-8 px-sm text-sm",
   md: "h-10 px-md text-sm",
   lg: "h-12 px-lg text-base",
+  /** Square icon controls — pair with `secondary` or `ghost` for toolbar affordances. */
+  iconSm: "h-8 w-8 min-w-8 shrink-0 gap-0 p-0 [&_svg]:shrink-0",
+  iconMd: "h-9 w-9 min-w-9 shrink-0 gap-0 p-0 [&_svg]:shrink-0",
+  iconLg: "h-10 w-10 min-w-10 shrink-0 gap-0 p-0 [&_svg]:shrink-0",
+  /** Height/padding supplied via `className` (e.g. choice cards, menus). */
+  custom: "",
 } as const;
 
 export type ButtonVariant = keyof typeof variants;

@@ -1,4 +1,5 @@
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import { formatCurrency } from "@/features/enrollment/store/derived";
 import { COMPARE_SCENARIOS } from "@/features/enrollment/store/constants/contributionPageConstants";
 
@@ -102,22 +103,26 @@ export function ContributionProjectionRightPanel({
           <p className="text-[0.7rem] font-semibold uppercase tracking-wider text-muted-foreground">
             Compare Scenarios
           </p>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="custom"
             onClick={onToggleCompare}
-            className="text-[0.75rem] font-medium text-primary transition-colors hover:text-primary/80"
+            className="h-auto min-h-0 px-0 py-0 text-[0.75rem] font-medium text-primary hover:bg-transparent hover:text-primary/80"
           >
             {showCompare ? "Hide" : "Show"}
-          </button>
+          </Button>
         </div>
         {showCompare && (
           <div className="mt-3 space-y-2">
             {COMPARE_SCENARIOS.map((s) => {
               const projHeight = Math.min(100, Math.round((s.pct / 15) * 100));
               return (
-                <button
+                <Button
                   key={s.pct}
                   type="button"
+                  variant="custom"
+                  size="custom"
                   onClick={() => onApplyPercent(s.pct)}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors",
@@ -135,7 +140,7 @@ export function ContributionProjectionRightPanel({
                       />
                     </div>
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import type { CoreAIStructuredPayload, PlanSelectionPayload } from "@/features/ai/store/interactiveTypes";
 
 export interface PlanSelectionCardProps {
@@ -17,9 +18,11 @@ export function PlanSelectionCard({ payload, onAction }: PlanSelectionCardProps)
       <p className="text-sm font-semibold text-[var(--color-text)]">{payload.title}</p>
       <div className="mt-4 flex flex-col gap-2">
         {payload.options.map((opt: { label: string; value: string }) => (
-          <button
+          <Button
             key={opt.value}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() =>
               onAction({
                 action: "enrollment_plan_pick",
@@ -30,7 +33,7 @@ export function PlanSelectionCard({ payload, onAction }: PlanSelectionCardProps)
             className="rounded-xl border border-[var(--color-border)] px-4 py-3 text-left text-sm font-medium text-[var(--color-text)] transition-colors hover:border-primary hover:bg-[var(--color-surface)]"
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
     </motion.div>

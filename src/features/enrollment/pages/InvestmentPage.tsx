@@ -11,6 +11,7 @@ import { AllocationEditor, type AllocationSlice } from "@/ui/components";
 import { FormSection } from "@/ui/patterns";
 import { EnrollmentActionRow } from "@/ui/patterns/enrollment-router";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import type { FundAllocation, RiskLevel } from "../store/types";
 
 // ── Portfolio presets by risk ──────────────────
@@ -115,14 +116,16 @@ export function InvestmentPage() {
   return (
     <div className="space-y-6">
       <div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="custom"
           onClick={prevStep}
-          className="mb-3 inline-flex items-center gap-1 text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-3 inline-flex h-auto items-center gap-1 px-0 text-[0.85rem] text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
         <h1 className="text-xl font-semibold text-foreground sm:text-2xl">Investment strategy</h1>
         <p className="mt-1 text-[0.9rem] text-muted-foreground">
           Choose how your contributions will be invested.
@@ -132,12 +135,14 @@ export function InvestmentPage() {
       {/* Risk level selection */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         {RISK_OPTIONS.map((opt) => (
-          <button
+          <Button
             key={opt.value}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => updateEnrollment({ riskLevel: opt.value })}
             className={cn(
-              "relative rounded-xl border p-4 text-left transition-all",
+              "relative h-auto justify-start rounded-xl border p-4 text-left font-normal transition-all",
               enrollment.riskLevel === opt.value
                 ? "border-primary ring-2 ring-primary ring-offset-1 ring-offset-background"
                 : "border-border bg-card hover:border-primary/50",
@@ -152,26 +157,28 @@ export function InvestmentPage() {
             <p className="mt-2 text-sm font-bold text-foreground">{opt.label}</p>
             <p className="text-xs text-muted-foreground">{opt.description}</p>
             <p className="mt-1 text-xs font-medium text-primary">{opt.growthRate}</p>
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Recommended vs Custom toggle */}
       <div className="flex rounded-xl border border-border bg-muted/40 p-1">
         {[true, false].map((rec) => (
-          <button
+          <Button
             key={String(rec)}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => updateEnrollment({ useRecommendedPortfolio: rec })}
             className={cn(
               "flex-1 rounded-lg py-2.5 text-sm font-medium transition-colors",
               enrollment.useRecommendedPortfolio === rec
                 ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+                : "text-muted-foreground hover:bg-transparent hover:text-foreground",
             )}
           >
             {rec ? "Recommended Portfolio" : "Custom Funds"}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -216,13 +223,15 @@ export function InvestmentPage() {
                 {customFunds.map((f) => (
                   <div key={f.fundId} className="flex items-center justify-between rounded-xl border border-border px-4 py-2 text-sm">
                     <span className="font-medium text-foreground">{f.ticker} — {f.name}</span>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="custom"
                       onClick={() => removeFund(f.fundId)}
-                      className="text-xs text-danger hover:underline"
+                      className="h-auto px-0 text-xs text-danger hover:bg-transparent hover:underline"
                     >
                       Remove
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -240,13 +249,15 @@ export function InvestmentPage() {
                       {f.assetClass}
                     </span>
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => addFund(f)}
-                    className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                    className="h-auto rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary hover:text-primary"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -267,19 +278,21 @@ export function InvestmentPage() {
               </p>
               <div className="flex rounded-xl border border-border bg-muted/40 p-1">
                 {[true, false].map((same) => (
-                  <button
+                  <Button
                     key={String(same)}
                     type="button"
+                    variant="custom"
+                    size="custom"
                     onClick={() => updateEnrollment({ sameAllocationForAllSources: same })}
                     className={cn(
                       "flex-1 rounded-lg py-2 text-sm font-medium transition-colors",
                       enrollment.sameAllocationForAllSources === same
                         ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground",
+                        : "text-muted-foreground hover:bg-transparent hover:text-foreground",
                     )}
                   >
                     {same ? "Same for all" : "Different per source"}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </FormSection>

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, X, Zap } from "lucide-react";
 import { motionTransition } from "@/ui/animations/motionTokens";
+import { Button } from "@/ui/components/Button";
 import { formatCurrency } from "@/features/enrollment/store/derived";
 import type { ReadinessSuggestionView } from "@/features/enrollment/store/readinessSuggestions";
 
@@ -60,13 +61,15 @@ export function ReadinessSuggestionConfirmModal({
             <p className="text-[1rem] font-semibold text-foreground">Confirm Change</p>
             <p className="mt-0.5 text-[0.75rem] text-muted-foreground">Review the impact before applying.</p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="iconSm"
             onClick={onCancel}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-5 px-6 py-5">
@@ -134,20 +137,24 @@ export function ReadinessSuggestionConfirmModal({
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={onCancel}
             className="rounded-xl border border-border px-5 py-2.5 text-[0.85rem] font-medium text-foreground transition-colors hover:bg-muted"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={onApply}
             className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-[0.85rem] font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
           >
             <Zap className="h-3.5 w-3.5" /> Apply Change
-          </button>
+          </Button>
         </div>
       </motion.div>
     </motion.div>

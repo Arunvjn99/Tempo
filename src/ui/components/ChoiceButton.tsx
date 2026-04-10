@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 interface ChoiceButtonProps {
   active: boolean;
@@ -38,14 +39,22 @@ export function ChoiceButton({
 }: ChoiceButtonProps) {
   const v = VARIANTS[variant] ?? VARIANTS.card;
   return (
-    <button
+    <Button
       type="button"
+      variant="custom"
+      size="custom"
       onClick={onClick}
       disabled={disabled}
-      className={cn(v.base, active ? v.on : v.off, disabled && "cursor-not-allowed opacity-50", className)}
+      className={cn(
+        "inline-flex w-auto items-start justify-start font-medium",
+        v.base,
+        active ? v.on : v.off,
+        disabled && "cursor-not-allowed opacity-50",
+        className,
+      )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 

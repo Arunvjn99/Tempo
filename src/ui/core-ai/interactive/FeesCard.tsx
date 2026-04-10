@@ -1,4 +1,5 @@
 import type { CoreAIStructuredPayload, FeesCardPayload } from "@/features/ai/store/interactiveTypes";
+import { Button } from "@/ui/components/Button";
 
 function money(n: number): string {
   return `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
@@ -34,13 +35,15 @@ export function FeesCard({ payload, onAction }: FeesCardProps) {
         </li>
       </ul>
 
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={() => onAction({ action: "fees_card_continue" })}
         className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
       >
         Continue
-      </button>
+      </Button>
     </div>
   );
 }

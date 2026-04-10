@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/ui/components/Button";
 import type { CoreAIStructuredPayload, DocumentUploadCardPayload } from "@/features/ai/store/interactiveTypes";
 
 export interface DocumentUploadCardProps {
@@ -38,20 +39,24 @@ export function DocumentUploadCard({ payload, onAction }: DocumentUploadCardProp
       )}
 
       <div className="mt-4 flex flex-col gap-2">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onAction({ action: "document_upload_card_continue", deferred: false })}
           className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
         >
           Continue to review
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onAction({ action: "document_upload_card_continue", deferred: true })}
           className="w-full rounded-xl border border-[var(--color-border)] py-2.5 text-sm font-medium text-[var(--color-textSecondary)] transition-colors hover:bg-[var(--color-surface)]"
         >
           I&apos;ll upload later
-        </button>
+        </Button>
       </div>
     </div>
   );

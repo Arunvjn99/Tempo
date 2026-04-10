@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Button } from "@/ui/components/Button";
 
 /**
  * MessageActions — Per-message action bar rendered below each AI message.
@@ -36,10 +37,12 @@ export function MessageActions({ messageId, text, isSpeaking, onPlay }: MessageA
   return (
     <div className="flex items-center gap-1 mt-1.5" role="group" aria-label="Message actions">
       {/* Copy */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="iconSm"
         onClick={handleCopy}
-        className={`p-1.5 rounded-md transition-colors ${
+        className={`rounded-md p-1.5 transition-colors ${
           copied
             ? "text-[var(--color-success)]"
             : "text-[var(--color-textSecondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-background)]"
@@ -57,13 +60,15 @@ export function MessageActions({ messageId, text, isSpeaking, onPlay }: MessageA
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
         )}
-      </button>
+      </Button>
 
       {/* Thumbs up */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="iconSm"
         onClick={() => setFeedback(feedback === "up" ? null : "up")}
-        className={`p-1.5 rounded-md transition-colors ${
+        className={`rounded-md p-1.5 transition-colors ${
           feedback === "up"
             ? "text-[var(--color-success)]"
             : "text-[var(--color-textSecondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-background)]"
@@ -75,13 +80,15 @@ export function MessageActions({ messageId, text, isSpeaking, onPlay }: MessageA
         <svg width="14" height="14" viewBox="0 0 24 24" fill={feedback === "up" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
         </svg>
-      </button>
+      </Button>
 
       {/* Thumbs down */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="iconSm"
         onClick={() => setFeedback(feedback === "down" ? null : "down")}
-        className={`p-1.5 rounded-md transition-colors ${
+        className={`rounded-md p-1.5 transition-colors ${
           feedback === "down"
             ? "text-[var(--color-danger)]"
             : "text-[var(--color-textSecondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-background)]"
@@ -93,13 +100,15 @@ export function MessageActions({ messageId, text, isSpeaking, onPlay }: MessageA
         <svg width="14" height="14" viewBox="0 0 24 24" fill={feedback === "down" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
         </svg>
-      </button>
+      </Button>
 
       {/* Play / Stop audio */}
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="iconSm"
         onClick={() => onPlay(messageId)}
-        className={`p-1.5 rounded-md transition-colors ${
+        className={`rounded-md p-1.5 transition-colors ${
           isSpeaking
             ? "text-primary bg-primary/15"
             : "text-[var(--color-textSecondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-background)]"
@@ -119,7 +128,7 @@ export function MessageActions({ messageId, text, isSpeaking, onPlay }: MessageA
             <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
           </svg>
         )}
-      </button>
+      </Button>
     </div>
   );
 }

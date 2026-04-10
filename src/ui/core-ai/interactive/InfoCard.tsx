@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import type { CoreAIStructuredPayload, InfoCardPayload } from "@/features/ai/store/interactiveTypes";
 import { InsightBox } from "./InsightBox";
 
@@ -25,25 +26,29 @@ export function InfoCard({ payload, onAction }: InfoCardProps) {
       {payload.suggestions && payload.suggestions.length > 0 && onAction && (
         <div className="flex flex-wrap gap-2 mt-3">
           {payload.suggestions.map((s) => (
-            <button
+            <Button
               key={s}
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => onAction({ action: "info_card_suggestion", suggestion: s })}
               className="rounded-lg border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-surface)] transition-colors"
             >
               {s}
-            </button>
+            </Button>
           ))}
         </div>
       )}
       {payload.actionLabel && payload.action && onAction && (
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onAction(payload.action!)}
           className="mt-4 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
         >
           {payload.actionLabel}
-        </button>
+        </Button>
       )}
     </motion.div>
   );

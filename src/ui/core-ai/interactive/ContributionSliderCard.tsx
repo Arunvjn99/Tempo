@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import { Slider } from "@/ui/components/Slider";
 import type { CoreAIStructuredPayload, ContributionSliderPayload } from "@/features/ai/store/interactiveTypes";
 
@@ -37,13 +38,15 @@ export function ContributionSliderCard({ payload, onAction }: ContributionSlider
           step={1}
         />
       </div>
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={() => onAction({ action: "enrollment_contribution_continue", value })}
         className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
       >
         Continue
-      </button>
+      </Button>
     </motion.div>
   );
 }

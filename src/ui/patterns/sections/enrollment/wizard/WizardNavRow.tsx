@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 interface WizardNavRowProps {
   wizardStep: number;
@@ -12,20 +13,24 @@ export function WizardNavRow({ wizardStep, canContinue, onBack, onNext }: Wizard
   return (
     <div className="mt-6 flex items-center justify-between">
       {wizardStep > 1 ? (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="custom"
           onClick={onBack}
-          className="inline-flex items-center gap-1.5 text-[0.875rem] text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex h-auto min-h-0 items-center gap-1.5 px-0 py-0 text-[0.875rem] font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
       ) : (
         <div />
       )}
 
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={onNext}
         disabled={!canContinue}
         className={cn(
@@ -37,7 +42,7 @@ export function WizardNavRow({ wizardStep, canContinue, onBack, onNext }: Wizard
       >
         {wizardStep === 4 ? "Start Enrollment" : "Continue"}
         <ArrowRight className="h-4 w-4" aria-hidden />
-      </button>
+      </Button>
     </div>
   );
 }

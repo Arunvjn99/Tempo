@@ -1,4 +1,5 @@
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout } from "@/ui/patterns";
 import { transactionChoiceButtonClass } from "../transactionChoiceStyles";
 import type { LoanStepCommonProps, LoanStoreSlice } from "./loanStepTypes";
@@ -29,15 +30,19 @@ export function LoanEligibilityStep({
           Run a quick check. You must be eligible before continuing.
         </p>
         <div className="flex flex-wrap gap-sm">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className={transactionChoiceButtonClass(loan.isEligible === true)}
             onClick={() => updateLoan({ isEligible: true, eligibilityReason: "" })}
           >
             I am eligible
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className={transactionChoiceButtonClass(loan.isEligible === false)}
             onClick={() =>
               updateLoan({
@@ -47,7 +52,7 @@ export function LoanEligibilityStep({
             }
           >
             Not eligible
-          </button>
+          </Button>
         </div>
         {errors.eligibility && (
           <p className="mt-sm text-xs text-danger" role="alert">

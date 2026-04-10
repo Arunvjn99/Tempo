@@ -1,6 +1,7 @@
 import { Pencil } from "lucide-react";
 import { type ReactNode } from "react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 interface ReviewCardProps {
   label: string;
@@ -41,14 +42,16 @@ export function ReviewCard({
       </div>
 
       {onEdit && (
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={onEdit}
-          className="inline-flex shrink-0 items-center gap-xs rounded-md border border-border px-sm py-xs text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="inline-flex shrink-0 gap-xs rounded-md px-sm py-xs text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
         >
           <Pencil className="h-3 w-3" aria-hidden />
           {editLabel}
-        </button>
+        </Button>
       )}
     </div>
   );

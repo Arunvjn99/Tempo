@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { cn } from "@/core/lib/utils";
 import type { PersonalizationState } from "@/features/enrollment/store/types";
 import type { PopularLocation } from "./wizardConstants";
@@ -40,9 +41,11 @@ export function WizardLocationSection({
 
       <div className="grid grid-cols-2 gap-3">
         {filteredPopular.map((loc) => (
-          <button
+          <Button
             key={loc.name}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => onPickLocation(loc.name)}
             className={cn(
               "rounded-xl border-2 p-4 text-left transition-all",
@@ -60,12 +63,14 @@ export function WizardLocationSection({
             >
               {loc.name}
             </span>
-          </button>
+          </Button>
         ))}
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={() => onPickLocation("Not sure yet")}
         className={cn(
           "w-full rounded-xl border-2 px-4 py-3 text-[0.9rem] font-medium transition-all",
@@ -75,7 +80,7 @@ export function WizardLocationSection({
         )}
       >
         Not sure yet
-      </button>
+      </Button>
     </div>
   );
 }

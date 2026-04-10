@@ -1,4 +1,5 @@
 import { ArrowRight, Award } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { formatCurrency } from "@/features/enrollment/store/derived";
 import type { ReadinessSuggestionView } from "@/features/enrollment/store/readinessSuggestions";
 import { cn } from "@/core/lib/utils";
@@ -83,13 +84,15 @@ export function ReadinessSuggestionsListSection({
                   </div>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="custom"
+                  size="custom"
                   onClick={() => onRequestApply(s)}
                   className="mt-3 w-full rounded-lg border border-primary/30 bg-card px-4 py-2 text-[0.8rem] font-semibold text-foreground transition-all hover:bg-primary/5"
                 >
                   Apply Recommendation
-                </button>
+                </Button>
               </div>
             </div>
           );

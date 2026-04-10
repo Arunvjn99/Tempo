@@ -1,4 +1,5 @@
 import type { MutableRefObject } from "react";
+import { Button } from "@/ui/components/Button";
 import { useTranslation } from "react-i18next";
 import type { LocalFlowState } from "@/features/ai/store/flowTypes";
 import { CoreAiBrandMark } from "./CoreAiBrandMark";
@@ -31,17 +32,19 @@ export function CoreAssistantModalHeader({ flowStateRef, onClose }: CoreAssistan
         </div>
       </div>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="iconSm"
         onClick={onClose}
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-textSecondary)] transition-colors hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
+        className="rounded-lg text-[var(--color-textSecondary)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
         aria-label={t("coreAi.closeAria")}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
-      </button>
+      </Button>
     </div>
   );
 }

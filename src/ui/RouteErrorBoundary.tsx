@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "@/ui/components/Button";
 
 interface Props {
   children: ReactNode;
@@ -44,13 +45,15 @@ export class RouteErrorBoundary extends Component<Props, State> {
               >
                 Go to Dashboard
               </Link>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => window.location.reload()}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-background-secondary)]"
+                className="text-[var(--color-text-primary)]"
               >
                 Reload page
-              </button>
+              </Button>
             </div>
           </div>
         </div>

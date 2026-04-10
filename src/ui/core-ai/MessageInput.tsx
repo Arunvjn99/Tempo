@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { Button } from "@/ui/components/Button";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -75,8 +76,10 @@ export function MessageInput({
     >
       <div className="flex items-center gap-2 rounded-full bg-[var(--color-background)] border border-[var(--color-border)] pl-2 pr-1 focus-within:border-[var(--color-primary)]/70 transition-colors">
         {/* Mic button — inside input */}
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={onMicClick}
           disabled={disabled || isProcessing}
           className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all ${
@@ -140,7 +143,7 @@ export function MessageInput({
               <line x1="8" y1="23" x2="16" y2="23" />
             </svg>
           )}
-        </button>
+        </Button>
 
         {/* Text input */}
         <input
@@ -155,8 +158,10 @@ export function MessageInput({
         />
 
         {/* Send button */}
-        <button
+        <Button
           type="submit"
+          variant="custom"
+          size="custom"
           disabled={!value.trim() || disabled || micBusy}
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all hover:bg-primary-hover disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label={t("coreAi.ariaSend")}
@@ -175,7 +180,7 @@ export function MessageInput({
             <line x1="22" y1="2" x2="11" y2="13" />
             <polygon points="22 2 15 22 11 13 2 9 22 2" />
           </svg>
-        </button>
+        </Button>
       </div>
 
       {/* Speech status */}

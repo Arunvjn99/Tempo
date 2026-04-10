@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "@/ui/components/Button";
 
 export type SearchOverlayProps = {
   children: ReactNode;
@@ -13,8 +14,10 @@ export type SearchOverlayProps = {
 export function SearchOverlay({ children, onClose, labelId }: SearchOverlayProps) {
   return (
     <div className="ai-command-root" role="presentation">
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         className="ai-command-scrim"
         aria-hidden
         tabIndex={-1}

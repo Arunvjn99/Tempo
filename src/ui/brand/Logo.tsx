@@ -1,6 +1,6 @@
 /**
  * Product logo for pre-auth pages only (Login, Signup, Forgot Password, etc.).
- * Renders CORE branding. Post-auth header uses tenant logo from ThemeContext.
+ * Resolves mark via {@link useBrandedLogo} (company + theme); text fallback when no URL.
  */
 import { CoreProductBranding } from "./CoreProductBranding";
 

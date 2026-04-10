@@ -1,4 +1,5 @@
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 import type { ChatAction } from "./messageBubbleTypes";
 
 export function MessageBubbleContentCard({
@@ -37,31 +38,37 @@ export function MessageBubbleContentCard({
       {(primaryAction || secondaryAction) && (
         <div className="flex flex-wrap gap-2 mt-3">
           {primaryAction && (
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => onAction(primaryAction.route)}
               className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors"
             >
               {primaryAction.label}
-            </button>
+            </Button>
           )}
           {secondaryAction && (
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => onAction(secondaryAction.route)}
               className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-textSecondary)] text-xs font-medium hover:bg-[var(--color-background)] transition-colors"
             >
               {secondaryAction.label}
-            </button>
+            </Button>
           )}
         </div>
       )}
       {suggestions && suggestions.length > 0 && onSuggestion && (
         <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-[var(--color-border)]">
           {suggestions.map((s) => (
-            <button
+            <Button
               key={s}
               type="button"
+              variant="custom"
+              size="custom"
               onClick={() => onSuggestion(s)}
               className={cn(
                 "rounded-lg bg-[var(--color-background)] border border-[var(--color-border)] px-2.5 py-1.5 text-[11px] text-[var(--color-text)] transition-colors",
@@ -69,7 +76,7 @@ export function MessageBubbleContentCard({
               )}
             >
               {s}
-            </button>
+            </Button>
           ))}
         </div>
       )}

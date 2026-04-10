@@ -1,4 +1,5 @@
 import { cn } from "@/core/lib/utils";
+import { Button } from "./Button";
 
 export interface ThemeToggleProps {
   /** Resolved light/dark (not "system"). */
@@ -12,13 +13,14 @@ export interface ThemeToggleProps {
  */
 export function ThemeToggle({ mode, onToggle, className }: ThemeToggleProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="iconMd"
       onClick={onToggle}
       className={cn(
-        "flex h-9 w-9 items-center justify-center rounded-lg text-[var(--color-text-secondary)] transition-colors",
-        "hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]",
-        "focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-background)]",
+        "rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]",
+        "focus:ring-[var(--color-primary)] focus:ring-offset-[var(--color-background)]",
         className,
       )}
       aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
@@ -26,6 +28,6 @@ export function ThemeToggle({ mode, onToggle, className }: ThemeToggleProps) {
       <span className="flex h-5 w-5 items-center justify-center text-lg" aria-hidden="true">
         {mode === "light" ? "🌙" : "☀️"}
       </span>
-    </button>
+    </Button>
   );
 }

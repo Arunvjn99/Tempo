@@ -1,5 +1,6 @@
 import type { TransferData } from "@/features/transactions/store/types";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface TransferStepSourceFundProps {
@@ -33,14 +34,16 @@ export function TransferStepSourceFund({
       <FormSection>
         <div className="grid gap-sm sm:grid-cols-2">
           {mockFunds.map((f) => (
-            <button
+            <Button
               key={f.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(t.sourceFundId === f.id)}
               onClick={() => updateTransfer({ sourceFundId: f.id, sourceFundName: f.name })}
             >
               {f.name}
-            </button>
+            </Button>
           ))}
         </div>
         {errors.sourceFund && (

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/ui/components/Button";
 import { ArrowRight, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { PageLayout, CardGridLayout, FormSection } from "@/ui/patterns";
 import { FadeIn, SlideUp, motionDuration } from "@/ui/animations";
@@ -63,9 +64,11 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
 
       <div className="flex gap-xs overflow-x-auto">
         {ranges.map((r) => (
-          <button
+          <Button
             key={r}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => setRange(r)}
             className={cn(
               "shrink-0 rounded-full border px-md py-xs text-xs font-medium transition-colors",
@@ -75,7 +78,7 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
             )}
           >
             {r}
-          </button>
+          </Button>
         ))}
       </div>
 

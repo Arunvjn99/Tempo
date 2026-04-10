@@ -16,6 +16,7 @@ import {
 import { useEnrollmentStore, useEnrollmentDerived } from "../store";
 import { formatCurrency } from "../store/derived";
 import type { EnrollmentStepId } from "../store/types";
+import { Button } from "@/ui/components/Button";
 
 export function ReviewPage() {
   const enrollment = useEnrollmentStore((s) => s.enrollment);
@@ -85,14 +86,16 @@ export function ReviewPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       {/* Header */}
       <div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="custom"
           onClick={prevStep}
-          className="mb-3 inline-flex items-center gap-1 text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-3 inline-flex h-auto items-center gap-1 px-0 text-[0.85rem] text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
         <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
           Review Your Retirement Plan
         </h1>
@@ -171,14 +174,16 @@ export function ReviewPage() {
                 </p>
                 <p className="mt-1 text-[0.82rem] font-medium text-foreground">{section.value}</p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="custom"
                 onClick={() => edit(section.step)}
-                className="mt-2.5 inline-flex items-center gap-1 self-start text-[0.7rem] font-medium text-primary transition-colors hover:opacity-70"
+                className="mt-2.5 inline-flex h-auto items-center gap-1 self-start px-0 text-[0.7rem] font-medium text-primary transition-colors hover:bg-transparent hover:opacity-70"
               >
                 <Edit3 className="h-3 w-3" aria-hidden />
                 Edit
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -219,15 +224,17 @@ export function ReviewPage() {
 
       {/* ── Primary CTA ── */}
       <div className="sticky bottom-4 md:static">
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="custom"
           onClick={nextStep}
           disabled={!enrollment.agreedToTerms}
-          className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 px-8 text-[0.9rem] font-semibold transition-all shadow-lg md:shadow-none disabled:cursor-not-allowed disabled:opacity-40 bg-primary text-primary-foreground hover:opacity-90 active:scale-[0.98] disabled:hover:opacity-40"
+          className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 px-8 text-[0.9rem] font-semibold transition-all shadow-lg md:shadow-none disabled:cursor-not-allowed disabled:opacity-40 hover:opacity-90 active:scale-[0.98] disabled:hover:opacity-40"
         >
           <Shield className="h-4 w-4" aria-hidden />
           Enroll in Retirement Plan
-        </button>
+        </Button>
       </div>
     </div>
   );

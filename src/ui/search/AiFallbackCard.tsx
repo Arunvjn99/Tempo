@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 
 export type AiFallbackCardProps = {
   query: string;
@@ -13,8 +14,10 @@ export function AiFallbackCard({ query, onActivate }: AiFallbackCardProps) {
   const display = q || "your question";
 
   return (
-    <button
+    <Button
       type="button"
+      variant="custom"
+      size="custom"
       className="ai-command-ai-card"
       onClick={onActivate}
       aria-label={`Ask Core AI about ${display}`}
@@ -25,6 +28,6 @@ export function AiFallbackCard({ query, onActivate }: AiFallbackCardProps) {
       </span>
       <span className="ai-command-ai-card__label">Ask Core AI</span>
       <span className="ai-command-ai-card__query">&ldquo;{display}&rdquo;</span>
-    </button>
+    </Button>
   );
 }

@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { useNetwork } from "@/core/network/networkContext";
+import { Button } from "@/ui/components/Button";
 
 const OFFLINE_MESSAGE =
   "You appear to be offline. Please check your connection.";
@@ -36,10 +37,12 @@ export function NetworkBanner() {
       }}
     >
       <span className="flex-1">{message}</span>
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="iconSm"
         onClick={() => setDismissed(true)}
-        className="shrink-0 rounded p-1.5 text-white/90 transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
+        className="shrink-0 rounded text-white/90 hover:bg-white/20 focus-visible:ring-white/50"
         aria-label="Dismiss"
       >
         <svg
@@ -56,7 +59,7 @@ export function NetworkBanner() {
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
-      </button>
+      </Button>
     </div>
     </>
   );

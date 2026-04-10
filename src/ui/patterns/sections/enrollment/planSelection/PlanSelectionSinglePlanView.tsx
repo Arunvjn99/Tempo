@@ -1,4 +1,5 @@
 import { ArrowRight, Info, Landmark } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import type { PlanType } from "@/features/enrollment/store/types";
 
 export interface PlanSelectionCopyEntry {
@@ -38,13 +39,15 @@ export function PlanSelectionSinglePlanView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onConfirm(plan)}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-[0.9rem] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
         >
           Continue to Contributions <ArrowRight className="h-4 w-4" aria-hidden />
-        </button>
+        </Button>
 
         <p className="text-[0.75rem] text-muted-foreground">
           You can change this plan later from your account settings.

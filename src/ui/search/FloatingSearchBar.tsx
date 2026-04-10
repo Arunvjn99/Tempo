@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { shouldShowFloatingSearch } from "@/core/lib/floatingSearchVisibility";
 import { requestOpenGlobalSearch , useGlobalSearch } from "@/core/hooks/useGlobalSearch";
 
@@ -26,8 +27,10 @@ export const FloatingSearchBar = memo(function FloatingSearchBar() {
   return (
     <div className="floating-search-bar__dock" data-floating-search>
       <div className="floating-search-bar__inner">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => requestOpenGlobalSearch()}
           className="search-container search-container--trigger search-container--animated search-container--compact"
           aria-label={t("floatingSearch.openAria")}
@@ -40,7 +43,7 @@ export const FloatingSearchBar = memo(function FloatingSearchBar() {
             <span className="search-container__placeholder">{t("floatingSearch.placeholder")}</span>
             <kbd className="search-container__kbd search-container__kbd--collapse-sm">{shortcutLabel}</kbd>
           </span>
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/ui/components/Button";
 import { ArrowRight } from "lucide-react";
 import { SlideUp, ScaleIn, motionDuration } from "@/ui/animations";
 import { LazyHeroScene } from "@/ui/3d";
@@ -56,13 +57,15 @@ export function DashboardHeroSection({
                 </span>
                 <span className="text-center text-xs font-medium text-primary-foreground/80">It only takes 5 minutes</span>
               </Link>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="custom"
                 onClick={onLearnMore}
-                className="text-left text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="h-auto min-h-0 justify-start px-0 py-0 text-left text-sm font-medium text-muted-foreground hover:bg-transparent hover:text-foreground"
               >
                 Learn about the plan <span aria-hidden>→</span>
-              </button>
+              </Button>
             </div>
           </SlideUp>
 

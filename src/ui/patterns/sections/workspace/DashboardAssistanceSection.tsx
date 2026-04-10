@@ -1,4 +1,5 @@
 import { Sparkles, MessageCircle } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import {
   SlideUp,
   StaggerRoot,
@@ -34,12 +35,14 @@ export function DashboardAssistanceSection() {
                 Schedule a one-on-one conversation to review your plan options and enrollment steps.
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               className="mt-6 w-full rounded-xl border border-border bg-muted/30 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted/50 sm:w-auto sm:px-8"
             >
               Schedule now
-            </button>
+            </Button>
           </AnimatedCard>
         </StaggerItem>
 
@@ -63,12 +66,14 @@ export function DashboardAssistanceSection() {
                 Get instant answers and personalized retirement insights anytime.
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               className="mt-6 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
               Start chatting
-            </button>
+            </Button>
           </AnimatedCard>
         </StaggerItem>
       </StaggerRoot>

@@ -6,41 +6,43 @@ import { useUser } from "@/core/context/UserContext";
 import { requestOpenGlobalSearch } from "@/core/hooks/useGlobalSearch";
 import { cn } from "@/core/lib/utils";
 import { ConnectedThemeToggle } from "@/ui";
+import { Button } from "@/ui/components/Button";
 import { SUPPORTED_LANGS, normalizeLanguage } from "@/core/constants/locales";
-
-const iconBtn =
-  "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:bg-muted";
 
 function HeaderSearch() {
   const { t } = useTranslation();
 
   return (
     <>
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="iconMd"
         onClick={() => requestOpenGlobalSearch()}
-        className={cn(iconBtn, "lg:hidden")}
+        className="rounded-lg lg:hidden"
         aria-label={t("header.searchCompactAria")}
       >
         <Search className="h-4 w-4 text-muted-foreground" aria-hidden />
-      </button>
+      </Button>
 
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="md"
         onClick={() => requestOpenGlobalSearch()}
         className={cn(
-          "hidden min-h-9 w-full max-w-[220px] items-center gap-sm rounded-full border border-border bg-surface px-md py-sm text-left transition-colors hover:bg-muted lg:flex",
+          "hidden h-auto min-h-9 w-full max-w-[220px] justify-start gap-sm rounded-full font-normal lg:flex",
         )}
         aria-label={t("floatingSearch.openAria")}
       >
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+        <span className="min-w-0 flex-1 truncate text-left text-sm text-muted-foreground">
           {t("floatingSearch.placeholder")}
         </span>
         <kbd className="hidden shrink-0 rounded-md border border-border bg-background-secondary px-sm py-xs font-mono text-xs text-muted-foreground xl:inline">
           ⌘K
         </kbd>
-      </button>
+      </Button>
     </>
   );
 }
@@ -71,40 +73,44 @@ function HeaderLanguageSwitcher() {
 
   return (
     <div className="relative" ref={containerRef}>
-      <button
+      <Button
         type="button"
+        variant="secondary"
+        size="md"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="true"
         aria-label={t("common.language")}
-        className="flex h-9 shrink-0 items-center gap-sm rounded-lg border border-border bg-surface px-md text-sm font-medium text-foreground transition-colors hover:bg-muted"
+        className="h-auto min-h-9 shrink-0 gap-sm rounded-lg px-md font-medium"
       >
         <Globe className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <span className="hidden max-w-32 truncate sm:inline">{displayLabel}</span>
-      </button>
+      </Button>
       {open ? (
         <div
           className="absolute right-0 z-50 mt-sm max-h-[70vh] min-w-40 overflow-y-auto rounded-lg border border-border bg-card py-xs shadow-elevation-md"
           role="menu"
         >
           {SUPPORTED_LANGS.map(({ code, labelKey }) => (
-            <button
+            <Button
               key={code}
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 void i18n.changeLanguage(code);
                 setOpen(false);
               }}
               role="menuitem"
               className={cn(
-                "w-full px-md py-sm text-left text-sm transition-colors hover:bg-muted",
+                "h-auto w-full min-h-0 justify-start rounded-none px-md py-sm font-normal",
                 currentLang === code
                   ? "font-medium text-primary"
                   : "text-muted-foreground",
               )}
             >
               {t(labelKey)}
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
@@ -146,9 +152,15 @@ export function HeaderActions() {
     <div className="flex min-w-0 shrink-0 items-center justify-end gap-sm md:gap-md">
       <HeaderSearch />
       <HeaderLanguageSwitcher />
-      <button type="button" className={iconBtn} aria-label={t("header.notifications")}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="iconMd"
+        className="rounded-lg"
+        aria-label={t("header.notifications")}
+      >
         <Bell className="h-4 w-4 text-muted-foreground" aria-hidden />
-      </button>
+      </Button>
       <div className="flex h-9 items-center">
         <ConnectedThemeToggle />
       </div>

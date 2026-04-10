@@ -1,5 +1,6 @@
 import { DollarSign, Sparkles } from "lucide-react";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 const SAVINGS_PRESETS = [
   { label: "$0", value: 0 },
@@ -37,9 +38,11 @@ export function WizardSavingsSection({ currentSavings, onSavingsChange }: Wizard
 
       <div className="flex flex-wrap gap-2">
         {SAVINGS_PRESETS.map((opt) => (
-          <button
+          <Button
             key={opt.label}
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => onSavingsChange(opt.value)}
             className={cn(
               "rounded-xl px-4 py-2.5 text-[0.85rem] font-medium transition-colors",
@@ -49,7 +52,7 @@ export function WizardSavingsSection({ currentSavings, onSavingsChange }: Wizard
             )}
           >
             {opt.label}
-          </button>
+          </Button>
         ))}
       </div>
 

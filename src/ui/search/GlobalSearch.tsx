@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { requestOpenGlobalSearch } from "@/core/hooks/useGlobalSearch";
 
 export interface GlobalSearchProps {
@@ -12,8 +13,10 @@ export interface GlobalSearchProps {
  */
 export function GlobalSearch({ className = "" }: GlobalSearchProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="custom"
+      size="custom"
       onClick={() => requestOpenGlobalSearch()}
       className={`flex min-w-0 max-w-sm flex-1 items-center justify-end gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-background-secondary)] hover:text-[var(--color-text-primary)] xl:max-w-md ${className}`.trim()}
       aria-label="Open command palette"
@@ -23,6 +26,6 @@ export function GlobalSearch({ className = "" }: GlobalSearchProps) {
       <kbd className="hidden shrink-0 rounded border border-[var(--color-border)] bg-[var(--color-background-secondary)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-text-secondary)] sm:inline">
         ⌘K
       </kbd>
-    </button>
+    </Button>
   );
 }

@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/core/lib/utils";
 import { motionTransition } from "@/ui/animations/motionTokens";
+import { Button } from "@/ui/components/Button";
 
 export interface ModalProps {
   open: boolean;
@@ -84,14 +85,16 @@ export function Modal({
             ) : null}
           </div>
           {!hideClose && (
-            <button
+            <Button
               type="button"
-              className="shrink-0 rounded-md p-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              variant="ghost"
+              size="iconSm"
+              className="shrink-0 rounded-md text-muted-foreground hover:text-foreground"
               aria-label="Close"
               onClick={() => onOpenChange(false)}
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
         <div className="mt-md">{children}</div>

@@ -3,6 +3,7 @@ import { Slider } from "@/ui/components/Slider";
 import { calculateEMI } from "@/features/ai/services/emiCalculator";
 import type { CoreAIStructuredPayload, LoanSimulatorCardPayload } from "@/features/ai/store/interactiveTypes";
 import { getLoanInsight } from "@/features/ai/services/insights";
+import { Button } from "@/ui/components/Button";
 import { InsightBox } from "./InsightBox";
 
 function money(n: number): string {
@@ -84,20 +85,24 @@ export function LoanSimulatorCard({ payload, onAction }: LoanSimulatorCardProps)
       <InsightBox insight={insight} />
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-        <button
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onAction({ action: "loan_simulator_continue", amount, tenureMonths })}
           className="sm:flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
         >
           Continue
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="custom"
+          size="custom"
           onClick={() => onAction({ action: "START_LOAN_REVIEW", amount, tenureMonths })}
           className="sm:flex-1 rounded-xl border border-[var(--color-border)] py-2.5 text-sm font-medium text-[var(--color-text)] transition-colors hover:bg-[var(--color-surface)]"
         >
           Review
-        </button>
+        </Button>
       </div>
     </div>
   );

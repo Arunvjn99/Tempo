@@ -10,6 +10,7 @@ import { EnrollmentActionRow } from "@/ui/patterns/enrollment-router";
 import { ArrowLeft } from "lucide-react";
 import { formatCurrency } from "../store/derived";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 const SOURCE_COLORS = {
   preTax: "var(--chart-1)",
@@ -77,14 +78,16 @@ export function ContributionSourcePage() {
   return (
     <div className="space-y-6">
       <div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="custom"
           onClick={prevStep}
-          className="mb-3 inline-flex items-center gap-1 text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-3 inline-flex h-auto items-center gap-1 px-0 text-[0.85rem] text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
         <h1 className="text-xl font-semibold text-foreground sm:text-2xl">Tax strategy</h1>
         <p className="mt-1 text-[0.9rem] text-muted-foreground">
           How do you want to split your contributions across tax treatments?
@@ -138,12 +141,14 @@ export function ContributionSourcePage() {
                   Math.round(contributionSources.afterTax) === preset.values.afterTax;
 
                 return (
-                  <button
+                  <Button
                     key={preset.label}
                     type="button"
+                    variant="custom"
+                    size="custom"
                     onClick={() => applyPreset(preset.values)}
                     className={cn(
-                      "w-full rounded-xl border p-4 text-left transition-colors",
+                      "h-auto w-full justify-start rounded-xl border p-4 text-left font-normal transition-colors",
                       isActive
                         ? "border-primary bg-primary/5"
                         : "border-border bg-surface hover:bg-muted",
@@ -165,7 +170,7 @@ export function ContributionSourcePage() {
                       </div>
                     </div>
                     <p className="mt-xs text-xs text-muted-foreground">{preset.description}</p>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

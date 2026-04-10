@@ -1,5 +1,6 @@
 import type { TransferData } from "@/features/transactions/store/types";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout } from "@/ui/patterns";
 import { formatPercent } from "@/features/transactions/services/format";
 
@@ -56,13 +57,15 @@ export function TransferStepImpactPreview({
         nextDisabled={nextDisabled}
         center={
           !t.impactCalculated ? (
-            <button
+            <Button
               type="button"
+              variant="custom"
+              size="custom"
               onClick={onCalculateImpact}
               className="rounded-button border border-border bg-card px-md py-sm text-sm font-medium text-foreground hover:bg-muted"
             >
               Calculate impact
-            </button>
+            </Button>
           ) : undefined
         }
       />

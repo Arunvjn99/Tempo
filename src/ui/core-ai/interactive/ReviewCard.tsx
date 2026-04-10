@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import type { CoreAIStructuredPayload, ReviewCardPayload, SchedulePreviewRow } from "@/features/ai/store/interactiveTypes";
 
 function money(n: number): string {
@@ -92,13 +93,15 @@ export function ReviewCard({ payload, onAction }: ReviewCardProps) {
         </div>
       )}
 
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={() => onAction({ action: "SUBMIT_LOAN" })}
         className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
       >
         Submit loan
-      </button>
+      </Button>
     </motion.div>
   );
 }

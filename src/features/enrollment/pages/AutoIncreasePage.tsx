@@ -5,6 +5,7 @@
 import { ArrowLeft, ArrowRight, TrendingUp, Minus } from "lucide-react";
 import { useEnrollmentStore, useEnrollmentDerived } from "../store";
 import { formatCurrency } from "../store/derived";
+import { Button } from "@/ui/components/Button";
 
 export function AutoIncreasePage() {
   const enrollment = useEnrollmentStore((s) => s.enrollment);
@@ -26,14 +27,16 @@ export function AutoIncreasePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="custom"
           onClick={prevStep}
-          className="mb-3 inline-flex items-center gap-1 text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          className="mb-3 inline-flex h-auto items-center gap-1 px-0 text-[0.85rem] text-muted-foreground transition-colors hover:bg-transparent hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
         <h1 className="text-2xl font-bold text-foreground">Increase your savings automatically</h1>
         <p className="mt-1 text-[0.9rem] text-muted-foreground">
           Small increases today can grow your retirement savings over time.
@@ -57,13 +60,15 @@ export function AutoIncreasePage() {
               {formatCurrency(withoutAI)}
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="custom"
             onClick={() => handleSelect(false)}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card py-3 text-[0.9rem] font-medium text-foreground transition-all hover:bg-muted active:scale-[0.98]"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[0.9rem] font-medium transition-all hover:bg-muted active:scale-[0.98]"
           >
             Skip Auto Increase
-          </button>
+          </Button>
         </div>
 
         {/* Recommended card */}
@@ -84,14 +89,16 @@ export function AutoIncreasePage() {
               {formatCurrency(withAI)}
             </p>
           </div>
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={() => handleSelect(true)}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-success py-3 text-[0.9rem] font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
           >
             Enable Auto Increase
             <ArrowRight className="h-4 w-4" aria-hidden />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -107,14 +114,16 @@ export function AutoIncreasePage() {
 
       {/* Navigation row */}
       <div className="flex items-center">
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="custom"
           onClick={prevStep}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-border px-4 py-2.5 text-[0.875rem] font-medium text-foreground transition-colors hover:bg-muted"
+          className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[0.875rem] font-medium transition-colors hover:bg-muted"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
-        </button>
+        </Button>
       </div>
     </div>
   );

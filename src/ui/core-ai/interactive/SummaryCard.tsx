@@ -6,6 +6,7 @@
  */
 
 import { motion, useReducedMotion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 
 export interface SummaryRow {
   label: string;
@@ -83,9 +84,11 @@ export function SummaryCard({ title, rows, actions, status }: SummaryCardProps) 
       {actions && actions.length > 0 && (
         <div className="px-4 py-3 border-t border-[var(--color-border)] flex flex-wrap gap-2">
           {actions.map((action) => (
-            <button
+            <Button
               key={action.label}
               type="button"
+              variant="custom"
+              size="custom"
               onClick={action.onClick}
               className={`
                 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
@@ -96,7 +99,7 @@ export function SummaryCard({ title, rows, actions, status }: SummaryCardProps) 
               `}
             >
               {action.label}
-            </button>
+            </Button>
           ))}
         </div>
       )}

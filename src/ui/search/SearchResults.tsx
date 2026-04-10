@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import { Button } from "@/ui/components/Button";
 import type { PaletteRowItem } from "@/core/search/suggestionEngine";
 
 export type SearchResultsProps = {
@@ -32,8 +33,10 @@ export const SearchResults = forwardRef<HTMLUListElement, SearchResultsProps>(fu
           const isActive = activeDescendantId === optionId;
           return (
             <li key={item.id} role="presentation">
-              <button
+              <Button
                 type="button"
+                variant="custom"
+                size="custom"
                 id={optionId}
                 role="option"
                 aria-selected={isActive}
@@ -45,7 +48,7 @@ export const SearchResults = forwardRef<HTMLUListElement, SearchResultsProps>(fu
                 {item.subtitle ? (
                   <span className="ai-command-results__subtitle">{item.subtitle}</span>
                 ) : null}
-              </button>
+              </Button>
             </li>
           );
         })}

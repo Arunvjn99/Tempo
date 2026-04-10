@@ -1,6 +1,7 @@
 import type { TransferData } from "@/features/transactions/store/types";
 import { TRANSFER_TYPES } from "@/features/transactions/store/constants/transferFlowConstants";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface TransferStepTransferTypeProps {
@@ -32,15 +33,17 @@ export function TransferStepTransferType({
       <FormSection>
         <div className="grid gap-sm sm:grid-cols-2">
           {TRANSFER_TYPES.map((x) => (
-            <button
+            <Button
               key={x.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={transactionChoiceButtonClass(t.transferType === x.id)}
               onClick={() => updateTransfer({ transferType: x.id })}
             >
               <span className="block text-sm font-semibold">{x.label}</span>
               <span className="mt-xs block text-xs text-muted-foreground">{x.sub}</span>
-            </button>
+            </Button>
           ))}
         </div>
         {errors.transferType && (

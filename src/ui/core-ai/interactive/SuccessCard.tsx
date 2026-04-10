@@ -5,6 +5,7 @@
  */
 
 import { motion, useReducedMotion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 
 export interface TimelineStep {
   label: string;
@@ -74,13 +75,15 @@ export function SuccessCard({ title, description, timeline, actionLabel, onActio
       {/* Action */}
       {actionLabel && onAction && (
         <div className="px-4 py-3 border-t border-[var(--color-success)]/20">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={onAction}
             className="w-full px-3 py-2 rounded-lg bg-[var(--color-success)] text-white text-xs font-medium hover:bg-[var(--color-success)] transition-colors"
           >
             {actionLabel}
-          </button>
+          </Button>
         </div>
       )}
     </motion.div>

@@ -20,7 +20,7 @@ const congruentLight: ThemeColors = {
   warning: "#F59E0B",
   danger: "#DC2626",
   font: "Inter",
-  logo: "/logos/congruent-solutions.png",
+  logo: "",
 };
 
 const lincolnLight: ThemeColors = {
@@ -36,7 +36,7 @@ const lincolnLight: ThemeColors = {
   warning: "#EF6C00",
   danger: "#C62828",
   font: "Georgia",
-  logo: "/logos/lincoln-financial.png",
+  logo: "",
 };
 
 const johnHancockLight: ThemeColors = {
@@ -52,7 +52,7 @@ const johnHancockLight: ThemeColors = {
   warning: "#F9A825",
   danger: "#B71C1C",
   font: "Inter",
-  logo: "/logos/john-hancock.png",
+  logo: "",
 };
 
 const transamericaLight: ThemeColors = {
@@ -68,7 +68,7 @@ const transamericaLight: ThemeColors = {
   warning: "#F57C00",
   danger: "#C62828",
   font: "Inter",
-  logo: "/logos/transamerica.png",
+  logo: "",
 };
 
 const defaultThemeMap: Record<string, CompanyTheme> = {

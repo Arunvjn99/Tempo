@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 export type InlineAnswerCardProps = {
   question: string;
@@ -26,14 +27,16 @@ export function InlineAnswerCard({
     <div className={cn(containerClassName, className)} role="region" aria-label={t("preEnrollment.heroQuickAnswer", { defaultValue: "Quick answer" })}>
       <p className="answer-question">{question}</p>
       <p className="answer-text">{shortAnswer}</p>
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         className="answer-cta"
         onMouseDown={(e) => e.preventDefault()}
         onClick={onKnowMore}
       >
         {t("preEnrollment.heroSearchKnowMore", { defaultValue: "Know more" })}
-      </button>
+      </Button>
     </div>
   );
 }

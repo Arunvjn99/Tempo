@@ -2,6 +2,7 @@ import type { RolloverData } from "@/features/transactions/store/types";
 import { ALLOCATION_OPTIONS } from "@/features/transactions/store/constants/rolloverFlowConstants";
 import { MOCK_FUNDS } from "@/features/transactions/store/constants/mockFunds";
 import { AllocationEditor, ActionBar, type AllocationSlice } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 import { cn } from "@/core/lib/utils";
 
@@ -36,9 +37,11 @@ export function RolloverStepAllocation({
       <FormSection title="Method">
         <div className="grid gap-sm">
           {ALLOCATION_OPTIONS.map((a) => (
-            <button
+            <Button
               key={a.id}
               type="button"
+              variant="custom"
+              size="custom"
               className={cn(transactionChoiceButtonClass(r.allocationMethod === a.id), "text-left")}
               onClick={() => {
                 if (a.id === "custom") {
@@ -55,7 +58,7 @@ export function RolloverStepAllocation({
             >
               <span className="font-semibold">{a.label}</span>
               <span className="mt-xs block text-xs font-normal text-muted-foreground">{a.sub}</span>
-            </button>
+            </Button>
           ))}
         </div>
       </FormSection>

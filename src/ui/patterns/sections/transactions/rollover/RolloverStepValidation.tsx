@@ -1,5 +1,6 @@
 import type { RolloverData } from "@/features/transactions/store/types";
 import { ActionBar } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FormSection, StepLayout } from "@/ui/patterns";
 
 export interface RolloverStepValidationProps {
@@ -33,15 +34,19 @@ export function RolloverStepValidation({
           Run a mock validation against the account information you entered.
         </p>
         <div className="flex flex-wrap gap-sm">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className="rounded-button bg-primary px-md py-sm text-sm font-semibold text-primary-foreground hover:opacity-90"
             onClick={() => updateRollover({ accountValidated: true, validationError: "" })}
           >
             Validate account
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className="rounded-button border border-border bg-surface px-md py-sm text-sm font-medium text-foreground hover:bg-muted"
             onClick={() =>
               updateRollover({
@@ -51,7 +56,7 @@ export function RolloverStepValidation({
             }
           >
             Simulate failure
-          </button>
+          </Button>
         </div>
         {r.accountValidated === true && (
           <p className="mt-md text-sm font-medium text-success">Account verified.</p>

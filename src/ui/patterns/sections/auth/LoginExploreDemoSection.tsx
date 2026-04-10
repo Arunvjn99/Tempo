@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { Button } from "@/ui/components/Button";
 import { useTranslation } from "react-i18next";
 import {
   DEMO_SCENARIO_IDS,
@@ -37,8 +38,10 @@ export function LoginExploreDemoSection({
     <>
       {typeof document !== "undefined" &&
         createPortal(
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             onClick={onOpen}
             className="fixed left-4 bottom-6 z-[100] flex items-center gap-2.5 rounded-2xl border-2 border-[var(--color-primary)] bg-[var(--color-surface)] px-4 py-3 text-sm font-semibold text-[var(--color-primary)] shadow-lg transition-[box-shadow,transform] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:shadow-xl md:left-6"
             aria-label={t("auth.exploreDemoScenarios")}
@@ -61,7 +64,7 @@ export function LoginExploreDemoSection({
               <line x1="23" y1="11" x2="17" y2="11" />
             </svg>
             <span>{t("auth.exploreDemoScenarios")}</span>
-          </button>,
+          </Button>,
           document.body,
         )}
 
@@ -79,10 +82,12 @@ export function LoginExploreDemoSection({
                 <h2 className="text-lg font-bold text-[var(--color-text)]">{t("auth.exploreScenarios")}</h2>
                 <p className="mt-0.5 text-sm text-[var(--color-textSecondary)]">{t("auth.pickPersona")}</p>
               </div>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="iconSm"
                 onClick={onClose}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-textSecondary)] transition-colors hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
+                className="rounded-lg text-[var(--color-textSecondary)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
                 aria-label={t("auth.close")}
               >
                 <svg
@@ -99,7 +104,7 @@ export function LoginExploreDemoSection({
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
-              </button>
+              </Button>
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto p-3">
@@ -114,9 +119,11 @@ export function LoginExploreDemoSection({
                   });
 
                   return (
-                    <button
+                    <Button
                       key={scenarioId}
                       type="button"
+                      variant="custom"
+                      size="custom"
                       onClick={() => onSelectScenario(scenarioId)}
                       className="flex w-full items-center gap-3 rounded-xl border-2 border-transparent p-4 text-left transition-all hover:border-[var(--color-border)] hover:bg-[var(--color-background)]"
                     >
@@ -156,7 +163,7 @@ export function LoginExploreDemoSection({
                       >
                         <path d="M9 18l6-6-6-6" />
                       </svg>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

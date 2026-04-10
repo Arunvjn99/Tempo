@@ -3,6 +3,7 @@
 // ─────────────────────────────────────────────
 
 import { BarChart3, Calendar, CheckCircle, Mail } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { motion } from "@/ui/animations";
 import { useNavigate } from "react-router-dom";
 import { useEnrollmentStore, useEnrollmentDerived } from "../store";
@@ -77,13 +78,15 @@ export function SuccessPage() {
         </div>
 
         {/* Dashboard CTA */}
-        <button
+        <Button
           type="button"
+          variant="primary"
+          size="custom"
           onClick={handleDashboard}
-          className="w-full rounded-xl bg-primary py-3.5 text-[0.9rem] font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"
+          className="w-full rounded-xl py-3.5 text-[0.9rem] font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
         >
           Go to Dashboard
-        </button>
+        </Button>
       </motion.div>
     </div>
   );

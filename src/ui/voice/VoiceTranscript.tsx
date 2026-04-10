@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Button } from "@/ui/components/Button";
 import { UIState, type VoiceMessage } from "@/core/types/voice";
 
 interface VoiceTranscriptProps {
@@ -43,14 +44,16 @@ export const VoiceTranscript = ({ messages, uiState, onQuickReply }: VoiceTransc
             {message.type === "agent" && message.quickReplies && message.quickReplies.length > 0 && (
               <div className="voice-transcript__quick-replies">
                 {message.quickReplies.map((reply, idx) => (
-                  <button
+                  <Button
                     key={idx}
                     type="button"
+                    variant="custom"
+                    size="custom"
                     onClick={() => onQuickReply(reply)}
                     className="voice-transcript__quick-reply"
                   >
                     {reply}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

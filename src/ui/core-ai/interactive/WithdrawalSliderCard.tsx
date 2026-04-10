@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { Button } from "@/ui/components/Button";
 import { Slider } from "@/ui/components/Slider";
 import type { CoreAIStructuredPayload, WithdrawalSliderPayload } from "@/features/ai/store/interactiveTypes";
 import { getWithdrawalInsight } from "@/features/ai/services/insights";
@@ -61,13 +62,15 @@ export function WithdrawalSliderCard({ payload, onAction }: WithdrawalSliderCard
 
       <InsightBox insight={insight} />
 
-      <button
+      <Button
         type="button"
+        variant="custom"
+        size="custom"
         onClick={() => onAction({ action: "withdrawal_amount_continue", value })}
         className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
       >
         Continue
-      </button>
+      </Button>
     </motion.div>
   );
 }

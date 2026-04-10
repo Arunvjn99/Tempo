@@ -1,5 +1,6 @@
 import type { TransferData } from "@/features/transactions/store/types";
 import { ActionBar, SliderInput } from "@/ui/components";
+import { Button } from "@/ui/components/Button";
 import { FieldGroup, FormSection, StepLayout , transactionChoiceButtonClass } from "@/ui/patterns";
 
 export interface TransferStepAmountProps {
@@ -30,20 +31,24 @@ export function TransferStepAmount({
     >
       <FormSection title="Mode">
         <div className="mb-md flex flex-wrap gap-sm">
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className={transactionChoiceButtonClass(t.mode === "dollar")}
             onClick={() => updateTransfer({ mode: "dollar" })}
           >
             Dollar amount
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className={transactionChoiceButtonClass(t.mode === "percent")}
             onClick={() => updateTransfer({ mode: "percent" })}
           >
             Percentage
-          </button>
+          </Button>
         </div>
         {t.mode === "dollar" ? (
           <FieldGroup label="Amount (USD)" error={errors.amount}>

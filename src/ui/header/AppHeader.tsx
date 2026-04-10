@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { useTheme } from "@/core/context/ThemeContext";
+import { useBrandedLogo } from "@/core/hooks/useBrandedLogo";
 import { useUser } from "@/core/context/UserContext";
 import { cn } from "@/core/lib/utils";
 import { motionOffset, motionTransition } from "@/ui/animations/motionTokens";
@@ -15,29 +15,34 @@ const headerChrome =
 
 function HeaderLogo({
   logoUrl,
+  hasImage,
   brandLabel,
   ariaLabel,
   companyLogoAlt,
+  onImageError,
 }: {
   logoUrl: string;
+  hasImage: boolean;
   brandLabel: string;
   ariaLabel: string;
   companyLogoAlt: string;
+  onImageError: () => void;
 }) {
   return (
     <Link
       to="/dashboard"
       className={cn(
         "header-logo min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        !logoUrl && "max-w-full",
+        !hasImage && "max-w-full",
       )}
       aria-label={ariaLabel}
     >
-      {logoUrl ? (
+      {hasImage ? (
         <div className="header-logo__frame">
           <img
             src={logoUrl}
             alt={companyLogoAlt}
+            onError={onImageError}
             className="h-8 w-auto max-w-[var(--header-logo-max-width)] object-contain"
             decoding="async"
             loading="eager"
@@ -54,18 +59,12 @@ function HeaderLogo({
 
 export function AppHeader() {
   const { t } = useTranslation();
-  const { enrollmentStatus, company, profile } = useUser();
-  const { currentColors } = useTheme();
+  const { enrollmentStatus } = useUser();
+  const { logoUrl, hasImage, brandLabel, onImageError } = useBrandedLogo();
   const reduceMotion = useReducedMotion();
 
   const mode = useMemo(() => getHeaderNavMode(enrollmentStatus), [enrollmentStatus]);
-  const logoUrl = currentColors.logo?.trim() ?? "";
-  const brandLabel = company?.name?.trim() || profile?.name?.trim() || t("header.logoAria");
 
-  /**
-   * True center nav: left + right in normal flow (`z-10`), main nav absolutely centered
-   * (`left-1/2 -translate-x-1/2`) so asymmetric right-side width does not pull the bar off-center.
-   */
   const inner = (
     <div className="container-app flex h-full min-h-0 min-w-0 items-center">
       {/* LEFT GROUP: hamburger (mobile) + logo + desktop nav */}
@@ -73,9 +72,11 @@ export function AppHeader() {
         <HeaderMobileNavDialog mode={mode} />
         <HeaderLogo
           logoUrl={logoUrl}
+          hasImage={hasImage}
           brandLabel={brandLabel}
           ariaLabel={t("header.logoAria")}
           companyLogoAlt={t("header.companyLogoAlt")}
+          onImageError={onImageError}
         />
         <nav className="hidden md:flex items-center gap-xl ml-md" aria-label="Main">
           <HeaderNav mode={mode} variant="desktop" />

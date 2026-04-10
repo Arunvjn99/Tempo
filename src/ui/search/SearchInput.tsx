@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 import { Sparkles, X, ArrowRight } from "lucide-react";
+import { Button } from "@/ui/components/Button";
 import { UnifiedSearchInput } from "./UnifiedSearchInput";
 
 export type SearchInputProps = {
@@ -56,18 +57,20 @@ export function SearchInput({
       />
       <div className="search-palette-actions">
         {showClear ? (
-          <button
+          <Button
             type="button"
+            variant="custom"
+            size="custom"
             className="search-palette-clear"
             onClick={onClear}
             aria-label="Clear search"
           >
             <X className="size-4" strokeWidth={2} aria-hidden />
-          </button>
+          </Button>
         ) : null}
-        <button type="submit" className="search-palette-submit" aria-label="Submit search">
+        <Button type="submit" variant="custom" size="custom" className="search-palette-submit" aria-label="Submit search">
           <ArrowRight className="size-5" strokeWidth={2} aria-hidden />
-        </button>
+        </Button>
       </div>
     </UnifiedSearchInput>
   );

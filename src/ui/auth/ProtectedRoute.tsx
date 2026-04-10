@@ -6,6 +6,17 @@ import { getRoutingVersion, withVersion } from "@/core/version";
 import { ScenarioFlowGuard } from "@/core/engine/flowGuard";
 
 /**
+ * TEMP (debug only): set `VITE_DEBUG_BYPASS_AUTH=true` in `.env.local` to open protected routes
+ * without session/OTP while developing pre-enrollment UI. Does not change sign-in/sign-up logic.
+ */
+function isTemporaryProtectedAuthBypass(): boolean {
+  return (
+    import.meta.env.DEV &&
+    String(import.meta.env.VITE_DEBUG_BYPASS_AUTH ?? "").toLowerCase() === "true"
+  );
+}
+
+/**
  * Requires BOTH a Supabase session AND OTP verification — OR an active demo persona.
  *  - demo user active → render children (no auth needed)
  *  - loading → render nothing (avoids flash)
@@ -20,6 +31,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const version = getRoutingVersion(location.pathname);
   const verifyLoginPath = `${withVersion(version, "/verify")}?mode=login`;
+
+  if (isTemporaryProtectedAuthBypass()) {
+    return <ScenarioFlowGuard>{children}</ScenarioFlowGuard>;
+  }
 
   if (demoUser) return <ScenarioFlowGuard>{children}</ScenarioFlowGuard>;
 

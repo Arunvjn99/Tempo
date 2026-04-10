@@ -1,4 +1,5 @@
 import { cn } from "@/core/lib/utils";
+import { Button } from "@/ui/components/Button";
 
 export interface SearchPanelProps {
   id: string;
@@ -27,9 +28,11 @@ export function SearchPanel({ id, trendingTitle, chips, onChipPick, className }:
       </p>
       <div className="flex flex-wrap gap-2">
         {chips.map((label) => (
-          <button
+          <Button
             key={label}
             type="button"
+            variant="custom"
+            size="custom"
             onMouseDown={(e) => {
               e.preventDefault();
               onChipPick(label);
@@ -37,7 +40,7 @@ export function SearchPanel({ id, trendingTitle, chips, onChipPick, className }:
             className="rounded-full border border-border bg-background-tertiary px-3 py-1 text-left text-sm text-muted transition-colors duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
