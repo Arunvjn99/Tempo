@@ -1,4 +1,6 @@
 /**
+ * ⚠️ DO NOT MODIFY: Core Supabase Integration
+ * Service-role client — separate from the browser anon client in src/core/supabase.ts.
  * Supabase admin client — service role for JWT verification and server-side DB access.
  * Used only for /api/core-ai auth and profile lookup. Never expose to frontend.
  */

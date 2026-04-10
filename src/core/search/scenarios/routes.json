@@ -1,0 +1,316 @@
+[
+  {
+    "id": "start_enrollment",
+    "keywords": [
+      "enroll",
+      "start enrollment",
+      "sign up",
+      "join plan",
+      "401k enrollment"
+    ],
+    "queries": [
+      "Start enrollment",
+      "How to enroll?",
+      "Begin my 401k"
+    ],
+    "subtitle": "Enrollment",
+    "type": "navigation",
+    "route": "/enrollment"
+  },
+  {
+    "id": "enrollment_status",
+    "keywords": [
+      "enrollment status",
+      "am i enrolled",
+      "already enrolled"
+    ],
+    "queries": [
+      "Check enrollment status",
+      "Am I enrolled?"
+    ],
+    "subtitle": "Enrollment",
+    "type": "navigation",
+    "route": "/enrollment"
+  },
+  {
+    "id": "resume_enrollment",
+    "keywords": [
+      "continue enrollment",
+      "resume enrollment",
+      "finish enrollment"
+    ],
+    "queries": [
+      "Continue enrollment",
+      "Resume where I left off"
+    ],
+    "subtitle": "Enrollment",
+    "type": "navigation",
+    "route": "/enrollment"
+  },
+  {
+    "id": "beneficiary_enrollment",
+    "keywords": [
+      "beneficiary enrollment",
+      "name beneficiary"
+    ],
+    "queries": [
+      "Add beneficiary during enrollment"
+    ],
+    "subtitle": "Profile",
+    "type": "navigation",
+    "route": "/profile"
+  },
+  {
+    "id": "enrollment_investments",
+    "keywords": [
+      "pick investments enrollment",
+      "investment election"
+    ],
+    "queries": [
+      "Choose investments in enrollment"
+    ],
+    "subtitle": "Enrollment",
+    "type": "navigation",
+    "route": "/enrollment/investments"
+  },
+  {
+    "id": "auto_increase",
+    "keywords": [
+      "auto increase",
+      "automatic escalation",
+      "annual increase"
+    ],
+    "queries": [
+      "Turn on automatic contribution increases"
+    ],
+    "subtitle": "Enrollment",
+    "type": "navigation",
+    "route": "/enrollment/auto-increase"
+  },
+  {
+    "id": "loan_status",
+    "keywords": [
+      "loan status",
+      "outstanding loan",
+      "loan balance"
+    ],
+    "queries": [
+      "Check my loan status",
+      "Loan balance"
+    ],
+    "subtitle": "Loans",
+    "type": "navigation",
+    "route": "/transactions/loan"
+  },
+  {
+    "id": "withdrawal_status",
+    "keywords": [
+      "withdrawal status",
+      "distribution pending"
+    ],
+    "queries": [
+      "Check withdrawal status"
+    ],
+    "subtitle": "Transactions",
+    "type": "navigation",
+    "route": "/transactions"
+  },
+  {
+    "id": "view_portfolio",
+    "keywords": [
+      "portfolio",
+      "my investments",
+      "holdings"
+    ],
+    "queries": [
+      "View my portfolio",
+      "See my investments"
+    ],
+    "subtitle": "Investments",
+    "type": "navigation",
+    "route": "/dashboard/investment-portfolio"
+  },
+  {
+    "id": "change_investments",
+    "keywords": [
+      "change investments",
+      "switch funds",
+      "reallocate"
+    ],
+    "queries": [
+      "Change my investments"
+    ],
+    "subtitle": "Investments",
+    "type": "navigation",
+    "route": "/dashboard/investment-portfolio"
+  },
+  {
+    "id": "fund_performance",
+    "keywords": [
+      "fund performance",
+      "returns",
+      "performance ytd"
+    ],
+    "queries": [
+      "Fund performance",
+      "How are my funds doing?"
+    ],
+    "subtitle": "Investments",
+    "type": "navigation",
+    "route": "/investments"
+  },
+  {
+    "id": "investment_options",
+    "keywords": [
+      "fund lineup",
+      "investment options",
+      "available funds"
+    ],
+    "queries": [
+      "What funds can I choose?"
+    ],
+    "subtitle": "Investments",
+    "type": "navigation",
+    "route": "/investments"
+  },
+  {
+    "id": "transaction_history",
+    "keywords": [
+      "history",
+      "past transactions",
+      "activity"
+    ],
+    "queries": [
+      "Transaction history"
+    ],
+    "subtitle": "Transactions",
+    "type": "navigation",
+    "route": "/transactions"
+  },
+  {
+    "id": "pending_transaction",
+    "keywords": [
+      "pending trade",
+      "trade status"
+    ],
+    "queries": [
+      "Pending transactions"
+    ],
+    "subtitle": "Transactions",
+    "type": "navigation",
+    "route": "/transactions"
+  },
+  {
+    "id": "view_balance",
+    "keywords": [
+      "balance",
+      "account balance",
+      "how much saved"
+    ],
+    "queries": [
+      "Check my balance",
+      "View account balance"
+    ],
+    "subtitle": "Dashboard",
+    "type": "navigation",
+    "route": "/dashboard/pre-enrollment"
+  },
+  {
+    "id": "transactions_hub",
+    "keywords": [
+      "transactions",
+      "loans transfers"
+    ],
+    "queries": [
+      "Transactions",
+      "Money in and out"
+    ],
+    "subtitle": "Transactions",
+    "type": "navigation",
+    "route": "/transactions"
+  },
+  {
+    "id": "update_profile",
+    "keywords": [
+      "profile",
+      "update address",
+      "personal info"
+    ],
+    "queries": [
+      "Update my profile"
+    ],
+    "subtitle": "Profile",
+    "type": "navigation",
+    "route": "/profile"
+  },
+  {
+    "id": "beneficiaries",
+    "keywords": [
+      "beneficiary",
+      "beneficiaries"
+    ],
+    "queries": [
+      "Update beneficiaries",
+      "Add beneficiary"
+    ],
+    "subtitle": "Profile",
+    "type": "navigation",
+    "route": "/profile"
+  },
+  {
+    "id": "contact_support",
+    "keywords": [
+      "help",
+      "support",
+      "contact"
+    ],
+    "queries": [
+      "Contact support",
+      "Get help"
+    ],
+    "subtitle": "Help",
+    "type": "navigation",
+    "route": "/help"
+  },
+  {
+    "id": "settings_hub",
+    "keywords": [
+      "settings",
+      "preferences",
+      "notifications"
+    ],
+    "queries": [
+      "Open settings"
+    ],
+    "subtitle": "Settings",
+    "type": "navigation",
+    "route": "/settings"
+  },
+  {
+    "id": "change_password",
+    "keywords": [
+      "password",
+      "reset login"
+    ],
+    "queries": [
+      "Change password"
+    ],
+    "subtitle": "Settings",
+    "type": "navigation",
+    "route": "/settings"
+  },
+  {
+    "id": "two_factor",
+    "keywords": [
+      "two factor",
+      "2fa",
+      "mfa"
+    ],
+    "queries": [
+      "Two-factor authentication"
+    ],
+    "subtitle": "Settings",
+    "type": "navigation",
+    "route": "/settings"
+  }
+]

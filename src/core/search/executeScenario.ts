@@ -1,6 +1,6 @@
 import type { NavigateFunction } from "react-router-dom";
 import { withVersionIfEnrollment } from "@/core/version";
-import type { OpenAIModalInput } from "@/stores/aiAssistantStore";
+import type { OpenAIModalInput } from "@/core/globalStores/aiAssistantStore";
 import { buildActionHandlers } from "./actionHandlers";
 import { getScenarioById, SEARCH_SCENARIOS } from "./scenarioConfig";
 

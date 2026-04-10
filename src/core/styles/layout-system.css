@@ -1,0 +1,44 @@
+/**
+ * SaaS layout tokens — mirrors `tailwind.config.js` theme.extend.spacing (xs … 3xl).
+ * Prefer Tailwind utilities (`p-md`, `gap-lg`, `max-w-app`) in React; use these variables in plain CSS only.
+ */
+:root {
+  --layout-space-xs: 0.25rem; /* 4px */
+  --layout-space-sm: 0.5rem; /* 8px */
+  --layout-space-md: 1rem; /* 16px */
+  --layout-space-lg: 1.5rem; /* 24px */
+  --layout-space-xl: 2rem; /* 32px */
+  --layout-space-2xl: 3rem; /* 48px */
+  --layout-space-3xl: 4rem; /* 64px */
+  --layout-max-width-app: 1200px;
+  --layout-max-width-sidebar: 16rem;
+  --header-logo-max-height: 2rem; /* 32px — matches h-8 */
+  --header-logo-max-width: 8.75rem; /* 140px at 16px root */
+}
+
+/**
+ * Header logo: shields against global `img` rules (e.g. width: 100%) and odd SVGs.
+ * Component also uses `h-8 max-w-[8.75rem] object-contain` utilities.
+ */
+.header-logo {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+}
+
+.header-logo__frame {
+  display: flex;
+  height: 2.5rem; /* 40px slot — centers 32px logo */
+  max-width: 100%;
+  align-items: center;
+}
+
+.header-logo img {
+  width: auto;
+  height: auto;
+  max-height: var(--header-logo-max-height);
+  max-width: var(--header-logo-max-width);
+  object-fit: contain;
+  flex-shrink: 0;
+}

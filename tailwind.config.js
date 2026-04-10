@@ -98,11 +98,25 @@ export default {
         button: "var(--radius-md)",
         input: "var(--radius-md)",
       },
+      maxWidth: {
+        /** SaaS app content column — use with `container-app` */
+        app: "1200px",
+        /** Default sidebar column in `layout-split` */
+        sidebar: "16rem",
+      },
       spacing: {
         "rhythm-1": "8px",
         "rhythm-2": "16px",
         "rhythm-3": "24px",
         "rhythm-4": "32px",
+        /** Layout scale (aligned with `src/core/styles/layout-system.css`) */
+        xs: "4px",
+        sm: "8px",
+        md: "16px",
+        lg: "24px",
+        xl: "32px",
+        "2xl": "48px",
+        "3xl": "64px",
       },
       fontFamily: {
         sans: ["system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"],
@@ -119,6 +133,77 @@ export default {
         ".scrollbar-hide": {
           "scrollbar-width": "none",
           "&::-webkit-scrollbar": { display: "none" },
+        },
+      });
+    },
+    /** SaaS layout: centered container + 12-col grid utilities */
+    function ({ addComponents, theme }) {
+      addComponents({
+        ".container-app": {
+          marginLeft: "auto",
+          marginRight: "auto",
+          width: "100%",
+          maxWidth: theme("maxWidth.app"),
+          paddingLeft: theme("spacing.md"),
+          paddingRight: theme("spacing.md"),
+          "@screen md": {
+            paddingLeft: theme("spacing.xl"),
+            paddingRight: theme("spacing.xl"),
+          },
+        },
+        ".layout-grid-12": {
+          display: "grid",
+          width: "100%",
+          minWidth: "0",
+          gridTemplateColumns: "repeat(1, minmax(0, 1fr))",
+          columnGap: theme("spacing.md"),
+          rowGap: theme("spacing.md"),
+          "@screen md": {
+            gridTemplateColumns: "repeat(12, minmax(0, 1fr))",
+            columnGap: theme("spacing.lg"),
+            rowGap: theme("spacing.lg"),
+          },
+        },
+        ".layout-page": {
+          display: "flex",
+          flexDirection: "column",
+          width: "100%",
+          minWidth: "0",
+          rowGap: theme("spacing.lg"),
+          "@screen md": {
+            rowGap: theme("spacing.xl"),
+          },
+        },
+        ".layout-split": {
+          display: "grid",
+          width: "100%",
+          minWidth: "0",
+          gridTemplateColumns: "minmax(0, 1fr)",
+          columnGap: theme("spacing.lg"),
+          rowGap: theme("spacing.lg"),
+          "@screen lg": {
+            gridTemplateColumns: `minmax(0, ${theme("maxWidth.sidebar")}) minmax(0, 1fr)`,
+            columnGap: theme("spacing.xl"),
+            alignItems: "start",
+          },
+        },
+        ".layout-card-grid": {
+          display: "grid",
+          width: "100%",
+          gridTemplateColumns: "minmax(0, 1fr)",
+          columnGap: theme("spacing.md"),
+          rowGap: theme("spacing.md"),
+          "@screen sm": {
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            columnGap: theme("spacing.lg"),
+            rowGap: theme("spacing.lg"),
+          },
+          "@screen lg": {
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          },
+          "@screen xl": {
+            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          },
         },
       });
     },

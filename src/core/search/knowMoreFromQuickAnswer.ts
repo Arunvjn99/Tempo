@@ -1,5 +1,5 @@
 import type { QuickAnswerResult } from "./answerEngine";
-import { useAIAssistantStore } from "@/stores/aiAssistantStore";
+import { useAIAssistantStore } from "@/core/globalStores/aiAssistantStore";
 
 /**
  * Hero / command palette “Know more”: FAQ → Core AI full answer; otherwise auto-send prompt.

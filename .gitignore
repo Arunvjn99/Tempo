@@ -1,3 +1,6 @@
+# Legacy / archived code (not part of the app; keep local copy outside repo if needed)
+bin_archive/
+
 # Dependencies
 node_modules/
 
@@ -9,6 +12,9 @@ dist/
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.staging
 server/.env
 
 # IDE

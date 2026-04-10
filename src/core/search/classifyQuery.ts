@@ -1,4 +1,4 @@
-import { getFAQMatch } from "@/core/ai/faqAnswers";
+import { getFAQMatch } from "@/features/ai/services/faqAnswers";
 import { matchShortAnswer } from "./shortAnswers";
 import { findScenarioForRawQuery } from "./executeScenario";
 import { getScenarioById } from "./scenarioConfig";

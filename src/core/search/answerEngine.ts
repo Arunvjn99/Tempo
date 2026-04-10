@@ -1,4 +1,4 @@
-import { getFAQMatch } from "@/core/ai/faqAnswers";
+import { getFAQMatch } from "@/features/ai/services/faqAnswers";
 import { classifyQuery } from "./classifyQuery";
 import { matchShortAnswer } from "./shortAnswers";
 import { SEARCH_SCENARIOS } from "./scenarioConfig";

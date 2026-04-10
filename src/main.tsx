@@ -1,32 +1,28 @@
-import "./i18n/index";
+import i18n from "./core/i18n/index";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { I18nextProvider, useTranslation } from "react-i18next";
-import i18n from "./i18n/index";
-import "./styles/design-tokens.css";
-import "./styles/design-system.css";
-import "./theme/tokens.css";
-import "./theme/global.css";
-import "./styles/global.css";
-import "./theme/light.css";
-import "./theme/dark.css";
-import "./theme/enrollment-dark.css";
+import "./core/styles/design-tokens.css";
+import "./core/styles/design-system.css";
+import "./core/theme/tokens.css";
+import "./core/theme/global.css";
+import "./core/styles/global.css";
+import "./core/styles/layout-system.css";
+import "./core/theme/light.css";
+import "./core/theme/dark.css";
+import "./core/theme/enrollment-dark.css";
 import "./index.css";
-import "./features/enrollment/enrollment.css";
-import { loadUXtweak } from "./utils/uxtweakLoader";
-import { loadUXsniff } from "./utils/uxsniffLoader";
-import { loadClarity } from "./lib/analytics/clarity";
-import { router } from "./app/router.tsx";
-import { ThemeProvider } from "./context/ThemeContext";
-import { AISettingsProvider } from "./context/AISettingsContext";
-import { AuthProvider } from "./context/AuthContext";
-import { OtpProvider } from "./context/OtpContext";
-import { UserProvider } from "./context/UserContext";
-import { NetworkProvider } from "./lib/network/networkContext";
-import { NetworkBanner } from "./components/system/NetworkBanner";
+import { loadUXtweak } from "./core/utils/uxtweakLoader";
+import { loadUXsniff } from "./core/utils/uxsniffLoader";
+import { loadClarity } from "./core/lib/analytics/clarity";
+import { v4Router } from "./v4/router.tsx";
+import { ThemeProvider } from "./core/context/ThemeContext";
+import { AuthProvider } from "./core/context/AuthContext";
+import { UserProvider } from "./core/context/UserContext";
+import { NetworkProvider } from "./core/network/networkContext";
+import { NetworkBanner } from "@/ui/system/NetworkBanner";
 
-// Initialize theme from localStorage before first paint (avoids flash)
 const savedTheme = localStorage.getItem("theme");
 const effectiveTheme =
   savedTheme === "system"
@@ -39,22 +35,17 @@ const effectiveTheme =
 document.documentElement.classList.remove("light", "dark");
 document.documentElement.classList.add(effectiveTheme);
 
-/** Keys router to current language so all route content remounts and picks up new translations. */
 function RootWithLanguageKey() {
   const { i18n: i18nInstance } = useTranslation();
   return (
     <NetworkProvider>
       <NetworkBanner />
       <AuthProvider>
-        <OtpProvider>
-          <ThemeProvider>
-            <AISettingsProvider>
-              <UserProvider>
-                <RouterProvider key={i18nInstance.language || "en"} router={router} />
-              </UserProvider>
-            </AISettingsProvider>
-          </ThemeProvider>
-        </OtpProvider>
+        <ThemeProvider>
+          <UserProvider>
+            <RouterProvider key={i18nInstance.language || "en"} router={v4Router} />
+          </UserProvider>
+        </ThemeProvider>
       </AuthProvider>
     </NetworkProvider>
   );

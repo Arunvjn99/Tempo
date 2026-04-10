@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Frontend (Vite)",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["node_modules/.bin/vite"],
+      "port": 5173
+    },
+    {
+      "name": "Voice API Server",
+      "runtimeExecutable": "/usr/local/lib/node_modules/npm/bin/npm",
+      "runtimeArgs": ["run", "dev:server"],
+      "port": 3001
+    },
+    {
+      "name": "Image Dev Server",
+      "runtimeExecutable": "/usr/local/lib/node_modules/npm/bin/npm",
+      "runtimeArgs": ["run", "dev:image-server"],
+      "port": 3001
+    }
+  ]
+}

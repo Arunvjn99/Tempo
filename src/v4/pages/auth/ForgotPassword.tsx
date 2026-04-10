@@ -1,0 +1,62 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { AuthLayout } from "@/ui/auth/AuthLayout";
+import { AuthFormShell, AuthInput, AuthButton } from "@/ui/auth";
+import { Logo } from "@/ui/brand/Logo";
+
+export const ForgotPassword = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+
+  const handleSendResetLink = () => {
+    navigate("/forgot/verify", { state: { email: email.trim() } });
+  };
+
+  const handleBackToSignIn = () => {
+    navigate("/");
+  };
+
+  const headerSlot = (
+    <Logo className="h-10 w-auto" />
+  );
+
+  const bodySlot = (
+    <>
+      <AuthInput
+        label={t("auth.email")}
+        type="email"
+        name="email"
+        id="email"
+        placeholder={t("auth.enterYourEmail")}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <AuthButton onClick={handleSendResetLink}>{t("auth.sendResetLink")}</AuthButton>
+      <div className="flex flex-col items-center gap-2">
+        <a
+          href="#"
+          className="text-center text-sm text-[var(--color-primary)] no-underline hover:underline"
+          onClick={(e) => {
+            e.preventDefault();
+            handleBackToSignIn();
+          }}
+        >
+          {t("auth.backToSignIn")}
+        </a>
+      </div>
+    </>
+  );
+
+  return (
+    <AuthLayout>
+      <AuthFormShell
+        headerSlot={headerSlot}
+        title={t("auth.forgotPasswordTitle")}
+        description={t("auth.forgotPasswordDesc")}
+        bodySlot={bodySlot}
+      />
+    </AuthLayout>
+  );
+};

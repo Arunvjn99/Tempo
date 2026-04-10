@@ -1,0 +1,130 @@
+[
+  {
+    "id": "increase_contribution",
+    "keywords": [
+      "increase contribution",
+      "raise deferral",
+      "save more paycheck"
+    ],
+    "queries": [
+      "Increase contribution",
+      "Change contribution percentage"
+    ],
+    "subtitle": "Contributions",
+    "type": "action",
+    "action": "OPEN_CONTRIBUTION_FLOW"
+  },
+  {
+    "id": "stop_contribution",
+    "keywords": [
+      "stop contribution",
+      "pause contribution",
+      "reduce to zero"
+    ],
+    "queries": [
+      "Stop my contributions",
+      "Pause deferrals"
+    ],
+    "subtitle": "Contributions",
+    "type": "action",
+    "action": "OPEN_CONTRIBUTION_FLOW"
+  },
+  {
+    "id": "edit_contribution",
+    "keywords": [
+      "edit contribution",
+      "change deferral amount"
+    ],
+    "queries": [
+      "Edit contribution amount"
+    ],
+    "subtitle": "Contributions",
+    "type": "action",
+    "action": "OPEN_CONTRIBUTION_FLOW"
+  },
+  {
+    "id": "apply_loan",
+    "keywords": [
+      "loan",
+      "apply loan",
+      "borrow",
+      "401k loan"
+    ],
+    "queries": [
+      "Apply for a loan",
+      "How to take a 401k loan"
+    ],
+    "subtitle": "Loans",
+    "type": "action",
+    "action": "OPEN_LOAN_FLOW"
+  },
+  {
+    "id": "withdraw_money",
+    "keywords": [
+      "withdraw",
+      "take money out",
+      "distribution"
+    ],
+    "queries": [
+      "Withdraw money",
+      "Take a withdrawal"
+    ],
+    "subtitle": "Withdrawals",
+    "type": "action",
+    "action": "OPEN_WITHDRAWAL_FLOW"
+  },
+  {
+    "id": "full_withdrawal",
+    "keywords": [
+      "close account",
+      "cash out entire",
+      "lump sum"
+    ],
+    "queries": [
+      "Withdraw my full balance",
+      "Cash out 401k"
+    ],
+    "subtitle": "Withdrawals",
+    "type": "action",
+    "action": "OPEN_WITHDRAWAL_FLOW"
+  },
+  {
+    "id": "rebalance",
+    "keywords": [
+      "rebalance",
+      "rebalancing"
+    ],
+    "queries": [
+      "Rebalance my portfolio"
+    ],
+    "subtitle": "Rebalance",
+    "type": "action",
+    "action": "OPEN_REBALANCE_FLOW"
+  },
+  {
+    "id": "transfer_money",
+    "keywords": [
+      "transfer between accounts",
+      "move money plan"
+    ],
+    "queries": [
+      "Transfer between accounts"
+    ],
+    "subtitle": "Transfer",
+    "type": "action",
+    "action": "OPEN_TRANSFER_FLOW"
+  },
+  {
+    "id": "rollover_in",
+    "keywords": [
+      "rollover in",
+      "roll old 401k"
+    ],
+    "queries": [
+      "Roll over an old 401k"
+    ],
+    "subtitle": "Rollover",
+    "type": "action",
+    "action": "OPEN_ROLLOVER_FLOW"
+  }
+]
