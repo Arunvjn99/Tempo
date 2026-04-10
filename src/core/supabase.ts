@@ -11,6 +11,24 @@ import { timeoutFetch } from "./network/timeoutFetch";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
+if (import.meta.env.DEV) {
+  const urlPresent = Boolean(supabaseUrl?.trim());
+  const keyPresent = Boolean(supabaseAnonKey?.trim());
+  let host: string | null = null;
+  if (urlPresent) {
+    try {
+      host = new URL(supabaseUrl!.trim()).host;
+    } catch {
+      host = "(invalid URL)";
+    }
+  }
+  console.info("[Supabase diag]", {
+    VITE_SUPABASE_URL: urlPresent,
+    VITE_SUPABASE_ANON_KEY: keyPresent,
+    host,
+  });
+}
+
 const PLACEHOLDER_PATTERNS = [
   "your-project",
   "YOUR_PROJECT_ID",

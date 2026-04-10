@@ -12,7 +12,10 @@ export interface LoginFormSectionProps {
   error: string | null;
   submitting: boolean;
   supabaseReady: boolean;
-  canReachServer: boolean;
+  /** When false (e.g. offline), sign-in is disabled; degraded still allows attempt. */
+  canAttemptLogin: boolean;
+  /** Non-blocking hint when connectivity monitor reports degraded health. */
+  showDegradedNetworkHint?: boolean;
   detectedLogo: string | null;
   onLogin: () => void;
   onForgotPassword: () => void;
@@ -27,7 +30,8 @@ export function LoginFormSection({
   error,
   submitting,
   supabaseReady,
-  canReachServer,
+  canAttemptLogin,
+  showDegradedNetworkHint = false,
   detectedLogo,
   onLogin,
   onForgotPassword,
@@ -47,7 +51,16 @@ export function LoginFormSection({
         </div>
       )}
       {!supabaseReady && <AuthDemoModeBanner variant="login" />}
-      {supabaseReady && !canReachServer && <LoginNetworkWarningBanner />}
+      {supabaseReady && !canAttemptLogin && <LoginNetworkWarningBanner />}
+      {supabaseReady && canAttemptLogin && showDegradedNetworkHint ? (
+        <div
+          role="status"
+          className="rounded-lg border border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 px-4 py-3 text-sm text-[var(--color-warning)]"
+        >
+          Connection looks unstable. You can still try to sign in—if it fails, check your network
+          and try again.
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-6">
         <AuthInput
@@ -83,7 +96,7 @@ export function LoginFormSection({
         </div>
         <AuthButton
           onClick={onLogin}
-          disabled={submitting || !supabaseReady || !canReachServer}
+          disabled={submitting || !supabaseReady || !canAttemptLogin}
           className="w-full"
         >
           {submitting ? t("auth.loggingIn", "Logging in…") : t("auth.login")}

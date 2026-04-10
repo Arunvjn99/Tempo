@@ -45,7 +45,7 @@ When Supabase is not configured:
 - **Login** shows: *Running in demo mode (no backend)* and disables email/password sign-in until env is set.
 - **Signup** shows the same idea and disables submit.
 - **Auth context** skips session subscription; `signIn` / `signUp` throw `Supabase not configured` if called from code paths that bypass the UI guards.
-- Data services that need Supabase return empty or safe fallbacks where implemented (see `src/lib/supabase.ts` and callers).
+- Data services that need Supabase return empty or safe fallbacks where implemented (see `src/core/supabase.ts` and callers).
 
 Configure both `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with real project values to enable full auth and database features.
 

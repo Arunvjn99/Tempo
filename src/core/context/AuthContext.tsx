@@ -18,6 +18,7 @@ import {
   subscribeAuthStateChange,
   SUPABASE_NOT_CONFIGURED_MESSAGE,
 } from "@/services/authService";
+import { useOtpStore } from "@/core/globalStores/otpStore";
 
 interface AuthContextValue {
   user: User | null;
@@ -130,10 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async (): Promise<void> => {
     if (!isSupabaseConfigured()) {
+      useOtpStore.getState().resetOtp();
       return;
     }
     const { error } = await authSignOut();
     throwIfError(error);
+    useOtpStore.getState().resetOtp();
   };
 
   return (
