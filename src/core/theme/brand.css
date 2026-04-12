@@ -1,0 +1,26 @@
+/* Static brand hues — source of truth for `--brand-primary`. Never overridden by Supabase at runtime. */
+:root,
+[data-brand="default"] {
+  --brand-primary: #2563eb;
+  --color-primary-rgb: 37 99 235;
+}
+
+[data-brand="transamerica"] {
+  --brand-primary: #e11d48;
+  --color-primary-rgb: 225 29 72;
+}
+
+[data-brand="congruent"] {
+  --brand-primary: #2563eb;
+  --color-primary-rgb: 37 99 235;
+}
+
+[data-brand="lincoln"] {
+  --brand-primary: #6b1d4a;
+  --color-primary-rgb: 107 29 74;
+}
+
+[data-brand="john-hancock"] {
+  --brand-primary: #002b5c;
+  --color-primary-rgb: 0 43 92;
+}

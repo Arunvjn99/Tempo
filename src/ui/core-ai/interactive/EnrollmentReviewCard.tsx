@@ -55,7 +55,7 @@ export function EnrollmentReviewCard({ payload, onAction }: EnrollmentReviewCard
         variant="custom"
         size="custom"
         onClick={() => onAction({ action: "enrollment_review_submit" })}
-        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
       >
         Submit enrollment
       </Button>

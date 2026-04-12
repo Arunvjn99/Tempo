@@ -1,15 +1,15 @@
 import { Outlet } from "react-router-dom";
 import { CoreAIModalProvider } from "@/core/context/CoreAIModalContext";
 import { RouteErrorBoundary } from "@/ui/RouteErrorBoundary";
-import { SplashScreen } from "@/ui/SplashScreen";
 
 export function V4RootLayout() {
   return (
     <CoreAIModalProvider>
-      <SplashScreen />
-      <RouteErrorBoundary>
-        <Outlet />
-      </RouteErrorBoundary>
+      <div className="min-h-screen min-h-[100dvh] opacity-100 bg-[var(--surface-page)]">
+        <RouteErrorBoundary>
+          <Outlet />
+        </RouteErrorBoundary>
+      </div>
     </CoreAIModalProvider>
   );
 }

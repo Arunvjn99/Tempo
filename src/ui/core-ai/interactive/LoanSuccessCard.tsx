@@ -82,7 +82,7 @@ export function LoanSuccessCard({ payload, onAction, enableConfetti = true }: Lo
             variant="custom"
             size="custom"
             onClick={() => onAction({ action: "success_card_dismiss" })}
-            className="w-full rounded-xl bg-[var(--color-success)] py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90"
+            className="w-full rounded-xl bg-[var(--color-success)] py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
           >
             {payload.actionLabel}
           </Button>

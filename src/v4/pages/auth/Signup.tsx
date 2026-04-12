@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuthFormShell } from "@/ui/auth";
-import { Logo } from "@/ui/brand/Logo";
+import { CoreLogo } from "@/components/ui/CoreLogo";
 import { useAuth } from "@/core/context/AuthContext";
 import { useOtp } from "@/core/globalStores/otpStore";
 import { isSupabaseConfigured, signOut as authSignOut } from "@/services/authService";
@@ -147,7 +147,7 @@ export const Signup = () => {
 
   return (
     <AuthFormShell
-      headerSlot={<Logo className="h-10 w-auto" />}
+      headerSlot={<CoreLogo />}
       title={t("auth.signupTitle")}
       description={t("auth.signupDesc")}
       bodySlot={

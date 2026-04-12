@@ -1,0 +1,110 @@
+/**
+ * Figma Make enrollment — range inputs, elevation, and spacing scale.
+ * Radii: 12px (--radius-xl), 16px (--radius-2xl). Shadows/spacing from `tokens.css`.
+ *
+ * All rules are prefixed with `.enrollment-theme` (see `EnrollmentThemeScope`) so these
+ * styles never override global / transaction Figma shells.
+ */
+
+/**
+ * Token aliases for Figma Make utilities — on `.figma-scope` under the enrollment route only.
+ */
+.enrollment-theme .figma-scope {
+  --fm-space-3: var(--spacing-3);
+  --fm-space-4: var(--spacing-4);
+  --fm-space-6: var(--spacing-6);
+  --fm-space-8: var(--spacing-8);
+  --fm-r-inset: var(--radius-xl);
+  --fm-r-card: var(--radius-2xl);
+  --fm-shadow-elevated: var(--shadow-md);
+  --fm-shadow-inset: var(--shadow-card);
+}
+
+/**
+ * Primary shell cards — elevated (16px radius, medium shadow).
+ * Overrides global `.card-standard` only inside this flow.
+ */
+.enrollment-theme .enrollment-figma-flow .card-standard {
+  border-radius: var(--fm-r-card);
+  box-shadow: var(--fm-shadow-elevated);
+}
+
+/** Nested / inset panels — 12px radius, light shadow (info wells, metric tiles, callouts). */
+.enrollment-theme .figma-scope .fm-inset-panel {
+  border-radius: var(--fm-r-inset);
+  box-shadow: var(--fm-shadow-inset);
+}
+
+/** Hero / gradient / tinted large surfaces — 16px + depth without fighting inline backgrounds. */
+.enrollment-theme .figma-scope .fm-surface-hero {
+  border-radius: var(--fm-r-card);
+  box-shadow: var(--fm-shadow-elevated);
+}
+
+/** Vertical rhythm between major page sections (Figma: 24–32px). */
+.enrollment-theme .enrollment-figma-flow .fm-section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fm-space-8);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"] {
+  accent-color: var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--surface-section);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--surface-card);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--surface-section);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--surface-card);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+/* WCAG: visible focus (matches focus:outline-none + ring-2 ring-[var(--color-primary)]; no layout change) */
+.enrollment-theme .enrollment-figma-flow a[href]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow button:focus-visible:not(:disabled) {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="radio"]:focus-visible,
+.enrollment-theme .enrollment-figma-flow input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}

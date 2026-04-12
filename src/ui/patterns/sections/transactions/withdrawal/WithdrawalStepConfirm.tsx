@@ -22,7 +22,7 @@ export function WithdrawalStepConfirm({
       totalSteps={totalSteps}
     >
       <FormSection variant="highlight">
-        <p className="text-sm text-foreground">
+        <p className="text-sm text-primary">
           Distributions may be taxable. This is a demonstration flow only.
         </p>
       </FormSection>

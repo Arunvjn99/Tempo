@@ -49,7 +49,7 @@ export function PercentageInput({
 
   return (
     <div className={cn("space-y-xs", className)}>
-      {label && <label className="block text-sm font-medium text-foreground">{label}</label>}
+      {label && <label className="block text-sm font-medium text-primary">{label}</label>}
       <div className="flex items-center gap-sm">
         <Button
           type="button"
@@ -58,7 +58,7 @@ export function PercentageInput({
           onClick={decrement}
           disabled={value <= min}
           className={cn(
-            "inline-flex items-center justify-center rounded-button border border-border bg-surface text-foreground transition-colors hover:bg-muted",
+            "inline-flex items-center justify-center rounded-button border border-default bg-surface text-primary transition-colors hover:bg-primary/5",
             "disabled:cursor-not-allowed disabled:opacity-40",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             btnSizeClasses[size],
@@ -77,7 +77,7 @@ export function PercentageInput({
             max={max}
             step={step}
             className={cn(
-              "w-24 rounded-input border border-border bg-background text-center text-foreground",
+              "w-24 rounded-input border border-default bg-surface-card text-center text-primary",
               "focus:outline-none focus:ring-2 focus:ring-primary",
               "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
               sizeClasses[size],
@@ -85,7 +85,7 @@ export function PercentageInput({
           />
           <span
             className={cn(
-              "pointer-events-none absolute right-sm text-muted-foreground",
+              "pointer-events-none absolute right-sm text-secondary",
               size === "lg" ? "text-xl font-bold" : "text-sm",
             )}
           >
@@ -100,7 +100,7 @@ export function PercentageInput({
           onClick={increment}
           disabled={value >= max}
           className={cn(
-            "inline-flex items-center justify-center rounded-button border border-border bg-surface text-foreground transition-colors hover:bg-muted",
+            "inline-flex items-center justify-center rounded-button border border-default bg-surface text-primary transition-colors hover:bg-primary/5",
             "disabled:cursor-not-allowed disabled:opacity-40",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             btnSizeClasses[size],

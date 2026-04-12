@@ -1,6 +1,6 @@
 /**
  * Theme utility functions for the multi-tenant theming system.
- * Handles color manipulation, dark theme generation, and CSS variable application.
+ * Handles color manipulation and dark theme generation; brand hues are static in `brand.css`.
  */
 
 export interface ThemeColors {
@@ -123,168 +123,26 @@ export function generateDarkTheme(light: ThemeColors): ThemeColors {
   };
 }
 
-function hexToRGB(hex: string): string {
-  hex = hex.replace(/^#/, "");
-  if (hex.length === 3) {
-    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-  }
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-  return `${r} ${g} ${b}`;
+/** Figma User Flow — tertiary surface (wells / nested panels); light/dark fixed neutrals. */
+function _figmaSurfaceTertiary(colors: ThemeColors): string {
+  const card = colors.surface.replace(/\s/g, "").toUpperCase();
+  const page = colors.background.replace(/\s/g, "").toUpperCase();
+  if (card === "#F8FAFC" || card === "#FFFFFF") return "#F1F5F9";
+  if (page === "#0B1220" || page === "#FFFFFF") return "#1F2937";
+  return adjustColor(colors.surface, -8);
+}
+
+const BRAND_HEX_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
+
+/** True when `value` is a usable brand primary/accent hex (Supabase / JSON may omit or corrupt fields). */
+export function isValidBrandHex(value: string | undefined): boolean {
+  return typeof value === "string" && BRAND_HEX_PATTERN.test(value.trim());
 }
 
 /**
- * Maps a ThemeColors object to CSS custom properties and applies them
- * to document.documentElement. All UI must use these variables; no hardcoded colors.
+ * Brand-only input. Structural tokens (`--surface-*`, `--text-*`, `--border-default`, etc.)
+ * always come from `tokens.css` — never supplied from Supabase.
  */
-export function applyThemeToDOM(colors: ThemeColors): void {
-  const root = document.documentElement;
-  const brandHover = adjustColor(colors.primary, -8);
-  const brandActive = adjustColor(colors.primary, -15);
-
-  const vars: Record<string, string> = {
-    /* ─── Semantic theme API (use these everywhere) ─── */
-    "--surface-primary": colors.background,
-    "--surface-secondary": colors.surface,
-    "--text-primary": colors.textPrimary,
-    "--text-secondary": colors.textSecondary,
-    "--border-subtle": colors.border,
-    "--brand-primary": colors.primary,
-    "--brand-hover": brandHover,
-    "--brand-active": brandActive,
-
-    "--color-primary": colors.primary,
-    "--color-primary-hover": brandHover,
-    "--color-primary-active": brandActive,
-    "--color-primary-rgb": hexToRGB(colors.primary),
-    "--color-secondary": colors.secondary,
-    "--color-accent": colors.accent,
-    "--color-background": colors.background,
-    "--color-background-secondary": adjustColor(colors.background, -3),
-    "--color-background-tertiary": adjustColor(colors.background, -8),
-    "--color-surface": colors.surface,
-    "--color-surface-elevated": colors.surface,
-    "--color-text": colors.textPrimary,
-    "--color-text-primary": colors.textPrimary,
-    "--color-text-secondary": colors.textSecondary,
-    "--color-text-tertiary": adjustColor(colors.textSecondary, 15),
-    "--color-border": colors.border,
-    "--color-success": colors.success,
-    "--color-warning": colors.warning,
-    "--color-danger": colors.danger,
-    "--color-danger-rgb": hexToRGB(colors.danger),
-    "--color-success-rgb": hexToRGB(colors.success),
-    "--color-warning-rgb": hexToRGB(colors.warning),
-    "--accent": colors.primary,
-    "--accent-primary": colors.primary,
-    "--accent-success": colors.success,
-    "--accent-warning": colors.warning,
-    "--bg": colors.background,
-    "--surface": colors.surface,
-    "--border": colors.border,
-    "--bg-surface-muted": adjustColor(colors.background, -3),
-    "--enroll-brand": colors.primary,
-    "--enroll-brand-rgb": hexToRGB(colors.primary),
-    "--enroll-accent": colors.accent,
-    "--enroll-accent-rgb": hexToRGB(colors.accent),
-    "--enroll-bg": colors.background,
-    "--enroll-card-bg": colors.surface,
-    "--enroll-card-border": colors.border,
-    "--enroll-soft-bg": adjustColor(colors.background, -3),
-    "--enroll-text-primary": colors.textPrimary,
-    "--enroll-text-secondary": colors.textSecondary,
-    "--enroll-text-muted": adjustColor(colors.textSecondary, 15),
-    "--txn-brand": colors.primary,
-    "--txn-brand-soft": `${colors.primary}14`,
-    "--color-accent-soft": `${colors.primary}0f`,
-    "--logo-url": `url(${colors.logo})`,
-    "--banner-gradient": `linear-gradient(135deg, ${colors.primary} 0%, ${adjustColor(colors.primary, -20, 15)} 100%)`,
-  };
-
-  if (colors.font && colors.font !== "system-ui") {
-    vars["--font-family"] = `"${colors.font}", system-ui, sans-serif`;
-    root.style.fontFamily = vars["--font-family"];
-  } else {
-    vars["--font-family"] = `system-ui, Avenir, Helvetica, Arial, sans-serif`;
-    root.style.fontFamily = vars["--font-family"];
-  }
-
-  for (const [prop, value] of Object.entries(vars)) {
-    root.style.setProperty(prop, value);
-  }
-}
-
-/** Removes all theme CSS custom properties so fallback defaults apply. */
-export function clearThemeFromDOM(): void {
-  const root = document.documentElement;
-  const props = [
-    "--surface-1",
-    "--surface-2",
-    "--surface-primary",
-    "--surface-secondary",
-    "--text-primary",
-    "--text-secondary",
-    "--border-subtle",
-    "--brand-primary",
-    "--brand-hover",
-    "--brand-active",
-    "--danger",
-    "--success",
-    "--color-primary",
-    "--color-primary-hover",
-    "--color-primary-active",
-    "--color-primary-rgb",
-    "--color-secondary",
-    "--color-accent",
-    "--color-background",
-    "--color-background-secondary",
-    "--color-background-tertiary",
-    "--color-surface",
-    "--color-surface-elevated",
-    "--color-text",
-    "--color-text-primary",
-    "--color-text-secondary",
-    "--color-text-tertiary",
-    "--color-border",
-    "--color-success",
-    "--color-warning",
-    "--color-danger",
-    "--color-danger-rgb",
-    "--color-success-rgb",
-    "--color-warning-rgb",
-    "--accent",
-    "--accent-primary",
-    "--accent-success",
-    "--accent-warning",
-    "--bg",
-    "--surface",
-    "--border",
-    "--bg-surface-muted",
-    "--enroll-brand",
-    "--enroll-brand-rgb",
-    "--enroll-accent",
-    "--enroll-accent-rgb",
-    "--enroll-bg",
-    "--enroll-card-bg",
-    "--enroll-card-border",
-    "--enroll-soft-bg",
-    "--enroll-text-primary",
-    "--enroll-text-secondary",
-    "--enroll-text-muted",
-    "--txn-brand",
-    "--txn-brand-soft",
-    "--color-accent-soft",
-    "--logo-url",
-    "--banner-gradient",
-    "--font-family",
-  ];
-  for (const prop of props) {
-    root.style.removeProperty(prop);
-  }
-  root.style.fontFamily = "";
-}
-
 /**
  * Validates a theme JSON structure.
  * Returns null if valid, or an error message string.

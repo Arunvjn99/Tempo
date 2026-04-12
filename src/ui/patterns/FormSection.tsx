@@ -19,17 +19,17 @@ export function FormSection({
   return (
     <section
       className={cn(
-        "rounded-card border border-border p-lg",
+        "rounded-card border border-default p-lg",
         variant === "highlight" && "border-primary/30 bg-primary/5",
         variant === "muted" && "bg-surface",
-        variant === "default" && "bg-card",
+        variant === "default" && "bg-surface-card",
         className,
       )}
     >
       {(title || description) && (
         <div className="mb-md space-y-xs">
-          {title && <h2 className="text-base font-semibold text-foreground">{title}</h2>}
-          {description && <p className="text-sm text-muted-foreground">{description}</p>}
+          {title && <h2 className="text-base font-semibold text-primary">{title}</h2>}
+          {description && <p className="text-sm text-secondary">{description}</p>}
         </div>
       )}
       {children}
@@ -48,7 +48,7 @@ interface FieldGroupProps {
 export function FieldGroup({ label, error, hint, children, required }: FieldGroupProps) {
   return (
     <div className="space-y-xs">
-      <label className="block text-sm font-medium text-foreground">
+      <label className="block text-sm font-medium text-primary">
         {label}
         {required && (
           <span className="ml-xs text-danger" aria-hidden>
@@ -57,7 +57,7 @@ export function FieldGroup({ label, error, hint, children, required }: FieldGrou
         )}
       </label>
       {children}
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && !error && <p className="text-xs text-secondary">{hint}</p>}
       {error && (
         <p className="text-xs text-danger" role="alert">
           {error}

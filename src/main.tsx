@@ -5,14 +5,17 @@ import { RouterProvider } from "react-router-dom";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import "./core/styles/design-tokens.css";
 import "./core/styles/design-system.css";
+import "./core/theme/brand.css";
 import "./core/theme/tokens.css";
 import "./core/theme/global.css";
+import "./core/theme/figma-scope.css";
 import "./core/styles/global.css";
 import "./core/styles/layout-system.css";
 import "./core/theme/light.css";
 import "./core/theme/dark.css";
 import "./core/theme/enrollment-dark.css";
 import "./index.css";
+import "./core/theme/token-utilities.css";
 import { loadUXtweak } from "./core/utils/uxtweakLoader";
 import { loadUXsniff } from "./core/utils/uxsniffLoader";
 import { loadClarity } from "./core/lib/analytics/clarity";
@@ -33,7 +36,12 @@ const effectiveTheme =
       ? "dark"
       : "light";
 document.documentElement.classList.remove("light", "dark");
-document.documentElement.classList.add(effectiveTheme);
+document.documentElement.setAttribute("data-theme", effectiveTheme);
+document.documentElement.setAttribute("data-brand", "default");
+
+if (import.meta.env.DEV) {
+  void import("./core/theme/inlineColorDevWarning").then((m) => m.installInlineColorDevWarning());
+}
 
 function RootWithLanguageKey() {
   const { i18n: i18nInstance } = useTranslation();

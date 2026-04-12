@@ -16,7 +16,6 @@ export interface LoginFormSectionProps {
   canAttemptLogin: boolean;
   /** Non-blocking hint when connectivity monitor reports degraded health. */
   showDegradedNetworkHint?: boolean;
-  detectedLogo: string | null;
   onLogin: () => void;
   onForgotPassword: () => void;
   onHelpCenter: () => void;
@@ -32,7 +31,6 @@ export function LoginFormSection({
   supabaseReady,
   canAttemptLogin,
   showDegradedNetworkHint = false,
-  detectedLogo,
   onLogin,
   onForgotPassword,
   onHelpCenter,
@@ -41,15 +39,6 @@ export function LoginFormSection({
 
   return (
     <>
-      {detectedLogo && (
-        <div className="flex justify-center">
-          <img
-            src={detectedLogo}
-            alt="Company Preview"
-            className="h-10 w-auto object-contain transition-opacity duration-300"
-          />
-        </div>
-      )}
       {!supabaseReady && <AuthDemoModeBanner variant="login" />}
       {supabaseReady && !canAttemptLogin && <LoginNetworkWarningBanner />}
       {supabaseReady && canAttemptLogin && showDegradedNetworkHint ? (

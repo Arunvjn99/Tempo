@@ -1,34 +1,51 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { HeroSection } from "@/ui/components/HeroSection";
-import { EnrollmentForm } from "@/features/enrollment/retirewiseReference/components/EnrollmentForm";
 import { PreEnrollmentLayout } from "@/features/enrollment/ui/PreEnrollmentLayout";
-import { RetireWiseNavbar } from "@/features/enrollment/ui/RetireWiseNavbar";
+import { usePreEnrollmentDashboardHeader } from "@/ui/header/PreEnrollmentDashboardHeaderContext";
 import {
   PreEnrollmentBentoSection,
   PreEnrollmentFooter,
   PreEnrollmentLearningSection,
 } from "@/features/enrollment/ui/PreEnrollmentMarketingSections";
+import { FigmaEnrollmentModal } from "@/features/enrollment/figma-v2/FigmaEnrollmentModal";
 
 /**
- * Production pre-enrollment marketing view — composes extracted layout + hero + reference sections.
+ * Authenticated `/dashboard` — marketing shell + Figma Make enrollment opened from hero / header CTA.
  */
 export function PreEnrollmentPage() {
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const { setDashboardStartEnroll } = usePreEnrollmentDashboardHeader();
+
+  const openModal = useCallback(() => setOpen(true), []);
+
+  useEffect(() => {
+    setDashboardStartEnroll(() => openModal);
+    return () => setDashboardStartEnroll(null);
+  }, [setDashboardStartEnroll, openModal]);
+
+  const handleEnrollmentComplete = useCallback(() => {
+    setOpen(false);
+    navigate("/plans");
+  }, [navigate]);
 
   return (
     <PreEnrollmentLayout>
-      <RetireWiseNavbar onStartEnroll={() => setIsFormOpen(true)} />
-      <EnrollmentForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onComplete={() => setIsFormOpen(false)}
-      />
-      <main className="max-w-6xl mx-auto px-6 pt-48 pb-20 flex flex-col gap-32">
-        <HeroSection onStartEnroll={() => setIsFormOpen(true)} />
-        <PreEnrollmentLearningSection />
-        <PreEnrollmentBentoSection />
-      </main>
-      <PreEnrollmentFooter />
+      {open && (
+        <FigmaEnrollmentModal
+          onClose={() => setOpen(false)}
+          onComplete={handleEnrollmentComplete}
+        />
+      )}
+      <div className="min-h-screen min-h-[100dvh] w-full opacity-100 bg-[var(--surface-page)] text-[var(--text-primary)]">
+        <main className="mx-auto flex max-w-6xl flex-col gap-32 px-6 pb-20 pt-12 md:pt-16">
+          <HeroSection onStartEnroll={openModal} />
+          <PreEnrollmentLearningSection />
+          <PreEnrollmentBentoSection />
+        </main>
+        <PreEnrollmentFooter />
+      </div>
     </PreEnrollmentLayout>
   );
 }

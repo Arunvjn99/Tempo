@@ -80,9 +80,9 @@ export function AllocationEditor({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-sm">
                 <span className="h-3 w-3 rounded-full" style={{ backgroundColor: s.color }} aria-hidden />
-                <span className="text-sm font-medium text-foreground">{s.label}</span>
+                <span className="text-sm font-medium text-primary">{s.label}</span>
               </div>
-              {showValues && <span className="text-sm font-bold text-foreground">{Math.round(s.value)}%</span>}
+              {showValues && <span className="text-sm font-bold text-primary">{Math.round(s.value)}%</span>}
             </div>
             <Slider
               value={[s.value]}

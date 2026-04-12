@@ -17,7 +17,7 @@ export function RolloverStepConfirm({ totalSteps, onNext, onBack, nextDisabled }
       totalSteps={totalSteps}
     >
       <FormSection variant="highlight">
-        <p className="text-sm text-foreground">
+        <p className="text-sm text-primary">
           Processing times depend on your prior provider. This is a demo flow only.
         </p>
       </FormSection>

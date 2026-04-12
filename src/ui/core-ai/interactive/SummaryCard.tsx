@@ -33,12 +33,12 @@ const ACCENT_CLASSES: Record<string, string> = {
   default: "text-[var(--color-text)]",
   success: "text-[var(--color-success)]",
   warning: "text-[var(--color-warning)]",
-  info: "text-sky-600",
+  info: "text-[var(--color-primary)]",
 };
 
 const STATUS_CLASSES: Record<string, string> = {
   success: "bg-[var(--color-success)]/10 border-[var(--color-success)]/20 text-[var(--color-success)]",
-  info: "bg-sky-500/10 border-sky-500/20 text-sky-400",
+  info: "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] border-[color-mix(in_srgb,var(--color-primary)_22%,var(--border-default))] text-[var(--color-primary)]",
   warning: "bg-[var(--color-warning)]/10 border-[var(--color-warning)]/20 text-[var(--color-warning)]",
 };
 
@@ -93,7 +93,7 @@ export function SummaryCard({ title, rows, actions, status }: SummaryCardProps) 
               className={`
                 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
                 ${action.variant === "primary"
-                  ? "bg-primary text-white hover:bg-primary-hover"
+                  ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                   : "border border-[var(--color-border)] text-[var(--color-textSecondary)] hover:bg-[var(--color-background)]"
                 }
               `}

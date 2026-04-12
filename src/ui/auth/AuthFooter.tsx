@@ -1,10 +1,9 @@
+import { CoreLogo } from "@/components/ui/CoreLogo";
 import { branding } from "@/core/config/branding";
-import { useBrandedLogo } from "@/core/hooks/useBrandedLogo";
 
-/** Footer for auth pages: copyright (left), Privacy (center), logo mark (right). */
+/** Footer for auth pages: copyright (left), Privacy (center), CORE mark (right). */
 export const AuthFooter = () => {
-  const { copyright, privacyLink, core } = branding.footer;
-  const { logoUrl, hasImage, brandLabel, onImageError } = useBrandedLogo();
+  const { copyright, privacyLink } = branding.footer;
 
   return (
     <footer
@@ -22,19 +21,7 @@ export const AuthFooter = () => {
           {privacyLink.label}
         </a>
         <div className="flex shrink-0 items-center justify-center sm:justify-end">
-          {hasImage ? (
-            <img
-              src={logoUrl}
-              alt={core.label}
-              onError={onImageError}
-              className="max-h-6 w-auto object-contain dark:[filter:brightness(0)_invert(1)]"
-              decoding="async"
-            />
-          ) : (
-            <span className="text-xs font-semibold text-[var(--color-textSecondary)]">
-              {brandLabel}
-            </span>
-          )}
+          <CoreLogo className="h-6 w-auto max-h-6 max-w-[120px] object-contain object-center" />
         </div>
       </div>
     </footer>

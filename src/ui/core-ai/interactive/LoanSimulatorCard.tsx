@@ -90,7 +90,7 @@ export function LoanSimulatorCard({ payload, onAction }: LoanSimulatorCardProps)
           variant="custom"
           size="custom"
           onClick={() => onAction({ action: "loan_simulator_continue", amount, tenureMonths })}
-          className="sm:flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="sm:flex-1 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           Continue
         </Button>

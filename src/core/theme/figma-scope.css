@@ -1,0 +1,42 @@
+/**
+ * Figma Make — scope for enrollment + transaction flows only.
+ *
+ * Token architecture: do NOT set `--color-primary`, `--color-accent`, or RGB channels here.
+ * Those inherit from `html[data-theme]` + `brand.css` / `tokens.css`, so tenant branding,
+ * Supabase-driven surfaces, and dark mode stay consistent.
+ *
+ * This block only maps shadcn-style semantic names to structural tokens (surfaces, borders, text).
+ */
+
+.figma-scope {
+  /* Brand / chart hues: inherited from document — see `tokens.css` (`--semantic-brand-*`, `--chart-*`) */
+
+  /* Semantic chains — structural tokens from theme */
+  --color-background: var(--surface-page);
+  --color-background-secondary: var(--surface-soft);
+  --color-background-tertiary: var(--surface-section);
+  --color-card: var(--surface-card);
+  --color-text: var(--text-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
+  --color-border: var(--border-default);
+  --color-surface: var(--surface-card);
+  --color-surface-elevated: var(--surface-section);
+
+  --foreground: var(--text-primary);
+  --muted-foreground: var(--text-secondary);
+  --background: var(--surface-page);
+  --border: var(--border-default);
+  --muted: var(--surface-soft);
+  --primary: var(--color-primary);
+  --card: var(--surface-card);
+
+  --secondary: var(--surface-soft);
+  --secondary-foreground: var(--text-primary);
+  --accent-surface: var(--surface-section);
+  --accent-surface-foreground: var(--text-primary);
+  --input-background: var(--surface-soft);
+
+  color: var(--color-text);
+}

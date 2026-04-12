@@ -33,9 +33,9 @@ function DesktopNavLink({
       to={to}
       onClick={onNavigate}
       className={cn(
-        "inline-flex items-center whitespace-nowrap border-b-2 border-transparent px-sm py-xs text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
+        "inline-flex items-center whitespace-nowrap border-b-2 border-transparent px-sm py-xs text-sm font-medium text-secondary transition-colors hover:text-primary",
         focusRing,
-        active && "border-primary text-primary",
+        active && "border-primary text-brand",
       )}
     >
       {label}
@@ -74,10 +74,10 @@ function DesktopNavDropdown({
         aria-expanded={open}
         aria-haspopup="true"
         className={cn(
-          "h-auto min-h-0 gap-xs whitespace-nowrap rounded-none border-b-2 border-transparent px-sm py-xs font-medium text-muted-foreground hover:bg-transparent",
+          "h-auto min-h-0 gap-xs whitespace-nowrap rounded-none border-b-2 border-transparent px-sm py-xs font-medium text-secondary hover:bg-transparent",
           focusRing,
-          open && "border-transparent bg-muted/80 text-foreground",
-          !open && anyActive && "border-primary text-primary",
+          open && "border-transparent bg-background shadow-sm ring-1 ring-border/70 text-primary",
+          !open && anyActive && "border-primary text-brand",
         )}
       >
         {t(entry.labelKey)}
@@ -85,7 +85,7 @@ function DesktopNavDropdown({
       </Button>
       {open ? (
         <div
-          className="absolute left-0 top-full z-50 mt-sm min-w-40 rounded-lg border border-border bg-card py-sm shadow-elevation-md lg:left-1/2 lg:-translate-x-1/2"
+          className="absolute left-0 top-full z-50 mt-sm min-w-40 rounded-lg border border-default bg-surface-card py-sm shadow-elevation-md lg:left-1/2 lg:-translate-x-1/2"
           role="menu"
         >
           {entry.items.map((item) => {
@@ -98,8 +98,8 @@ function DesktopNavDropdown({
                 className={cn(
                   "block px-md py-sm text-sm transition-colors",
                   active
-                    ? "bg-muted font-medium text-primary"
-                    : "text-foreground hover:bg-muted",
+                    ? "bg-primary/10 font-medium text-brand"
+                    : "text-primary hover:bg-primary/5",
                 )}
                 onClick={() => setOpen(false)}
               >
@@ -142,8 +142,8 @@ export function HeaderNav({ mode, variant, onMobileNavigate }: HeaderNavProps) {
               className={cn(
                 mobileNavLinkClass,
                 active
-                  ? "bg-muted text-primary"
-                  : "text-foreground hover:bg-muted",
+                  ? "bg-primary/10 text-brand"
+                  : "text-primary hover:bg-primary/5",
               )}
               onClick={onMobileNavigate}
             >
@@ -220,16 +220,16 @@ export function HeaderMobileNavDialog({ mode }: { mode: HeaderNavMode }) {
                 type="button"
                 variant="custom"
                 size="custom"
-                className="absolute inset-0 z-0 h-full min-h-0 w-full rounded-none border-0 bg-background/80 p-0 font-normal backdrop-blur-sm hover:bg-background/80"
+                className="absolute inset-0 z-0 h-full min-h-0 w-full rounded-none border-0 bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)] p-0 font-normal hover:bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)]"
                 aria-label={t("header.closeMenu")}
                 onClick={() => setOpen(false)}
               />
               <div
                 id="header-mobile-nav-panel"
-                className="absolute inset-x-md top-16 z-10 max-h-[70vh] overflow-y-auto rounded-card border border-border bg-card p-lg shadow-elevation-md"
+                className="absolute inset-x-md top-16 z-10 max-h-[70vh] overflow-y-auto rounded-card border border-default bg-surface-card p-lg shadow-elevation-md"
               >
                 <div className="mb-md flex items-center justify-between gap-md">
-                  <h2 id={titleId} className="text-sm font-semibold text-foreground">
+                  <h2 id={titleId} className="text-sm font-semibold text-primary">
                     {t("header.menuTitle")}
                   </h2>
                   <Button

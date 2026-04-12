@@ -22,6 +22,7 @@ import {
   resolvePrevStep,
   resolvePrevWizardSubStep,
 } from "./engine";
+import { MAIN_STEP_IDS } from "./steps";
 import { validateStep, validateWizardStep } from "./validation";
 import { buildDerived } from "./derived";
 
@@ -159,6 +160,22 @@ export const useEnrollmentStore = create<EnrollmentStore>()(
           // Reset wizard to beginning if jumping back
           wizardStep: id === "wizard" ? 1 : state.wizardStep,
         });
+      },
+
+      next: () => get().nextStep(),
+      back: () => get().prevStep(),
+      goTo: (id: EnrollmentStepId) => get().goToStep(id),
+
+      goToMainStepIndex: (index: number) => {
+        const id = MAIN_STEP_IDS[index];
+        if (id === undefined) return;
+        get().goToStep(id);
+      },
+
+      getMainFlowStepIndex: () => {
+        const step = get().currentStep;
+        const idx = MAIN_STEP_IDS.indexOf(step as (typeof MAIN_STEP_IDS)[number]);
+        return idx;
       },
 
       // ── canProceed ──

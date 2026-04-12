@@ -37,15 +37,15 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
   const employerMatch = 4;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[var(--surface-page)] font-sans selection:bg-[var(--color-primary)] selection:text-[var(--primary-foreground)]">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-50">
+      <header className="bg-[var(--surface-card)] border-b border-[var(--border-default)] px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-12">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-[var(--color-primary)] rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-[var(--primary-foreground)]" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-slate-900">RetireWell</span>
+            <span className="font-bold text-xl tracking-tight text-[var(--text-primary)]">RetireWell</span>
           </div>
           
           <nav className="hidden lg:flex items-center gap-8">
@@ -61,7 +61,7 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
                 href="#" 
                 className={cn(
                   "flex items-center gap-2 text-sm font-semibold transition-all py-2 relative",
-                  item.active ? "text-blue-600" : "text-slate-500 hover:text-slate-900"
+                  item.active ? "text-[var(--color-primary)]" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                 )}
               >
                 <item.icon className="w-4 h-4" />
@@ -69,7 +69,7 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
                 {item.active && (
                   <motion.div 
                     layoutId="navUnderline"
-                    className="absolute bottom-[-17px] left-0 right-0 h-0.5 bg-blue-600"
+                    className="absolute bottom-[-17px] left-0 right-0 h-0.5 bg-[var(--color-primary)]"
                   />
                 )}
               </a>
@@ -82,32 +82,32 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
             type="button"
             variant="secondary"
             size="iconLg"
-            className="relative rounded-full bg-slate-50 text-slate-400 hover:text-slate-900"
+            className="relative rounded-full bg-[var(--surface-card)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             aria-label="Notifications"
           >
             <Bell className="w-5 h-5" />
-            <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+            <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-[color-mix(in_srgb,var(--text-primary)_40%,var(--surface-card))] rounded-full border-2 border-[var(--surface-card)]" />
           </Button>
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm border-2 border-white shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--color-primary)_16%,var(--surface-card))] flex items-center justify-center text-[var(--color-primary)] font-bold text-sm border-2 border-[var(--surface-card)] ">
             JD
           </div>
         </div>
       </header>
 
       {/* Progress Sub-header */}
-      <div className="bg-white border-b border-slate-200 px-8 py-6">
+      <div className="bg-[var(--surface-card)] border-b border-[var(--border-default)] px-8 py-6">
         <div className="max-w-5xl mx-auto flex flex-col gap-4">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">Step 2 of 7</div>
+          <div className="text-[11px] font-bold text-[var(--text-secondary)] uppercase tracking-[0.15em]">Step 2 of 7</div>
           <div className="flex items-center gap-2">
             {steps.map((step) => (
               <div key={step.id} className="flex-1 flex flex-col gap-2">
                 <div className={cn(
                   "h-1.5 rounded-full transition-all duration-500",
-                  step.id <= 2 ? "bg-blue-600" : "bg-slate-100"
+                  step.id <= 2 ? "bg-[var(--color-primary)]" : "bg-[var(--surface-card)] border border-[var(--border-default)]"
                 )} />
                 <span className={cn(
                   "text-[10px] font-bold text-center transition-colors",
-                  step.id <= 2 ? "text-blue-600" : "text-slate-400"
+                  step.id <= 2 ? "text-[var(--color-primary)]" : "text-[var(--text-secondary)]"
                 )}>
                   {step.label}
                 </span>
@@ -120,22 +120,22 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-8 py-16 flex flex-col gap-12">
         <div className="flex flex-col gap-3">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Set Your Contribution</h1>
-          <p className="text-lg text-slate-500 font-medium">Decide how much of your pre-tax income you want to save.</p>
+          <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Set Your Contribution</h1>
+          <p className="text-lg text-[var(--text-secondary)] font-medium">Decide how much of your pre-tax income you want to save.</p>
         </div>
 
         <div className="grid lg:grid-cols-[1.2fr_1fr] gap-12">
           {/* Contribution Slider Card */}
-          <div className="bg-white rounded-[32px] p-10 border border-slate-200 shadow-sm flex flex-col gap-10">
+          <div className="card-standard flex flex-col gap-10 p-10">
             <div className="flex flex-col gap-8">
               <div className="flex justify-between items-end">
                 <div className="flex flex-col gap-1">
-                  <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Your Contribution</span>
-                  <div className="text-5xl font-black text-slate-900">{contribution}%</div>
+                  <span className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wider">Your Contribution</span>
+                  <div className="text-5xl font-black text-[var(--text-primary)]">{contribution}%</div>
                 </div>
                 <div className="flex flex-col gap-1 items-end text-right">
-                  <span className="text-sm font-bold text-emerald-500 uppercase tracking-wider">Employer Match</span>
-                  <div className="text-2xl font-black text-emerald-600">+{employerMatch}%</div>
+                  <span className="text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider">Employer Match</span>
+                  <div className="text-2xl font-black text-[var(--color-primary)]">+{employerMatch}%</div>
                 </div>
               </div>
 
@@ -146,9 +146,9 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
                   max="25" 
                   value={contribution}
                   onChange={(e) => setContribution(parseInt(e.target.value))}
-                  className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-[var(--surface-section)] accent-[var(--color-primary)]"
                 />
-                <div className="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="flex justify-between mt-4 text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">
                   <span>0%</span>
                   <span>5%</span>
                   <span>10%</span>
@@ -159,13 +159,13 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
               </div>
             </div>
 
-            <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100 flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
-                <Sparkles className="w-5 h-5 text-blue-600" />
+            <div className="p-6 bg-[color-mix(in_srgb,var(--color-primary)_10%,var(--surface-card))] rounded-2xl border border-[color-mix(in_srgb,var(--color-primary)_22%,var(--border-default))] flex items-start gap-4">
+              <div className="w-10 h-10 shrink-0 rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-[var(--color-primary)]" />
               </div>
               <div className="flex flex-col gap-1">
-                <h4 className="font-bold text-blue-900 text-sm">Smart Suggestion</h4>
-                <p className="text-blue-700/80 text-sm font-medium leading-relaxed">
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">Smart Suggestion</h4>
+                <p className="text-[color-mix(in_srgb,var(--color-primary)_78%,var(--text-primary))]/80 text-sm font-medium leading-relaxed">
                   Most people in your position contribute at least 6% to take full advantage of the employer match.
                 </p>
               </div>
@@ -173,67 +173,67 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
 
             <div className="grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                   <Wallet className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Estimated Paycheck Impact</span>
                 </div>
-                <div className="text-xl font-bold text-slate-900">-$240.00</div>
-                <p className="text-xs text-slate-400 font-medium">Per pay period (Pre-tax)</p>
+                <div className="text-xl font-bold text-[var(--text-primary)]">-$240.00</div>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">Per pay period (Pre-tax)</p>
               </div>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                   <TrendingUp className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">Total Monthly Savings</span>
                 </div>
-                <div className="text-xl font-bold text-emerald-600">$800.00</div>
-                <p className="text-xs text-slate-400 font-medium">Including employer match</p>
+                <div className="text-xl font-bold text-[var(--color-primary)]">$800.00</div>
+                <p className="text-xs text-[var(--text-secondary)] font-medium">Including employer match</p>
               </div>
             </div>
           </div>
 
           {/* Impact Visualization */}
           <div className="flex flex-col gap-8">
-            <div className="bg-slate-900 rounded-[32px] p-10 text-white flex flex-col gap-8 relative overflow-hidden">
+            <div className="bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)] text-[var(--surface-page)] rounded-[32px] p-10 text-[var(--primary-foreground)] flex flex-col gap-8 relative overflow-hidden">
               <div className="relative z-10 flex flex-col gap-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                    <PieChartIcon className="w-5 h-5 text-blue-400" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)]">
+                    <PieChartIcon className="w-5 h-5 text-[color-mix(in_srgb,var(--color-primary)_60%,var(--text-secondary))]" />
                   </div>
-                  <h3 className="text-xl font-bold">Contribution Breakdown</h3>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)]">Contribution Breakdown</h3>
                 </div>
 
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      <span className="text-sm font-medium text-slate-300">Your Contribution</span>
+                      <div className="w-3 h-3 rounded-full bg-[var(--color-primary)]" />
+                      <span className="text-sm font-medium text-[var(--text-secondary)]">Your Contribution</span>
                     </div>
                     <span className="text-sm font-bold">{contribution}%</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                      <span className="text-sm font-medium text-slate-300">Employer Match</span>
+                      <div className="w-3 h-3 rounded-full bg-[var(--color-primary)]" />
+                      <span className="text-sm font-medium text-[var(--text-secondary)]">Employer Match</span>
                     </div>
                     <span className="text-sm font-bold">{employerMatch}%</span>
                   </div>
-                  <div className="h-px bg-white/10 my-2" />
+                  <div className="h-px bg-[var(--surface-card)]/10 my-2" />
                   <div className="flex items-center justify-between">
-                    <span className="text-base font-bold text-white">Total Annual Savings</span>
-                    <span className="text-xl font-black text-blue-400">$9,600</span>
+                    <span className="text-base font-bold text-[var(--primary-foreground)]">Total Annual Savings</span>
+                    <span className="text-xl font-black text-[color-mix(in_srgb,var(--color-primary)_60%,var(--text-secondary))]">$9,600</span>
                   </div>
                 </div>
               </div>
               
-              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-600/20 rounded-full blur-[80px]" />
+              <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-primary)]/20 rounded-full blur-[80px]" />
             </div>
 
-            <div className="bg-white rounded-[32px] p-8 border border-slate-200 shadow-sm flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-slate-900">
-                <Info className="w-4 h-4 text-blue-600" />
-                <h4 className="font-bold text-sm">About Employer Matching</h4>
+            <div className="card-standard flex flex-col gap-4 p-8">
+              <div className="flex items-center gap-2 text-[var(--text-primary)]">
+                <Info className="w-4 h-4 text-[var(--color-primary)]" />
+                <h4 className="text-sm font-bold text-[var(--text-primary)]">About Employer Matching</h4>
               </div>
-              <p className="text-slate-500 text-sm font-medium leading-relaxed">
+              <p className="text-[var(--text-secondary)] text-sm font-medium leading-relaxed">
                 Your employer matches 100% of your contributions up to 4% of your salary. This is essentially "free money" for your retirement.
               </p>
             </div>
@@ -242,14 +242,14 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
       </main>
 
       {/* Footer Navigation */}
-      <footer className="bg-white border-t border-slate-200 px-8 py-6 sticky bottom-0 z-50">
+      <footer className="bg-[var(--surface-card)] border-t border-[var(--border-default)] px-8 py-6 sticky bottom-0 z-50">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <Button
             type="button"
             variant="secondary"
             size="custom"
             onClick={onBack}
-            className="px-8 py-3 rounded-xl font-bold text-sm"
+            className="rounded-xl px-8 py-3 text-sm font-bold text-[var(--text-primary)]"
           >
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
@@ -258,7 +258,7 @@ export const RetirementContribution: React.FC<RetirementContributionProps> = ({ 
             variant="custom"
             size="custom"
             onClick={onNext}
-            className="px-8 py-3 bg-blue-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 shadow-lg shadow-slate-200"
+            className="px-8 py-3 bg-[color-mix(in_srgb,var(--color-primary)_50%,var(--text-primary))] text-[var(--primary-foreground)] rounded-xl font-bold text-sm hover:bg-[var(--color-primary-hover)]  "
           >
             Next <ChevronRight className="w-4 h-4" />
           </Button>

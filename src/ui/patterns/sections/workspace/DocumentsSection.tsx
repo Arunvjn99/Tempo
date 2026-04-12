@@ -8,7 +8,7 @@ export function DocumentsSection({ documents }: { documents: ProfileDocumentRow[
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left text-xs text-muted-foreground">
+              <tr className="border-b border-default text-left text-xs text-secondary">
                 <th className="pb-sm pr-md font-medium">Document</th>
                 <th className="pb-sm pr-md font-medium">Date</th>
                 <th className="pb-sm font-medium">Type</th>
@@ -16,11 +16,11 @@ export function DocumentsSection({ documents }: { documents: ProfileDocumentRow[
             </thead>
             <tbody>
               {documents.map((doc) => (
-                <tr key={doc.name} className="border-b border-border/50">
-                  <td className="py-sm pr-md font-medium text-foreground">{doc.name}</td>
-                  <td className="py-sm pr-md text-muted-foreground">{doc.date}</td>
+                <tr key={doc.name} className="border-b border-default/50">
+                  <td className="py-sm pr-md font-medium text-primary">{doc.name}</td>
+                  <td className="py-sm pr-md text-secondary">{doc.date}</td>
                   <td className="py-sm">
-                    <span className="rounded bg-surface px-xs py-0.5 text-xs text-muted-foreground">{doc.type}</span>
+                    <span className="rounded bg-surface px-xs py-0.5 text-xs text-secondary">{doc.type}</span>
                   </td>
                 </tr>
               ))}

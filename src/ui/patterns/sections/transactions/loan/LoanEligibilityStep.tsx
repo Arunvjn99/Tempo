@@ -26,7 +26,7 @@ export function LoanEligibilityStep({
       totalSteps={totalSteps}
     >
       <FormSection title="Eligibility check">
-        <p className="mb-md text-sm text-muted-foreground">
+        <p className="mb-md text-sm text-secondary">
           Run a quick check. You must be eligible before continuing.
         </p>
         <div className="flex flex-wrap gap-sm">

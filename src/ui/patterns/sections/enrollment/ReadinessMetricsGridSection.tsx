@@ -23,9 +23,12 @@ export function ReadinessMetricsGridSection({
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       {metrics.map((m) => (
-        <div key={m.label} className="rounded-xl border border-border bg-card p-4 text-center">
-          <p className="text-xs text-muted-foreground">{m.label}</p>
-          <p className="mt-1 text-lg font-bold text-foreground">{m.value}</p>
+        <div
+          key={m.label}
+          className="rounded-xl border border-default bg-surface-card p-4 text-center"
+        >
+          <p className="text-xs text-secondary">{m.label}</p>
+          <p className="mt-1 text-lg font-bold text-primary">{m.value}</p>
         </div>
       ))}
     </div>

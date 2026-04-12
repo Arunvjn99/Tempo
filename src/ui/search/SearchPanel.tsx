@@ -19,11 +19,11 @@ export function SearchPanel({ id, trendingTitle, chips, onChipPick, className }:
       role="group"
       aria-label={trendingTitle}
       className={cn(
-        "mt-2 rounded-xl border border-border bg-card p-4 shadow-md animate-hero-search-panel",
+        "card-standard mt-2 p-4 animate-hero-search-panel",
         className,
       )}
     >
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-secondary">
         {trendingTitle}
       </p>
       <div className="flex flex-wrap gap-2">
@@ -37,7 +37,7 @@ export function SearchPanel({ id, trendingTitle, chips, onChipPick, className }:
               e.preventDefault();
               onChipPick(label);
             }}
-            className="rounded-full border border-border bg-background-tertiary px-3 py-1 text-left text-sm text-muted transition-colors duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="rounded-full border border-default bg-background px-3 py-1 text-left text-sm text-secondary transition-colors duration-200 hover:border-primary/30 hover:bg-primary/10 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {label}
           </Button>

@@ -25,7 +25,7 @@ export function TransactionFlowSubmittedStep({
   return (
     <StepLayout title={title} description={description} stepNumber={stepNumber} totalSteps={totalSteps}>
       <FormSection variant="highlight">
-        <p className="text-sm text-foreground">
+        <p className="text-sm text-primary">
           {completedAtPrefix}
           {new Date(completedAt).toLocaleString()}
         </p>

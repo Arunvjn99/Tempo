@@ -5,22 +5,38 @@ import { generateDarkTheme } from "./utils";
  * Phase 1: Hardcoded company branding.
  * Keyed by company name (normalized lowercase) for flexible lookup.
  * Will move to DB in Phase 2.
+ *
+ * Hex strings here are **theme seed data** for `CompanyTheme` / Supabase-shaped JSON
+ * (validated by `isValidBrandHex` / `validateThemeJSON`). They intentionally mirror
+ * the default structural palette in `tokens.css`; runtime UI should still consume
+ * CSS variables (`--surface-*`, `--text-*`, `--color-primary`, etc.).
  */
 
+/** Figma Make — page = subtle canvas, surface = white cards */
 const congruentLight: ThemeColors = {
   primary: "#0052CC",
   secondary: "#E6F0FF",
   accent: "#00C853",
-  background: "#FFFFFF",
-  surface: "#F8FAFC",
-  textPrimary: "#111827",
-  textSecondary: "#6B7280",
+  background: "#F8FAFC",
+  surface: "#FFFFFF",
+  textPrimary: "#0F172A",
+  textSecondary: "#64748B",
   border: "#E5E7EB",
   success: "#16A34A",
   warning: "#F59E0B",
   danger: "#DC2626",
   font: "Inter",
   logo: "",
+};
+
+const congruentDark: ThemeColors = {
+  ...generateDarkTheme(congruentLight),
+  primary: "#3B82F6",
+  background: "#0B1220",
+  surface: "#111827",
+  textPrimary: "#F8FAFC",
+  textSecondary: "#94A3B8",
+  border: "#374151",
 };
 
 const lincolnLight: ThemeColors = {
@@ -74,7 +90,7 @@ const transamericaLight: ThemeColors = {
 const defaultThemeMap: Record<string, CompanyTheme> = {
   "congruent solutions": {
     light: congruentLight,
-    dark: generateDarkTheme(congruentLight),
+    dark: congruentDark,
   },
   "lincoln group": {
     light: lincolnLight,

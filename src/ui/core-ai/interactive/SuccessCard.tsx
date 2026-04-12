@@ -80,7 +80,7 @@ export function SuccessCard({ title, description, timeline, actionLabel, onActio
             variant="custom"
             size="custom"
             onClick={onAction}
-            className="w-full px-3 py-2 rounded-lg bg-[var(--color-success)] text-white text-xs font-medium hover:bg-[var(--color-success)] transition-colors"
+            className="w-full px-3 py-2 rounded-lg bg-[var(--color-success)] text-primary-foreground text-xs font-medium hover:bg-[var(--color-success)] transition-colors"
           >
             {actionLabel}
           </Button>

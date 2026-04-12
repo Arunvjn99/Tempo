@@ -1,7 +1,7 @@
 export const branding = {
   appName: "Participant Portal",
   authAppName: "CORE",
-  /** Image URLs come from `useBrandedLogo` / company + theme; use text fallbacks when empty. */
+  /** Alt text for the CORE mark (`CoreLogo` / Supabase public `company-logos`). App shell uses `useBrandedLogo` for tenant marks. */
   logo: {
     alt: "CORE",
   },

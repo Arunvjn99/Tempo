@@ -30,6 +30,7 @@ export type NavConfigEntry = NavLinkItem | NavDropdownEntry;
 export const NAV_CONFIG: Record<HeaderNavMode, NavConfigEntry[]> = {
   pre: [
     { type: "link", labelKey: "header.nav.dashboard", to: "/dashboard", match: "exact" },
+    { type: "link", labelKey: "header.nav.transactions", to: "/transactions", match: "prefix" },
     { type: "link", labelKey: "header.nav.plans", to: "/plans", match: "prefix" },
     { type: "link", labelKey: "header.nav.profile", to: "/profile", match: "prefix" },
   ],

@@ -6,7 +6,7 @@ import {
   AuthOTPInput,
   AuthButton,
 } from "@/ui/auth";
-import { Logo } from "@/ui/brand/Logo";
+import { CoreLogo } from "@/components/ui/CoreLogo";
 import { VerifyCodeSuccessOverlay } from "@/ui/patterns/sections/auth/VerifyCodeSuccessOverlay";
 import { useOtp } from "@/core/globalStores/otpStore";
 import { DEFAULT_VERSION, withVersion } from "@/core/version";
@@ -40,7 +40,7 @@ export const VerifyCode = () => {
     navigate(withVersion(version, "/login"));
   };
 
-  const headerSlot = <Logo className="h-10 w-auto" />;
+  const headerSlot = <CoreLogo />;
 
   const bodySlot = (
     <>

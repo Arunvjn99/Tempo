@@ -17,7 +17,7 @@ export function HeroScene({ className, children, showFloatingLayer = true }: Her
   return (
     <div
       className={cn(
-        "relative isolate h-full min-h-[160px] w-full overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/[0.12] via-card to-background",
+        "relative isolate h-full min-h-[160px] w-full overflow-hidden rounded-2xl border border-default/60 bg-gradient-to-br from-primary/[0.12] via-card to-background",
         className,
       )}
       data-3d-scene="hero"

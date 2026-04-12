@@ -1,20 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { CoreLogo } from "@/components/ui/CoreLogo";
 import { AuthFormShell, AuthButton } from "@/ui/auth";
-import { Logo } from "@/ui/brand/Logo";
 import { useAuth } from "@/core/context/AuthContext";
 import { useOtp } from "@/core/globalStores/otpStore";
 import { useNetwork } from "@/core/network/networkContext";
 import { isSupabaseConfigured } from "@/services/authService";
-import { fetchCompanyLogoUrlByDomain } from "@/services/companyLookup";
 import { demoNavigateTarget, type DemoScenarioId } from "@/core/data/demoScenarios";
 import { getScenarioFlowStart } from "@/core/data/scenarioFlows";
 import { useScenarioStore } from "@/core/globalStores/scenarioStore";
 import { DEFAULT_VERSION, withVersion } from "@/core/version";
 import { LoginExploreDemoSection, LoginFormSection } from "@/ui/patterns";
-
-const DOMAIN_LOOKUP_DEBOUNCE_MS = 500;
 
 export const Login = () => {
   const { t } = useTranslation();
@@ -36,39 +33,10 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [detectedLogo, setDetectedLogo] = useState<string | null>(null);
   const [sessionPanelError, setSessionPanelError] = useState<string | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
-  const domainLookupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showAlreadySignedInPanel = Boolean(user && isOtpVerified && !forceLogin);
-
-  useEffect(() => {
-    const domain = email.trim().split("@")[1];
-    if (!domain) {
-      setDetectedLogo(null);
-      return;
-    }
-    if (domainLookupTimeoutRef.current) {
-      clearTimeout(domainLookupTimeoutRef.current);
-      domainLookupTimeoutRef.current = null;
-    }
-    domainLookupTimeoutRef.current = setTimeout(async () => {
-      domainLookupTimeoutRef.current = null;
-      try {
-        const logoUrl = await fetchCompanyLogoUrlByDomain(domain);
-        setDetectedLogo(logoUrl);
-      } catch (err) {
-        if (import.meta.env.DEV) console.error("[Login] domain logo lookup failed:", err);
-        setDetectedLogo(null);
-      }
-    }, DOMAIN_LOOKUP_DEBOUNCE_MS);
-    return () => {
-      if (domainLookupTimeoutRef.current) {
-        clearTimeout(domainLookupTimeoutRef.current);
-      }
-    };
-  }, [email]);
 
   const handleLogin = async () => {
     setError(null);
@@ -124,10 +92,10 @@ export const Login = () => {
     return (
       <>
         <AuthFormShell
-          headerSlot={<Logo className="max-h-8 w-auto" />}
+          headerSlot={<CoreLogo />}
           title={t("auth.login")}
           bodySlot={
-            <p className="text-center text-sm text-muted-foreground" role="status">
+            <p className="text-center text-sm text-secondary" role="status">
               {t("auth.loading", "Loading…")}
             </p>
           }
@@ -146,11 +114,11 @@ export const Login = () => {
     return (
       <>
         <AuthFormShell
-          headerSlot={<Logo className="max-h-8 w-auto" />}
+          headerSlot={<CoreLogo />}
           title={t("auth.alreadySignedInTitle", "You're signed in")}
           bodySlot={
             <div className="flex flex-col gap-4 text-center">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-secondary">
                 {t("auth.alreadySignedInBody", "You already have an active session.")}
               </p>
               {sessionPanelError ? (
@@ -167,7 +135,7 @@ export const Login = () => {
               <AuthButton type="button" onClick={handleGoToDashboard}>
                 {t("auth.goToDashboard", "Go to dashboard")}
               </AuthButton>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-secondary">
                 <Link
                   to={`${withVersion(version, "/login")}?force=true`}
                   className="text-[var(--color-primary)] underline-offset-2 hover:underline"
@@ -191,12 +159,12 @@ export const Login = () => {
   return (
     <>
       <AuthFormShell
-        headerSlot={<Logo className="max-h-8 w-auto" />}
+        headerSlot={<CoreLogo />}
         title={t("auth.login")}
         bodySlot={
           <>
             {forceLogin && user ? (
-              <p className="mb-4 rounded-lg border border-border bg-muted/40 px-3 py-2 text-center text-xs text-muted-foreground">
+              <p className="mb-4 rounded-lg border border-default bg-background shadow-sm ring-1 ring-border/50 px-3 py-2 text-center text-xs text-secondary">
                 {t(
                   "auth.forceLoginHint",
                   "You are forcing the sign-in form while a session exists. Signing in will replace the current session.",
@@ -213,7 +181,6 @@ export const Login = () => {
               supabaseReady={supabaseReady}
               canAttemptLogin={canAttemptLogin}
               showDegradedNetworkHint={networkStatus === "degraded"}
-              detectedLogo={detectedLogo}
               onLogin={handleLogin}
               onForgotPassword={() => navigate("/forgot")}
               onHelpCenter={() => navigate("/help")}

@@ -27,7 +27,7 @@ export function EnrollmentNavBrand({
           decoding="async"
         />
       ) : (
-        <span className="truncate font-bold text-lg tracking-tight text-slate-900">
+        <span className="truncate font-bold text-lg tracking-tight text-[var(--text-primary)]">
           {brandLabel}
         </span>
       )}

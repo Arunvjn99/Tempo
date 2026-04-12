@@ -7,6 +7,7 @@ import unusedImports from 'eslint-plugin-unused-imports'
 import importPlugin from 'eslint-plugin-import'
 import sonarjs from 'eslint-plugin-sonarjs'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import themeGuard from './eslint-plugins/theme-guard/index.js'
 
 export default defineConfig([
   globalIgnores(['dist', 'node_modules']),
@@ -40,6 +41,23 @@ export default defineConfig([
       'react-hooks/refs': 'off',
       /* Router/context files legitimately export hooks + components */
       'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/core/theme/defaultThemes.ts',
+      'src/core/theme/utils.ts',
+      '**/vite.config.ts',
+      '**/vitest.config.ts',
+      '**/playwright.config.ts',
+    ],
+    plugins: {
+      'theme-guard': themeGuard,
+    },
+    rules: {
+      'theme-guard/no-hardcoded-hex': 'error',
+      'theme-guard/no-tailwind-palette-colors': 'error',
     },
   },
 ])

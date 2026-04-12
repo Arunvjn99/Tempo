@@ -84,10 +84,10 @@ export function MessageInput({
           disabled={disabled || isProcessing}
           className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all ${
             isListening
-              ? "bg-[var(--color-danger)] text-white shadow-lg shadow-[var(--color-danger)]/25"
+              ? "bg-[var(--color-danger)] text-primary-foreground shadow-lg shadow-[var(--color-danger)]/25"
               : isProcessing
-                ? "bg-[var(--color-warning)]/80 text-white"
-                : "text-[var(--color-textSecondary)] hover:text-primary hover:bg-[var(--color-background)]"
+                ? "bg-[var(--color-warning)]/80 text-primary-foreground"
+                : "text-[var(--color-textSecondary)] hover:text-brand hover:bg-[var(--color-background)]"
           }`}
           aria-label={
             isListening
@@ -163,7 +163,7 @@ export function MessageInput({
           variant="custom"
           size="custom"
           disabled={!value.trim() || disabled || micBusy}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white transition-all hover:bg-primary-hover disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:bg-primary-hover disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label={t("coreAi.ariaSend")}
           title={t("coreAi.titleSend")}
         >

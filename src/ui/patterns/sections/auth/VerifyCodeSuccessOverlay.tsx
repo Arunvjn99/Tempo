@@ -3,7 +3,7 @@ import { AuthButton } from "@/ui/auth";
 export function VerifyCodeSuccessOverlay({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-hidden />
+      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)]" aria-hidden />
       <div className="relative z-10 w-full max-w-sm rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-2xl">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-success)]/10">
           <svg

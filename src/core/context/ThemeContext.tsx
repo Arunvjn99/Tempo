@@ -8,9 +8,10 @@ import {
   type ReactNode,
 } from "react";
 import { themeManager } from "../theme/themeManager";
-import { applyThemeToDOM, clearThemeFromDOM } from "../theme/utils";
+import { isValidBrandHex } from "../theme/utils";
 import type { CompanyTheme, ThemeColors } from "../theme/utils";
 import { fallbackTheme } from "../theme/defaultThemes";
+import { APPLY_SUPABASE_COMPANY_BRANDING } from "../theme/brandingFlags";
 
 type Mode = "light" | "dark" | "system";
 type EffectiveMode = "light" | "dark";
@@ -35,11 +36,6 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-function applyThemeClass(effective: EffectiveMode) {
-  document.documentElement.classList.remove("light", "dark");
-  document.documentElement.classList.add(effective);
-}
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<Mode>(() => {
@@ -70,7 +66,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isBrandingLoading, setBrandingLoading] = useState(true);
   const [overrideTheme, setOverrideTheme] = useState<CompanyTheme | null>(null);
 
-  const activeTheme = overrideTheme ?? companyTheme;
+  const activeTheme = useMemo(
+    () =>
+      overrideTheme ??
+      (APPLY_SUPABASE_COMPANY_BRANDING ? companyTheme : fallbackTheme),
+    [overrideTheme, companyTheme],
+  );
 
   const currentColors = useMemo(
     () => (effectiveMode === "dark" ? activeTheme.dark : activeTheme.light),
@@ -78,18 +79,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    applyThemeClass(effectiveMode);
+    const root = document.documentElement;
+    root.setAttribute("data-theme", effectiveMode);
+    root.classList.remove("light", "dark");
+    if (import.meta.env.DEV && effectiveMode === "light") {
+      const v = getComputedStyle(root).getPropertyValue("--text-primary").trim();
+      console.log("LIGHT TEXT:", v);
+    }
   }, [effectiveMode]);
-
-  useEffect(() => {
-    applyThemeToDOM(currentColors);
-  }, [currentColors]);
-
-  useEffect(() => {
-    return () => {
-      clearThemeFromDOM();
-    };
-  }, []);
 
   const toggleTheme = useCallback(() => {
     setModeState((prev) => {
@@ -111,14 +108,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     (companyName: string, dbJson?: unknown, logoUrl?: string | null, primaryColor?: string, secondaryColor?: string) => {
       const resolved = themeManager.getTheme(companyName, dbJson);
 
-      // Column-level primary_color / secondary_color override branding_json values
-      if (primaryColor) {
-        resolved.light = { ...resolved.light, primary: primaryColor };
-        resolved.dark = { ...resolved.dark, primary: primaryColor };
+      // Column-level primary_color / secondary_color override branding_json values (UI color still from `data-brand` + `brand.css`)
+      const pc = primaryColor?.trim();
+      if (pc && isValidBrandHex(pc)) {
+        resolved.light = { ...resolved.light, primary: pc };
+        resolved.dark = { ...resolved.dark, primary: pc };
       }
-      if (secondaryColor) {
-        resolved.light = { ...resolved.light, secondary: secondaryColor };
-        resolved.dark = { ...resolved.dark, secondary: secondaryColor };
+      const sc = secondaryColor?.trim();
+      if (sc && isValidBrandHex(sc)) {
+        resolved.light = { ...resolved.light, secondary: sc };
+        resolved.dark = { ...resolved.dark, secondary: sc };
       }
 
       const dbLogo = logoUrl?.trim() || "";
@@ -133,6 +132,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (import.meta.env.DEV) {
         console.log("[logo-audit] effectiveLogo:", effectiveLogo);
       }
+
       setCompanyTheme({ ...resolved });
     },
     [],

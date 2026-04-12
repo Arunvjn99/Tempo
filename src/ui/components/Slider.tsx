@@ -21,12 +21,12 @@ export function Slider({ value, onValueChange, min = 0, max = 100, step = 1, cla
       step={step}
     >
       <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-[var(--slider-track-unfilled)]">
-        <SliderPrimitive.Range className="absolute h-full bg-primary" />
+        <SliderPrimitive.Range className="absolute h-full bg-[var(--color-primary)]" />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb
         className={cn(
-          "block h-5 w-5 cursor-grab rounded-full border-2 border-primary bg-card shadow-md transition-colors",
-          "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+          "block h-5 w-5 cursor-grab rounded-full border-2 border-[var(--color-primary)] bg-surface-card shadow-md transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-card)]",
           "disabled:pointer-events-none disabled:opacity-50 active:cursor-grabbing",
         )}
         aria-label="Slider value"

@@ -11,6 +11,9 @@
             --primary-blue-hover: #2563eb;
             --accent-green: #10b981;
             --accent-green-hover: #059669;
+            /* Semantic rails / wells (no Tailwind gray palette) */
+            --ui-rail: color-mix(in srgb, var(--primary-blue) 12%, #ffffff);
+            --ui-well-border: color-mix(in srgb, var(--primary-blue) 18%, #ffffff);
         }
         
         .section {
@@ -40,7 +43,7 @@
             width: 100%;
             height: 8px;
             border-radius: 4px;
-            background: #e5e7eb;
+            background: var(--ui-rail);
             outline: none;
             transition: background 0.3s;
         }
@@ -71,7 +74,7 @@
         }
         
         .drop-zone {
-            border: 2px dashed #cbd5e1;
+            border: 2px dashed var(--ui-well-border);
             transition: all 0.3s ease;
         }
         
@@ -81,15 +84,15 @@
         }
         
         .signature-canvas {
-            border: 2px solid #e5e7eb;
+            border: 2px solid var(--ui-well-border);
             border-radius: 8px;
             cursor: crosshair;
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-white min-h-screen">
     <!-- Progress Stepper -->
-    <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div class="bg-white shadow-sm border-b border-blue-100 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2 md:space-x-4 flex-1">
@@ -97,25 +100,25 @@
                         <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold mr-2">1</div>
                         <span class="hidden sm:inline">Eligibility</span>
                     </div>
-                    <div class="flex-1 h-1 bg-gray-200 mx-2">
-                        <div class="h-full bg-gray-200 transition-all duration-300" id="progress-bar-1"></div>
+                    <div class="flex-1 h-1 bg-blue-100 mx-2">
+                        <div class="h-full bg-blue-100 transition-all duration-300" id="progress-bar-1"></div>
                     </div>
                     <div class="step-indicator flex items-center" data-step="2">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-semibold mr-2">2</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-sm font-semibold mr-2">2</div>
                         <span class="hidden sm:inline">Options</span>
                     </div>
-                    <div class="flex-1 h-1 bg-gray-200 mx-2">
-                        <div class="h-full bg-gray-200 transition-all duration-300" id="progress-bar-2"></div>
+                    <div class="flex-1 h-1 bg-blue-100 mx-2">
+                        <div class="h-full bg-blue-100 transition-all duration-300" id="progress-bar-2"></div>
                     </div>
                     <div class="step-indicator flex items-center" data-step="3">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-semibold mr-2">3</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-sm font-semibold mr-2">3</div>
                         <span class="hidden sm:inline">Terms</span>
                     </div>
-                    <div class="flex-1 h-1 bg-gray-200 mx-2">
-                        <div class="h-full bg-gray-200 transition-all duration-300" id="progress-bar-3"></div>
+                    <div class="flex-1 h-1 bg-blue-100 mx-2">
+                        <div class="h-full bg-blue-100 transition-all duration-300" id="progress-bar-3"></div>
                     </div>
                     <div class="step-indicator flex items-center" data-step="4">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-semibold mr-2">4</div>
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-sm font-semibold mr-2">4</div>
                         <span class="hidden sm:inline">Submit</span>
                     </div>
                 </div>
@@ -129,7 +132,7 @@
             <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
                 <div class="flex items-center justify-between mb-6">
                     <h1 class="text-3xl font-bold text-gray-900">Loan Dashboard</h1>
-                    <div class="text-sm text-gray-600">
+                    <div class="text-sm text-blue-800">
                         <span class="font-semibold">ABC Company</span>
                     </div>
                 </div>
@@ -143,13 +146,13 @@
                         <div class="text-sm text-green-700 font-medium mb-2">Eligible Loan Amount</div>
                         <div class="text-3xl font-bold text-green-900">$50,000</div>
                     </div>
-                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-6 border border-gray-200">
-                        <div class="text-sm text-gray-700 font-medium mb-2">Outstanding Loans</div>
+                    <div class="bg-gradient-to-br from-white to-blue-50 rounded-lg p-6 border border-blue-100">
+                        <div class="text-sm text-blue-900 font-medium mb-2">Outstanding Loans</div>
                         <div class="text-3xl font-bold text-gray-900">$0</div>
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                <div class="bg-white border border-blue-100 rounded-lg p-6 mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Active Loans</h2>
                     <div class="text-center py-8 text-gray-500">
                         <p class="mb-4">No active loans at this time</p>
@@ -162,7 +165,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <div class="bg-white border border-blue-100 rounded-lg p-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Loan History</h2>
                     <div class="text-center py-8 text-gray-500">
                         <p>No previous loans</p>
@@ -178,7 +181,7 @@
                     <h1 class="text-3xl font-bold text-gray-900">Loan Simulator</h1>
                     <button 
                         onclick="showSection('loan-dashboard')" 
-                        class="text-gray-600 hover:text-gray-900 transition-colors"
+                        class="text-blue-800 hover:text-gray-900 transition-colors"
                     >
                         ← Back to Dashboard
                     </button>
@@ -186,8 +189,8 @@
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     <!-- Loan Amount Slider -->
-                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <label class="block text-sm font-semibold text-gray-700 mb-4">
+                    <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100">
+                        <label class="block text-sm font-semibold text-blue-900 mb-4">
                             Loan Amount: <span id="loan-amount-value" class="text-blue-600">$25,000</span>
                         </label>
                         <input 
@@ -207,8 +210,8 @@
                     </div>
 
                     <!-- Tenure Slider -->
-                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <label class="block text-sm font-semibold text-gray-700 mb-4">
+                    <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100">
+                        <label class="block text-sm font-semibold text-blue-900 mb-4">
                             Tenure: <span id="tenure-value" class="text-blue-600">3 years</span>
                         </label>
                         <input 
@@ -245,15 +248,15 @@
                 </div>
 
                 <!-- Retirement Impact Chart -->
-                <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                <div class="bg-white border border-blue-100 rounded-lg p-6 mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Retirement Impact (30 Years)</h2>
                     <div class="space-y-4">
                         <div>
-                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                            <div class="flex justify-between text-sm text-blue-800 mb-2">
                                 <span>With Loan (Lost Growth)</span>
                                 <span id="lost-growth-amount" class="font-semibold">$0</span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-6">
+                            <div class="w-full bg-blue-100 rounded-full h-6">
                                 <div 
                                     id="lost-growth-bar" 
                                     class="retirement-chart-bar bg-red-500 h-6 rounded-full flex items-center justify-end pr-2"
@@ -264,11 +267,11 @@
                             </div>
                         </div>
                         <div>
-                            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                            <div class="flex justify-between text-sm text-blue-800 mb-2">
                                 <span>Without Loan (Potential Growth)</span>
                                 <span id="potential-growth-amount" class="font-semibold">$0</span>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-6">
+                            <div class="w-full bg-blue-100 rounded-full h-6">
                                 <div 
                                     id="potential-growth-bar" 
                                     class="retirement-chart-bar bg-green-500 h-6 rounded-full flex items-center justify-end pr-2"
@@ -299,20 +302,20 @@
                     <h1 class="text-3xl font-bold text-gray-900">Application Form</h1>
                     <button 
                         onclick="showSection('loan-simulator')" 
-                        class="text-gray-600 hover:text-gray-900 transition-colors"
+                        class="text-blue-800 hover:text-gray-900 transition-colors"
                     >
                         ← Back
                     </button>
                 </div>
 
                 <form id="loan-application-form" class="space-y-6">
-                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100">
+                        <label class="block text-sm font-semibold text-blue-900 mb-2">
                             Loan Purpose
                         </label>
                         <select 
                             id="loan-purpose" 
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full px-4 py-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
                         >
                             <option value="">Select a purpose</option>
@@ -325,29 +328,29 @@
                         </select>
                     </div>
 
-                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                    <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100">
                         <label class="flex items-center space-x-3">
                             <input 
                                 type="checkbox" 
                                 id="payroll-confirmation" 
-                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                class="w-5 h-5 text-blue-600 border-blue-200 rounded focus:ring-blue-500"
                                 required
                             >
-                            <span class="text-sm font-semibold text-gray-700">
+                            <span class="text-sm font-semibold text-blue-900">
                                 I confirm that loan repayments will be deducted from my payroll
                             </span>
                         </label>
                     </div>
 
-                    <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                    <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100">
                         <label class="flex items-center space-x-3">
                             <input 
                                 type="checkbox" 
                                 id="primary-residence" 
-                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                class="w-5 h-5 text-blue-600 border-blue-200 rounded focus:ring-blue-500"
                                 onchange="togglePrimaryResidence()"
                             >
-                            <span class="text-sm font-semibold text-gray-700">
+                            <span class="text-sm font-semibold text-blue-900">
                                 This loan is for my Primary Residence
                             </span>
                         </label>
@@ -360,7 +363,7 @@
                         <button 
                             type="button"
                             onclick="showSection('loan-simulator')" 
-                            class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            class="px-6 py-3 border border-blue-200 text-blue-900 rounded-lg hover:bg-white border border-blue-100 transition-colors"
                         >
                             Cancel
                         </button>
@@ -383,7 +386,7 @@
                     <h1 class="text-3xl font-bold text-gray-900">Document Upload</h1>
                     <button 
                         onclick="showSection('application-form')" 
-                        class="text-gray-600 hover:text-gray-900 transition-colors"
+                        class="text-blue-800 hover:text-gray-900 transition-colors"
                     >
                         ← Back
                     </button>
@@ -418,7 +421,7 @@
                             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
                         <div>
-                            <p class="text-lg font-semibold text-gray-700 mb-2">
+                            <p class="text-lg font-semibold text-blue-900 mb-2">
                                 Drag and drop files here, or click to browse
                             </p>
                             <p class="text-sm text-gray-500">
@@ -434,7 +437,7 @@
                     <button 
                         type="button"
                         onclick="showSection('application-form')" 
-                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        class="px-6 py-3 border border-blue-200 text-blue-900 rounded-lg hover:bg-white border border-blue-100 transition-colors"
                     >
                         Back
                     </button>
@@ -456,17 +459,17 @@
                     <h1 class="text-3xl font-bold text-gray-900">Final Review</h1>
                     <button 
                         onclick="showSection('doc-upload')" 
-                        class="text-gray-600 hover:text-gray-900 transition-colors"
+                        class="text-blue-800 hover:text-gray-900 transition-colors"
                     >
                         ← Back
                     </button>
                 </div>
 
                 <!-- Promissory Note Preview -->
-                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-6">
+                <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100 mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Promissory Note</h2>
-                    <div class="bg-white rounded-lg p-6 border border-gray-200 max-h-96 overflow-y-auto">
-                        <div class="space-y-4 text-sm text-gray-700">
+                    <div class="bg-white rounded-lg p-6 border border-blue-100 max-h-96 overflow-y-auto">
+                        <div class="space-y-4 text-sm text-blue-900">
                             <p><strong>Loan Agreement</strong></p>
                             <p>This Promissory Note ("Note") is entered into between ABC Company and the borrower.</p>
                             <p><strong>Loan Amount:</strong> <span id="review-loan-amount">$25,000</span></p>
@@ -481,7 +484,7 @@
                 </div>
 
                 <!-- Digital Signature -->
-                <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-6">
+                <div class="bg-white border border-blue-100 rounded-lg p-6 border border-blue-100 mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Digital Signature</h2>
                     <canvas 
                         id="signature-canvas" 
@@ -492,7 +495,7 @@
                     <div class="flex justify-between items-center mt-4">
                         <button 
                             onclick="clearSignature()" 
-                            class="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                            class="text-sm text-blue-800 hover:text-gray-900 transition-colors"
                         >
                             Clear Signature
                         </button>
@@ -506,7 +509,7 @@
                     <button 
                         type="button"
                         onclick="showSection('doc-upload')" 
-                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        class="px-6 py-3 border border-blue-200 text-blue-900 rounded-lg hover:bg-white border border-blue-100 transition-colors"
                     >
                         Back
                     </button>
@@ -633,7 +636,7 @@
                     stepDiv.textContent = stepNum;
                 } else {
                     indicator.classList.remove('active', 'completed');
-                    stepDiv.className = 'w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-sm font-semibold mr-2';
+                    stepDiv.className = 'w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-sm font-semibold mr-2';
                     stepDiv.textContent = stepNum;
                 }
             });
@@ -786,7 +789,7 @@
         function displayUploadedFile(file) {
             const container = document.getElementById('uploaded-files');
             const fileDiv = document.createElement('div');
-            fileDiv.className = 'bg-gray-50 rounded-lg p-4 border border-gray-200 flex items-center justify-between';
+            fileDiv.className = 'bg-white border border-blue-100 rounded-lg p-4 border border-blue-100 flex items-center justify-between';
             fileDiv.innerHTML = `
                 <div class="flex items-center space-x-3">
                     <svg class="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

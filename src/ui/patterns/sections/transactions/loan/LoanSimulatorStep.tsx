@@ -57,20 +57,20 @@ export function LoanSimulatorStep({
       <FormSection title="Estimated repayment" variant="muted">
         <dl className="grid gap-sm text-sm">
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Monthly payment</dt>
-            <dd className="font-semibold text-foreground">{formatCurrency(loan.monthlyPayment, 2)}</dd>
+            <dt className="text-secondary">Monthly payment</dt>
+            <dd className="font-semibold text-primary">{formatCurrency(loan.monthlyPayment, 2)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Total payback</dt>
-            <dd className="font-semibold text-foreground">{formatCurrency(loan.totalPayback, 2)}</dd>
+            <dt className="text-secondary">Total payback</dt>
+            <dd className="font-semibold text-primary">{formatCurrency(loan.totalPayback, 2)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Total interest</dt>
-            <dd className="font-semibold text-foreground">{formatCurrency(loan.totalInterest, 2)}</dd>
+            <dt className="text-secondary">Total interest</dt>
+            <dd className="font-semibold text-primary">{formatCurrency(loan.totalInterest, 2)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Interest rate (annual)</dt>
-            <dd className="font-semibold text-primary">{(loan.interestRate * 100).toFixed(1)}%</dd>
+            <dt className="text-secondary">Interest rate (annual)</dt>
+            <dd className="font-semibold text-brand">{(loan.interestRate * 100).toFixed(1)}%</dd>
           </div>
         </dl>
       </FormSection>

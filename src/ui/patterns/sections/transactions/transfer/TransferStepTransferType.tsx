@@ -42,7 +42,7 @@ export function TransferStepTransferType({
               onClick={() => updateTransfer({ transferType: x.id })}
             >
               <span className="block text-sm font-semibold">{x.label}</span>
-              <span className="mt-xs block text-xs text-muted-foreground">{x.sub}</span>
+              <span className="mt-xs block text-xs text-secondary">{x.sub}</span>
             </Button>
           ))}
         </div>

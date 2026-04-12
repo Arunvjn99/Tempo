@@ -39,9 +39,9 @@ export function RolloverStepDocuments({
                 documentsUploaded: e.target.checked ? ["rollover-form.pdf", "statement.pdf"] : [],
               })
             }
-            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            className="mt-0.5 h-4 w-4 rounded border-default text-brand focus:ring-primary"
           />
-          <span className="text-sm text-foreground">
+          <span className="text-sm text-primary">
             I confirm rollover documents are complete and uploaded.
           </span>
         </label>

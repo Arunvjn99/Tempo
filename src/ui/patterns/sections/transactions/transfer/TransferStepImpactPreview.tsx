@@ -32,7 +32,7 @@ export function TransferStepImpactPreview({
     >
       <FormSection title="Projection">
         {!t.impactCalculated ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-secondary">
             Calculate a mock allocation preview based on your selections.
           </p>
         ) : (
@@ -40,10 +40,10 @@ export function TransferStepImpactPreview({
             {mockFunds.map((f) => (
               <li
                 key={f.id}
-                className="flex justify-between rounded-md border border-border bg-surface px-md py-sm text-sm"
+                className="flex justify-between rounded-md border border-default bg-surface px-md py-sm text-sm"
               >
-                <span className="text-foreground">{f.name}</span>
-                <span className="font-medium text-primary">
+                <span className="text-primary">{f.name}</span>
+                <span className="font-medium text-brand">
                   {formatPercent(t.projectedNewAllocation[f.id] ?? 0, 1)}
                 </span>
               </li>
@@ -62,7 +62,7 @@ export function TransferStepImpactPreview({
               variant="custom"
               size="custom"
               onClick={onCalculateImpact}
-              className="rounded-button border border-border bg-card px-md py-sm text-sm font-medium text-foreground hover:bg-muted"
+              className="rounded-button border border-default bg-surface-card px-md py-sm text-sm font-medium text-primary hover:bg-primary/5"
             >
               Calculate impact
             </Button>

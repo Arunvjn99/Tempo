@@ -1,67 +1,295 @@
-/* ─── Single source of truth: theme variables (overridden by ThemeProvider from branding_json) ─── */
-:root {
-  --surface-1: #ffffff;
-  --surface-2: #f8fafc;
-  --surface-primary: #ffffff;
-  --surface-secondary: #f8fafc;
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --border-subtle: #e5e7eb;
-  --brand-primary: #3b82f6;
-  --brand-hover: #2563eb;
-  --brand-active: #1d4ed8;
+/* ═══ Figma Make — structural tokens (light / dark). Base UI from this file only; Supabase never overrides surfaces/text/borders. ═══ */
+/*
+ * Brand hues: `brand.css` (`--brand-primary`, `--color-primary-rgb`). This file chains semantic tokens only.
+ */
+html[data-theme="light"] {
+  /* SURFACES — Figma light */
+  --surface-page: #ffffff;
+  --surface-section: #f9fafb;
+  --surface-card: #ffffff;
+
+  /* TEXT */
+  --text-primary: #101828;
+  --text-secondary: #475467;
+
+  /* BORDER */
+  --border-default: #e5e7eb;
+
+  /* BRAND (Figma fallback #2563eb) — `[data-brand]` in brand.css sets `--brand-primary` */
+  --color-primary: var(--brand-primary);
+
+  /* Additional stack (wells, hero slab, aliases) */
+  --surface-soft: #f1f5f9;
+  --surface-elevated: #0b1b34;
+
+  /* Aliases — same stack, existing consumers */
+  --surface-muted: var(--surface-soft);
+  --surface-primary: var(--surface-card);
+  --surface-secondary: var(--surface-page);
+  --surface-tertiary: var(--surface-section);
+
+  /* SHADOW — matches reference `shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]` */
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+  /* Shell — header separation from page canvas */
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Modal / dialog scrim (dim page using theme text + transparency) */
+  --modal-overlay: color-mix(in srgb, var(--text-primary) 42%, transparent);
+
+  /* Marketing dashboard — blue gradient block (radius + depth; gradient colors stay on the element) */
+  --shadow-gradient-block: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --radius-dashboard-gradient: 24px;
+
+  /* Pre-enrollment page ambient (replaces raw hex glow — sits on --surface-page) */
+  --pre-enrollment-radial-glow: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--color-primary) 20%, var(--surface-page)) 0%,
+    color-mix(in srgb, var(--color-primary) 10%, var(--surface-page)) 45%,
+    transparent 70%
+  );
+
+  --surface-1: var(--surface-card);
+  --surface-2: var(--surface-page);
+  --border-subtle: var(--border-default);
+  --border: var(--border-default);
+
+  --color-background: var(--surface-page);
+  --color-card: var(--surface-card);
+  --color-text: var(--text-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
+  --color-border: var(--border-default);
+  --color-primary-hover: color-mix(in srgb, var(--brand-primary) 88%, black);
+  --color-primary-active: color-mix(in srgb, var(--brand-primary) 78%, black);
+
+  --brand-hover: color-mix(in srgb, var(--brand-primary) 88%, black);
+  --brand-active: color-mix(in srgb, var(--brand-primary) 78%, black);
   --danger: #ef4444;
   --success: #10b981;
-  --primary: var(--brand-primary);
-  /* Page / surface aliases (dashboard + shared layouts; ThemeProvider may override) */
-  --bg-primary: var(--surface-primary);
-  --bg-secondary: var(--surface-secondary);
-  --bg-tertiary: #f1f5f9;
+  --primary: var(--color-primary);
+  --primary-foreground: #ffffff;
+  --bg-primary: var(--surface-card);
+  --bg-secondary: var(--surface-page);
+  --bg-tertiary: var(--surface-tertiary);
   --text-muted: var(--text-secondary);
+
+  /* Semantic aliases for Tailwind `token-*` utilities (light / dark via --color-*) */
+  --token-background: var(--color-background);
+  --token-card: var(--color-card);
+  --token-text: var(--color-text);
+  --token-muted: var(--color-text-muted);
+  --token-border: var(--border-default);
+
+  /* Figma Make — hierarchy (insight / success / purple / gradients); avoid flat white */
+  --color-purple: #9333ea;
+  --color-purple-soft: color-mix(in srgb, var(--color-purple) 12%, var(--surface-card));
+  --color-purple-muted: color-mix(in srgb, var(--color-purple) 18%, var(--surface-section));
+
+  --color-info-bg: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 11%, var(--surface-page)) 0%,
+    color-mix(in srgb, var(--color-accent) 7%, var(--surface-section)) 100%
+  );
+  --color-info-border: color-mix(in srgb, var(--color-primary) 20%, var(--border-default));
+
+  --color-success-bg: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--success) 12%, var(--surface-page)) 0%,
+    color-mix(in srgb, var(--success) 7%, var(--surface-section)) 100%
+  );
+  --color-success-border: color-mix(in srgb, var(--success) 26%, var(--border-default));
+
+  --gradient-readiness-hero: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 7%, var(--surface-page)) 0%,
+    var(--surface-card) 38%,
+    var(--surface-card) 100%
+  );
+  --gradient-highlight-recommendation: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 10%, var(--surface-card)) 0%,
+    color-mix(in srgb, var(--color-primary) 6%, var(--surface-section)) 45%,
+    color-mix(in srgb, var(--color-accent) 5%, var(--surface-card)) 100%
+  );
+  --gradient-progress-primary: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    color-mix(in srgb, var(--color-primary) 72%, var(--color-accent)) 100%
+  );
+
+  /* ── Semantic bridge (Figma / product → system tokens; no hex) ── */
+  --semantic-brand-primary: var(--brand-primary);
+  --semantic-brand-accent: var(--color-accent);
+  --brand-accent: var(--color-accent);
+  --chart-primary: var(--chart-1);
+  --chart-secondary: var(--chart-5);
+  --surface-highlight: color-mix(in srgb, var(--color-primary) 8%, var(--surface-card));
+
+  /* ── Enrollment (readiness + investment) — semantic aliases; derived via color-mix only ── */
+  --surface-hero: var(--gradient-readiness-hero);
+  --surface-recommendation: var(--gradient-highlight-recommendation);
+  --surface-glass: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-card) 93%, var(--color-primary) 7%) 0%,
+    color-mix(in srgb, var(--surface-section) 95%, var(--color-accent) 5%) 100%
+  );
+  --surface-success-soft: color-mix(in srgb, var(--color-success) 10%, var(--surface-card));
+  --surface-warning-soft: color-mix(in srgb, var(--color-warning) 10%, var(--surface-card));
+  --surface-insight-well: color-mix(in srgb, var(--color-primary) 10%, var(--surface-card));
+  --border-insight: color-mix(in srgb, var(--color-primary) 16%, var(--border-default));
+  --surface-suggestion-recommended: color-mix(in srgb, var(--color-primary) 9%, var(--surface-card));
+  --surface-suggestion-muted: color-mix(in srgb, var(--surface-section) 92%, var(--text-secondary) 8%);
+  --border-highlight: color-mix(in srgb, var(--color-primary) 22%, var(--border-default));
+  --border-enroll-subtle: color-mix(in srgb, var(--border-default) 68%, var(--surface-card));
+  --text-muted-strong: color-mix(in srgb, var(--text-primary) 32%, var(--text-secondary));
+  --gradient-investment-customize: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-accent) 9%, var(--surface-card)) 0%,
+    color-mix(in srgb, var(--surface-page) 91%, var(--color-purple) 9%) 48%,
+    color-mix(in srgb, var(--color-primary) 7%, var(--surface-card)) 100%
+  );
+  --gradient-investment-advisor: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-warning) 11%, var(--surface-card)) 0%,
+    color-mix(in srgb, var(--surface-section) 93%, var(--color-warning) 7%) 100%
+  );
 }
 
-.dark {
-  --surface-1: #0f172a;
-  --surface-2: #1e293b;
-  --surface-primary: #0f172a;
-  --surface-secondary: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border-subtle: #334155;
-  --brand-primary: #60a5fa;
-  --brand-hover: #3b82f6;
-  --brand-active: #2563eb;
+/* Dark mode: semantic surfaces + tinted insight/success/purple (matches Figma; root is html[data-theme="dark"]). */
+html[data-theme="dark"] {
+  /* Figma dark — isolated stack */
+  --surface-page: #0b1220;
+  --surface-section: #111827;
+  --surface-card: #111827;
+  --surface-soft: #111827;
+  --surface-elevated: #111827;
+  --surface-muted: var(--surface-soft);
+  --surface-primary: var(--surface-card);
+  --surface-secondary: var(--surface-page);
+  --surface-tertiary: var(--surface-section);
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-default: #1f2937;
+  --shadow-header: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-gradient-block: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  --modal-overlay: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+
+  --pre-enrollment-radial-glow: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--color-primary) 28%, var(--surface-page)) 0%,
+    color-mix(in srgb, var(--color-primary) 14%, var(--surface-page)) 45%,
+    transparent 70%
+  );
+
+  --surface-1: var(--surface-card);
+  --surface-2: var(--surface-page);
+  --border-subtle: var(--border-default);
+  --border: var(--border-default);
+
+  --color-background: var(--surface-page);
+  --color-card: var(--surface-card);
+  --color-text: var(--text-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
+  --color-border: var(--border-default);
+  --color-primary: color-mix(in srgb, var(--brand-primary) 78%, white);
+  --color-primary-hover: color-mix(in srgb, var(--brand-primary) 68%, white);
+  --color-primary-active: color-mix(in srgb, var(--brand-primary) 58%, white);
+  --color-accent: #818cf8;
+  --color-accent-rgb: 129 140 248;
+
+  --brand-hover: color-mix(in srgb, var(--brand-primary) 72%, white);
+  --brand-active: color-mix(in srgb, var(--brand-primary) 62%, white);
   --danger: #f87171;
   --success: #34d399;
-  --primary: var(--brand-primary);
-  --bg-primary: var(--surface-primary);
-  --bg-secondary: var(--surface-secondary);
-  --bg-tertiary: #334155;
+  /* Charts / success UI — readable on dark surfaces */
+  --color-success: #34d399;
+  --color-success-rgb: 52 211 153;
+  --primary: var(--color-primary);
+  --primary-foreground: #ffffff;
+  --bg-primary: var(--surface-card);
+  --bg-secondary: var(--surface-page);
+  --bg-tertiary: var(--surface-tertiary);
   --text-muted: var(--text-secondary);
-  /* Legacy tokens (ThemeProvider overrides these from branding_json when mounted) */
-  --color-background: #0f172a;
-  --color-background-secondary: #1e293b;
-  --color-background-tertiary: #334155;
-  --color-text: #f1f5f9;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
+
+  --color-background-secondary: var(--surface-secondary);
+  --color-background-tertiary: var(--surface-tertiary);
   --color-text-tertiary: #cbd5e1;
-  --color-border: #334155;
-  --color-surface: #1e293b;
-  --color-surface-elevated: #334155;
-  --color-primary: #60a5fa;
-  --color-primary-hover: #3b82f6;
-  --color-primary-active: #2563eb;
-  --enroll-bg: #0f172a;
-  --enroll-card-bg: #1e293b;
-  --enroll-card-border: #334155;
-  --enroll-soft-bg: #1e293b;
-  --enroll-text-primary: #f1f5f9;
-  --enroll-text-secondary: #94a3b8;
-  --enroll-text-muted: #cbd5e1;
-  --card-bg: #1e293b;
+  --color-surface: var(--surface-card);
+  --color-surface-elevated: var(--surface-tertiary);
+  --card-bg: var(--color-card);
   --card-border: rgba(51, 65, 85, 0.5);
   --slider-track-unfilled: #334155;
+
+  --color-purple: #c4b5fd;
+  --color-purple-bg: rgba(124, 58, 237, 0.15);
+  --color-purple-soft: var(--color-purple-bg);
+  --color-purple-muted: color-mix(in srgb, var(--color-purple) 22%, var(--surface-section));
+
+  --color-info-bg: rgba(59, 130, 246, 0.15);
+  --color-info-border: color-mix(in srgb, var(--color-primary) 32%, var(--border-default));
+
+  --color-success-bg: rgba(22, 163, 74, 0.15);
+  --color-success-border: color-mix(in srgb, var(--color-success) 36%, var(--border-default));
+
+  --gradient-readiness-hero: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 11%, var(--surface-card)) 0%,
+    var(--surface-card) 40%,
+    var(--surface-card) 100%
+  );
+  --gradient-highlight-recommendation: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 14%, var(--surface-card)) 0%,
+    color-mix(in srgb, var(--color-primary) 9%, var(--surface-section)) 50%,
+    color-mix(in srgb, var(--color-accent) 8%, var(--surface-card)) 100%
+  );
+  --gradient-progress-primary: linear-gradient(
+    90deg,
+    var(--color-primary) 0%,
+    color-mix(in srgb, var(--color-primary) 68%, var(--color-accent)) 100%
+  );
+
+  /* ── Semantic bridge (inherits dark-tuned --color-primary / --color-accent) ── */
+  --semantic-brand-primary: var(--brand-primary);
+  --semantic-brand-accent: var(--color-accent);
+  --brand-accent: var(--color-accent);
+  --chart-primary: var(--chart-1);
+  --chart-secondary: var(--chart-5);
+  --surface-highlight: color-mix(in srgb, var(--color-primary) 14%, var(--surface-card));
+
+  /* ── Enrollment (readiness + investment) — dark-tuned mixes ── */
+  --surface-hero: var(--gradient-readiness-hero);
+  --surface-recommendation: var(--gradient-highlight-recommendation);
+  --surface-glass: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-card) 88%, var(--color-primary) 12%) 0%,
+    color-mix(in srgb, var(--surface-section) 90%, var(--color-accent) 10%) 100%
+  );
+  --surface-success-soft: color-mix(in srgb, var(--color-success) 14%, var(--surface-card));
+  --surface-warning-soft: color-mix(in srgb, var(--color-warning) 14%, var(--surface-card));
+  --surface-insight-well: color-mix(in srgb, var(--color-primary) 14%, var(--surface-card));
+  --border-insight: color-mix(in srgb, var(--color-primary) 28%, var(--border-default));
+  --surface-suggestion-recommended: color-mix(in srgb, var(--color-primary) 12%, var(--surface-card));
+  --surface-suggestion-muted: color-mix(in srgb, var(--surface-section) 88%, var(--text-secondary) 12%);
+  --border-highlight: color-mix(in srgb, var(--color-primary) 32%, var(--border-default));
+  --border-enroll-subtle: color-mix(in srgb, var(--border-default) 55%, var(--surface-page));
+  --text-muted-strong: color-mix(in srgb, var(--text-primary) 40%, var(--text-secondary));
+  --gradient-investment-customize: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-accent) 12%, var(--surface-card)) 0%,
+    color-mix(in srgb, var(--surface-page) 86%, var(--color-purple) 14%) 50%,
+    color-mix(in srgb, var(--color-primary) 10%, var(--surface-card)) 100%
+  );
+  --gradient-investment-advisor: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-warning) 14%, var(--surface-card)) 0%,
+    color-mix(in srgb, var(--surface-section) 88%, var(--color-warning) 12%) 100%
+  );
 }
 
 :root {
@@ -94,35 +322,36 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 
-  /* Primary Color */
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
-  --color-primary-active: #1d4ed8;
-  --color-primary-rgb: 59 130 246;
+  /* Primary — `--color-primary*` / `--color-primary-rgb` from first `:root` + `brand.css` */
+
+  --color-accent: #6366f1;
+  --color-accent-rgb: 99 102 241;
 
   /* Status Colors */
   --color-danger: #ef4444;
   --color-danger-rgb: 239 68 68;
   --color-warning-rgb: 245 158 11;
 
-  /* Background Colors (base - overridden by themes) */
-  --color-background: #ffffff;
-  --color-background-secondary: #f9fafb;
-  --color-background-tertiary: #f3f4f6;
+  /* Background / card — Figma structural (surfaces never overridden by company theme) */
+  --color-background: var(--surface-page);
+  --color-background-secondary: var(--surface-page);
+  --color-background-tertiary: var(--surface-tertiary);
+  --color-card: var(--surface-card);
 
-  /* Text Colors (base - overridden by themes) */
-  --color-text: #111827;
-  --color-text-primary: var(--color-text);
-  --color-text-secondary: #6b7280;
+  /* Text */
+  --color-text: var(--text-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-secondary);
   --color-text-tertiary: #9ca3af;
   --color-text-inverse: #ffffff;
   --color-text-inverse-rgb: 255 255 255;
   --color-text-inverse-muted: #94a3b8;
 
   /* Surfaces / Borders (theme overrides recommended) */
-  --color-border: #e5e7eb;
-  --color-surface: var(--color-background);
-  --color-surface-elevated: var(--color-background);
+  --color-border: var(--border-default);
+  --color-surface: var(--surface-card);
+  --color-surface-elevated: var(--surface-tertiary);
 
   /* Auth layout visual tokens */
   --auth-left-bg: linear-gradient(135deg, #0b1220 0%, #111827 100%);
@@ -131,8 +360,8 @@
   --auth-dot: rgb(255 255 255 / 0.30);
   --auth-dot-active: rgb(255 255 255 / 0.90);
 
-  /* Slider track (unfilled) - light mode */
-  --slider-track-unfilled: #e2e8f0;
+  /* Slider track (unfilled) — semantic, no raw gray utilities in components */
+  --slider-track-unfilled: color-mix(in srgb, var(--border-default) 85%, var(--surface-card));
 
   /* Financial / allocation slider (enrollment) - token-based dimensions */
   --financial-slider-track-height: var(--spacing-3);
@@ -140,23 +369,21 @@
   --financial-slider-thumb-focus-ring: 2px;
 
   /* Card tokens */
-  --card-bg: var(--color-surface-elevated);
+  --card-bg: var(--color-card);
   --card-border: rgb(17 24 39 / 0.08);
   --card-shadow: var(--shadow-lg);
 
   /* Auth semantic aliases (use these in Auth UI) */
   --bg: var(--color-background);
   --surface: var(--color-surface);
-  --text-primary: var(--color-text);
-  --text-secondary: var(--color-text-secondary);
-  --border: var(--color-border);
+  --border: var(--border-default);
   --accent: var(--color-primary);
 
   /* Dashboard semantic aliases */
   --bg-surface: var(--color-surface);
-  --bg-surface-muted: var(--color-background-secondary);
+  --bg-surface-muted: var(--surface-tertiary);
   --bg-elevated: var(--color-surface-elevated);
-  --border-subtle: var(--color-border);
+  --border-subtle: var(--border-default);
   --accent-primary: var(--color-primary);
   --accent-success: var(--color-success);
   --accent-warning: var(--color-warning);
@@ -179,79 +406,34 @@
   --chart-9: #f97316;
   --chart-10: #6366f1;
 
-  /* ── Enrollment Design System ── */
+  /* Readiness score ring — set dynamically via JS */
+  --score-color: var(--color-primary);
 
-  /* Page background */
-  --enroll-bg: #f8fafc;
-
-  /* Brand */
-  --enroll-brand: #4f46e5;
-  --enroll-brand-rgb: 79 70 229;
-  --enroll-accent: #22c55e;
-  --enroll-accent-rgb: 34 197 94;
-
-  /* Text */
-  --enroll-text-primary: #0f172a;
-  --enroll-text-secondary: #475569;
-  --enroll-text-muted: #94a3b8;
-
-  /* Surfaces & borders */
-  --enroll-card-bg: #ffffff;
-  --enroll-card-border: #e2e8f0;
-  --enroll-card-radius: 16px;
-  --enroll-soft-bg: #f1f5f9;
-
-  /* Elevation (standardized — light, never heavy) */
-  --enroll-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --enroll-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --enroll-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.08);
-
-  /* Review page: plan overview, risk badge, table header, next steps */
-  --enroll-plan-overview-bg: linear-gradient(134deg, #f0f7ff 0%, #e0effe 100%);
-  --enroll-risk-badge-bg: #eff6ff;
-  --enroll-risk-badge-border: #dbeafe;
-  --enroll-table-header-bg: rgba(248, 250, 252, 0.5);
-  --enroll-next-steps-bg: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
-  --enroll-next-steps-text: #e2e8f0;
-  --enroll-next-steps-heading: #f8fafc;
-  --enroll-success-tint-bg: rgba(16, 185, 129, 0.05);
-  --enroll-success-tint-border: rgba(16, 185, 129, 0.1);
-  --enroll-active-badge-bg: rgba(16, 185, 129, 0.1);
-  --enroll-active-badge-border: rgba(16, 185, 129, 0.2);
-
-  /* Donut chart: track (background ring) and fill (progress) — theme-aware */
-  --enroll-donut-track: var(--enroll-card-border);
-  --enroll-donut-fill: var(--enroll-brand);
-  --enroll-donut-text: var(--enroll-brand);
-
-  /* Readiness score ring — set dynamically via JS, fallback to brand */
-  --score-color: var(--enroll-brand);
-
-  /* ── Dashboard Command Center Design System ── */
-  --color-bg-primary: var(--enroll-bg);
-  --color-bg-surface: var(--enroll-card-bg);
-  --color-bg-soft: var(--enroll-soft-bg);
+  /* ── Dashboard Command Center (surfaces / shadows only — no --enroll-* on :root) ── */
+  --color-bg-primary: var(--color-background);
+  --color-bg-surface: var(--color-card);
+  --color-bg-soft: var(--surface-tertiary);
   --color-accent-soft: rgb(79 70 229 / 0.06);
   --color-success-rgb: 34 197 94;
-  --shadow-soft: var(--enroll-elevation-1);
-  --shadow-medium: var(--enroll-elevation-2);
-  --shadow-strong: var(--enroll-elevation-3);
-  --radius-large: var(--enroll-card-radius);
+  --shadow-soft: var(--shadow-card);
+  --shadow-medium: var(--shadow-md);
+  --shadow-strong: var(--shadow-lg);
+  --radius-large: var(--radius-2xl);
   --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ── Transaction Flow (Retirement Command Center) ── */
-  --txn-brand: var(--enroll-brand);
+  --txn-brand: var(--color-primary);
   --txn-brand-soft: rgb(79 70 229 / 0.08);
   --txn-success: var(--color-success);
   --txn-success-soft: var(--color-success-light);
   --txn-warning-soft: var(--color-warning-light);
-  --txn-card-radius: var(--enroll-card-radius);
-  --txn-elevation: var(--enroll-elevation-2);
+  --txn-card-radius: var(--radius-2xl);
+  --txn-elevation: var(--shadow-md);
 
   /* ── Investment Slider ── */
-  --inv-slider-track: var(--enroll-card-border);
-  --inv-slider-fill: var(--enroll-brand);
-  --inv-slider-thumb: var(--enroll-brand);
+  --inv-slider-track: var(--border-default);
+  --inv-slider-fill: var(--color-primary);
+  --inv-slider-thumb: var(--color-primary);
 
   /* HeroUI-inspired design system (v3.heroui.com) */
   --heroui-radius: 0.75rem;        /* 12px - rounded-xl */
@@ -264,4 +446,18 @@
   --heroui-switch-track: var(--color-background-tertiary);
   --heroui-switch-track-checked: var(--color-primary);
   --heroui-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Root layout — body inherits surfaces/text from html[data-theme] + blocks above */
+html[data-theme="light"],
+html[data-theme="dark"] {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--surface-page);
+  color: var(--text-primary);
 }

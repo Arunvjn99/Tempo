@@ -13,8 +13,8 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
     <PageLayout>
       <FadeIn duration="normal" ease="smooth">
         <header className="flex flex-col gap-xs">
-          <h1 className="text-2xl font-bold text-foreground">Investments</h1>
-          <p className="text-sm text-muted-foreground">Your portfolio performance and allocation.</p>
+          <h1 className="text-2xl font-bold text-primary">Investments</h1>
+          <p className="text-sm text-secondary">Your portfolio performance and allocation.</p>
         </header>
       </FadeIn>
 
@@ -41,13 +41,13 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
           { label: "Alpha", value: `+${data.alpha}%`, sub: "Outperformance", up: true },
         ].map((kpi, i) => (
           <SlideUp key={kpi.label} duration="fast" ease="snappy" delay={motionDuration.fast * i}>
-            <div className="rounded-card border border-border bg-card p-lg">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{kpi.label}</p>
-              <p className="mt-sm text-2xl font-bold text-foreground">{kpi.value}</p>
+            <div className="rounded-card border border-default bg-surface-card p-lg">
+              <p className="text-xs font-medium uppercase tracking-wider text-secondary">{kpi.label}</p>
+              <p className="mt-sm text-2xl font-bold text-primary">{kpi.value}</p>
               <p
                 className={cn(
                   "mt-xs flex items-center gap-xs text-xs font-medium",
-                  kpi.up ? "text-success" : "text-muted-foreground",
+                  kpi.up ? "text-success" : "text-secondary",
                 )}
               >
                 {kpi.up ? (
@@ -74,7 +74,7 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
               "shrink-0 rounded-full border px-md py-xs text-xs font-medium transition-colors",
               range === r
                 ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-surface text-muted-foreground hover:bg-muted",
+                : "border-default bg-surface text-secondary hover:bg-primary/5",
             )}
           >
             {r}
@@ -85,7 +85,7 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
       <div className="grid grid-cols-1 gap-lg lg:grid-cols-3">
         <SlideUp duration="fast" ease="snappy" delay={motionDuration.fast * 5}>
           <FormSection title="Allocation">
-            <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
+            <div className="flex h-3 w-full overflow-hidden rounded-full bg-border">
               {data.holdings.map((h, i) => (
                 <div
                   key={h.id}
@@ -99,16 +99,16 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
                 <li key={h.id} className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-sm">
                     <span className={cn("h-2.5 w-2.5 rounded-full", BG[i % BG.length])} aria-hidden />
-                    <span className="text-muted-foreground">{h.name}</span>
+                    <span className="text-secondary">{h.name}</span>
                   </span>
-                  <span className="font-medium text-foreground">{h.allocation}%</span>
+                  <span className="font-medium text-primary">{h.allocation}%</span>
                 </li>
               ))}
             </ul>
             <div className="mt-md flex justify-end">
               <Link
                 to="/transactions/rebalance"
-                className="inline-flex items-center gap-xs text-sm font-medium text-primary hover:underline"
+                className="inline-flex items-center gap-xs text-sm font-medium text-brand hover:underline"
               >
                 Rebalance
                 <ArrowRight className="h-4 w-4" aria-hidden />
@@ -122,7 +122,7 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs text-muted-foreground">
+                  <tr className="border-b border-default text-left text-xs text-secondary">
                     <th className="pb-sm pr-md font-medium">Fund</th>
                     <th className="pb-sm pr-md font-medium text-right">Balance</th>
                     <th className="pb-sm pr-md font-medium text-right">Alloc</th>
@@ -131,15 +131,15 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
                 </thead>
                 <tbody>
                   {data.holdings.map((h) => (
-                    <tr key={h.id} className="border-b border-border/50">
+                    <tr key={h.id} className="border-b border-default/50">
                       <td className="py-sm pr-md">
-                        <p className="font-medium text-foreground">{h.ticker}</p>
-                        <p className="text-xs text-muted-foreground">{h.name}</p>
+                        <p className="font-medium text-primary">{h.ticker}</p>
+                        <p className="text-xs text-secondary">{h.name}</p>
                       </td>
-                      <td className="py-sm pr-md text-right font-medium text-foreground">
+                      <td className="py-sm pr-md text-right font-medium text-primary">
                         {formatCurrency(h.balance)}
                       </td>
-                      <td className="py-sm pr-md text-right text-foreground">{h.allocation}%</td>
+                      <td className="py-sm pr-md text-right text-primary">{h.allocation}%</td>
                       <td
                         className={cn(
                           "py-sm text-right font-medium",
@@ -168,10 +168,10 @@ export function InvestmentsOverview({ range, setRange, ranges, data, formatCurre
             ].map((h) => (
               <div key={h.label} className="space-y-sm">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{h.label}</span>
-                  <span className="font-bold text-foreground">{h.value}%</span>
+                  <span className="text-secondary">{h.label}</span>
+                  <span className="font-bold text-primary">{h.value}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-border">
                   <div
                     className={cn(
                       "h-2 rounded-full transition-all",

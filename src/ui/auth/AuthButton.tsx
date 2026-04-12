@@ -11,7 +11,7 @@ interface AuthButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<AuthButtonVariant, string> = {
   primary:
-    "bg-[var(--color-primary)] text-white hover:opacity-90 active:opacity-80 focus:ring-[var(--color-primary)]",
+    "bg-[var(--color-primary)] text-primary-foreground hover:opacity-90 active:opacity-80 focus:ring-[var(--color-primary)]",
   secondary:
     "border border-[var(--color-border)] bg-transparent text-[var(--color-text)] hover:bg-[var(--color-surface)] focus:ring-[var(--color-primary)]",
   ghost:

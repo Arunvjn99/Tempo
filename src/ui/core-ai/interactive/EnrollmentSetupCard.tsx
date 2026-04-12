@@ -58,7 +58,7 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
             onClick={() => setPlan(opt.value)}
             className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
               plan === opt.value
-                ? "border-primary bg-primary/10 text-primary"
+                ? "border-primary bg-primary/10 text-brand"
                 : "border-[var(--color-border)] text-[var(--color-text)] hover:border-primary/50"
             }`}
           >
@@ -91,7 +91,7 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
             onClick={() => setInvestment(INV_VALUE[label] ?? label)}
             className={`rounded-xl border px-4 py-2 text-left text-sm font-medium transition-colors ${
               investment === (INV_VALUE[label] ?? label)
-                ? "border-primary bg-primary/10 text-primary"
+                ? "border-primary bg-primary/10 text-brand"
                 : "border-[var(--color-border)] text-[var(--color-text)] hover:border-primary/50"
             }`}
           >
@@ -114,7 +114,7 @@ export function EnrollmentSetupCard({ payload, onAction }: EnrollmentSetupCardPr
         variant="custom"
         size="custom"
         onClick={handleContinue}
-        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
       >
         Continue
       </Button>

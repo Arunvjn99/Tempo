@@ -12,7 +12,7 @@ export function Scene3DPlaceholder({
   return (
     <div
       className={cn(
-        "flex min-h-[120px] items-center justify-center rounded-card border border-dashed border-border bg-muted/30 text-sm text-muted-foreground",
+        "flex min-h-[120px] items-center justify-center rounded-card border border-dashed border-default bg-background shadow-sm ring-1 ring-border/40 text-sm text-secondary",
         className,
       )}
     >

@@ -39,16 +39,16 @@ export function WithdrawalStepTaxFees({
         />
         <dl className="mt-lg space-y-sm text-sm">
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Gross amount</dt>
-            <dd className="font-medium text-foreground">{formatCurrency(w.totalAmount)}</dd>
+            <dt className="text-secondary">Gross amount</dt>
+            <dd className="font-medium text-primary">{formatCurrency(w.totalAmount)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Estimated penalty</dt>
-            <dd className="font-medium text-foreground">{formatCurrency(w.penaltyAmount)}</dd>
+            <dt className="text-secondary">Estimated penalty</dt>
+            <dd className="font-medium text-primary">{formatCurrency(w.penaltyAmount)}</dd>
           </div>
-          <div className="flex justify-between border-t border-border pt-sm">
-            <dt className="text-muted-foreground">Estimated net to you</dt>
-            <dd className="text-lg font-bold text-primary">{formatCurrency(w.netAmount, 2)}</dd>
+          <div className="flex justify-between border-t border-default pt-sm">
+            <dt className="text-secondary">Estimated net to you</dt>
+            <dd className="text-lg font-bold text-brand">{formatCurrency(w.netAmount, 2)}</dd>
           </div>
         </dl>
       </FormSection>

@@ -11,8 +11,8 @@ export function PersonalInfoSection({ mock }: { mock: ProfileMockData }) {
             {mock.initials}
           </div>
           <div>
-            <p className="text-lg font-bold text-foreground">{mock.name}</p>
-            <p className="text-sm text-muted-foreground">Employee ID: {mock.employeeId}</p>
+            <p className="text-lg font-bold text-primary">{mock.name}</p>
+            <p className="text-sm text-secondary">Employee ID: {mock.employeeId}</p>
             <span className="mt-xs inline-flex items-center gap-xs rounded-full bg-success/10 px-sm py-0.5 text-xs font-medium text-success">
               <Shield className="h-3 w-3" aria-hidden />
               Verified

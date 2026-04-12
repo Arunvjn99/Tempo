@@ -23,6 +23,8 @@ import {
   fetchProfileByUserId,
   upsertProfileRow,
 } from "@/services/userService";
+import { APPLY_SUPABASE_COMPANY_BRANDING } from "@/core/theme/brandingFlags";
+import { resolveDataBrand } from "@/core/theme/resolveDataBrand";
 
 export type Profile = ProfileRow;
 export type Company = CompanyRow;
@@ -38,6 +40,11 @@ interface UserContextValue {
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
+
+function syncDataBrand(companyName: string | null | undefined) {
+  const slug = companyName?.trim() ? resolveDataBrand(companyName) : "default";
+  document.documentElement.setAttribute("data-brand", slug);
+}
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { user: authUser, session, loading: authLoading } = useAuth();
@@ -70,6 +77,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setEnrollmentStatus(null);
         setBrandingLoading(false);
         setProfileLoading(false);
+        syncDataBrand(null);
         return;
       }
       setProfile(null);
@@ -77,10 +85,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setEnrollmentStatus(null);
       setBrandingLoading(false);
       setProfileLoading(false);
-      if (typeof document?.documentElement?.style?.removeProperty === "function") {
-        document.documentElement.style.removeProperty("--color-primary");
-        document.documentElement.style.removeProperty("--color-secondary");
-      }
+      setCompanyBranding("", undefined);
+      syncDataBrand(null);
       return;
     }
 
@@ -94,6 +100,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setEnrollmentStatus(null);
         setBrandingLoading(false);
         setProfileLoading(false);
+        syncDataBrand(null);
         return;
       }
 
@@ -118,6 +125,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           if (import.meta.env.DEV) console.error("[user-diag] profile fetch failed:", profileError);
           setProfile(null);
           setCompany(null);
+          syncDataBrand(null);
           setBrandingLoading(false);
           setProfileLoading(false);
           return;
@@ -142,6 +150,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             if (import.meta.env.DEV) console.error("[user-diag] profile upsert failed:", upsertError);
             setProfile(null);
             setCompany(null);
+            syncDataBrand(null);
             setBrandingLoading(false);
             setProfileLoading(false);
             return;
@@ -152,6 +161,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             if (import.meta.env.DEV) console.error("[user-diag] profile refetch after upsert failed:", refetchError);
             setProfile(null);
             setCompany(null);
+            syncDataBrand(null);
             setBrandingLoading(false);
             setProfileLoading(false);
             return;
@@ -171,6 +181,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           }
           setCompany(null);
           setCompanyBranding("", undefined);
+          syncDataBrand(null);
           setBrandingLoading(false);
           setProfileLoading(false);
           return;
@@ -189,6 +200,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           }
           setCompany(null);
           setCompanyBranding("", undefined);
+          syncDataBrand(null);
           setBrandingLoading(false);
           setProfileLoading(false);
           return;
@@ -196,14 +208,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
         const companyResolved = companyData;
         setCompany(companyResolved);
+        syncDataBrand(companyResolved.name);
 
-        setCompanyBranding(
-          companyResolved.name,
-          companyResolved.branding_json ?? undefined,
-          companyResolved.logo_url ?? null,
-          companyResolved.primary_color?.trim() || undefined,
-          companyResolved.secondary_color?.trim() || undefined,
-        );
+        if (APPLY_SUPABASE_COMPANY_BRANDING) {
+          setCompanyBranding(
+            companyResolved.name,
+            companyResolved.branding_json ?? undefined,
+            companyResolved.logo_url ?? null,
+            companyResolved.primary_color?.trim() || undefined,
+            companyResolved.secondary_color?.trim() || undefined,
+          );
+        } else {
+          setCompanyBranding("", undefined);
+        }
         setBrandingLoading(false);
         setProfileLoading(false);
       } finally {

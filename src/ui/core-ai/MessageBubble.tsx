@@ -29,7 +29,7 @@ export function MessageBubble({
       <div
         className={`max-w-[85%] sm:max-w-[80%] ${
           isUser
-            ? "rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-white"
+            ? "rounded-2xl rounded-br-md bg-primary px-4 py-2.5 text-primary-foreground"
             : "space-y-1 w-full max-w-[85%] sm:max-w-[80%]"
         }`}
       >

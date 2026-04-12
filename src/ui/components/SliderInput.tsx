@@ -35,8 +35,8 @@ export function SliderInput({
   return (
     <div className={cn("space-y-sm", className)}>
       <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-foreground">{label}</label>
-        <span className="rounded-md bg-primary/10 px-sm py-xs text-sm font-bold text-primary">{display}</span>
+        <label className="text-sm font-medium text-primary">{label}</label>
+        <span className="rounded-md bg-primary/10 px-sm py-xs text-sm font-bold text-brand">{display}</span>
       </div>
 
       <Slider
@@ -50,16 +50,16 @@ export function SliderInput({
 
       {showMinMax && (
         <div className="flex justify-between">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-secondary">
             {formatValue ? formatValue(min) : `${min}${unit}`}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-secondary">
             {formatValue ? formatValue(max) : `${max}${unit}`}
           </span>
         </div>
       )}
 
-      {hint && !error && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && !error && <p className="text-xs text-secondary">{hint}</p>}
       {error && (
         <p className="text-xs text-danger" role="alert">
           {error}

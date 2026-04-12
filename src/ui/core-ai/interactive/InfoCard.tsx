@@ -45,7 +45,7 @@ export function InfoCard({ payload, onAction }: InfoCardProps) {
           variant="custom"
           size="custom"
           onClick={() => onAction(payload.action!)}
-          className="mt-4 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="mt-4 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           {payload.actionLabel}
         </Button>

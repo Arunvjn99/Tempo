@@ -13,7 +13,7 @@ interface AuthLayoutProps {
  */
 export const AuthLayout = ({ left, children }: AuthLayoutProps) => {
   return (
-    <div className="flex min-h-screen w-full flex-col lg:flex-row">
+    <div className="flex min-h-screen w-full flex-col opacity-100 lg:flex-row">
       <div className="hidden lg:flex lg:w-1/2">
         {left ?? <AuthLeftPanel />}
       </div>

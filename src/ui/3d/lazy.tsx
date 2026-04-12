@@ -12,7 +12,7 @@ function HeroSceneFallback({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "min-h-[160px] w-full animate-pulse rounded-2xl border border-border/50 bg-muted/30",
+        "min-h-[160px] w-full animate-pulse rounded-2xl border border-default/50 bg-background shadow-sm ring-1 ring-border/40",
         className,
       )}
       aria-hidden

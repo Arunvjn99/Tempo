@@ -25,7 +25,7 @@ export function InteractiveCard({ title, subtitle, children, className = "" }: I
       initial={reduced ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] backdrop-blur-sm shadow-lg overflow-hidden ${className}`}
+      className={`overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg ${className}`}
     >
       {title && (
         <div className="px-4 py-3 border-b border-[var(--color-border)]">

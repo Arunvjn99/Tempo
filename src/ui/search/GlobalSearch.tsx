@@ -18,7 +18,7 @@ export function GlobalSearch({ className = "" }: GlobalSearchProps) {
       variant="custom"
       size="custom"
       onClick={() => requestOpenGlobalSearch()}
-      className={`flex min-w-0 max-w-sm flex-1 items-center justify-end gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-background-secondary)] hover:text-[var(--color-text-primary)] xl:max-w-md ${className}`.trim()}
+      className={`flex min-w-0 max-w-sm flex-1 items-center justify-end gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-background-secondary)] hover:text-[var(--brand-primary)] xl:max-w-md ${className}`.trim()}
       aria-label="Open command palette"
     >
       <Search className="h-4 w-4 shrink-0 opacity-70" aria-hidden />

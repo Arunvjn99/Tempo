@@ -4,7 +4,4 @@ export { ProfilePageNav } from "./ProfilePageNav";
 export { PersonalInfoSection } from "./PersonalInfoSection";
 export { AccountSection } from "./AccountSection";
 export { DocumentsSection } from "./DocumentsSection";
-export { DashboardHeroSection } from "./DashboardHeroSection";
-export { DashboardLearnMoreSection } from "./DashboardLearnMoreSection";
-export { DashboardAssistanceSection } from "./DashboardAssistanceSection";
 export { InvestmentsOverview } from "./InvestmentsOverview";

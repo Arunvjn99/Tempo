@@ -40,7 +40,7 @@ export function FeesCard({ payload, onAction }: FeesCardProps) {
         variant="custom"
         size="custom"
         onClick={() => onAction({ action: "fees_card_continue" })}
-        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
       >
         Continue
       </Button>

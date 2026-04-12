@@ -57,7 +57,7 @@ export function RolloverStepAllocation({
               }}
             >
               <span className="font-semibold">{a.label}</span>
-              <span className="mt-xs block text-xs font-normal text-muted-foreground">{a.sub}</span>
+              <span className="mt-xs block text-xs font-normal text-secondary">{a.sub}</span>
             </Button>
           ))}
         </div>

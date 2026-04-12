@@ -1,383 +1,383 @@
 /**
  * Dark mode overrides for Plans and Contribution enrollment pages.
- * Loaded when .dark is on document.documentElement.
+ * Applied when the document root has `data-theme="dark"`.
  */
 
 /* ========== Choose Plan (Plans Page) ========== */
 /* Plan rail tiles (PlanRail): ensure shadows and surfaces use theme in dark */
-.dark .plan-selection__page-glow {
+html[data-theme="dark"] .plan-selection__page-glow {
   opacity: 0.06;
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgb(var(--enroll-brand-rgb) / 0.18) 0%,
+    rgb(var(--color-primary-rgb) / 0.18) 0%,
     transparent 70%
   );
 }
 
-.dark .choose-plan__advisory {
+html[data-theme="dark"] .choose-plan__advisory {
   background-color: rgb(var(--color-primary-rgb) / 0.12);
   border: 1px solid rgb(var(--color-primary-rgb) / 0.25);
 }
 
-.dark .choose-plan__footer {
+html[data-theme="dark"] .choose-plan__footer {
   border-top-color: var(--color-border);
   background-color: var(--color-background-secondary);
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
-.dark .choose-plan__footer-save {
+html[data-theme="dark"] .choose-plan__footer-save {
   background-color: var(--color-surface);
   border-color: var(--color-border);
 }
 
-.dark .choose-plan__footer-save:hover:not(:disabled) {
+html[data-theme="dark"] .choose-plan__footer-save:hover:not(:disabled) {
   background-color: var(--color-background-tertiary);
 }
 
 /* Radial Enrollment Stepper - no background/border in dark */
-.dark .enrollment-stepper__ring-track {
+html[data-theme="dark"] .enrollment-stepper__ring-track {
   stroke: var(--color-border);
 }
 
-.dark .enrollment-stepper__title {
+html[data-theme="dark"] .enrollment-stepper__title {
   color: var(--color-text);
 }
 
-.dark .enrollment-stepper__subtitle {
+html[data-theme="dark"] .enrollment-stepper__subtitle {
   color: var(--color-text-secondary);
 }
 
 /* Enrollment Footer - inline CTA section */
-.dark .enrollment-footer {
+html[data-theme="dark"] .enrollment-footer {
   border-top-color: var(--color-border);
 }
 
-.dark .enrollment-footer__back:hover:not(:disabled) {
+html[data-theme="dark"] .enrollment-footer__back:hover:not(:disabled) {
   background-color: var(--color-background-secondary);
 }
 
-.dark .enrollment-footer__save-exit {
+html[data-theme="dark"] .enrollment-footer__save-exit {
   background-color: var(--color-surface);
   border-color: var(--color-border);
   color: var(--color-text);
 }
 
-.dark .enrollment-footer__save-exit:hover:not(:disabled) {
+html[data-theme="dark"] .enrollment-footer__save-exit:hover:not(:disabled) {
   background-color: var(--color-background-secondary);
   border-color: var(--color-primary);
 }
 
-.dark .enrollment-footer__primary:hover:not(:disabled) {
+html[data-theme="dark"] .enrollment-footer__primary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
 }
 
-.dark .enrollment-footer__summary--error {
+html[data-theme="dark"] .enrollment-footer__summary--error {
   color: var(--color-danger);
 }
 
 /* Plan selection card - standard benefit chips */
-.dark .plan-selection-card--standard .plan-selection-card__benefit-chip {
+html[data-theme="dark"] .plan-selection-card--standard .plan-selection-card__benefit-chip {
   background-color: var(--color-background-tertiary);
   color: var(--color-text-secondary);
 }
 
 /* Plan selection card - Best Fit (recommended) benefit chips */
-.dark .plan-selection-card--recommended .plan-selection-card__benefit-chip {
+html[data-theme="dark"] .plan-selection-card--recommended .plan-selection-card__benefit-chip {
   background-color: rgb(var(--color-success-rgb) / 0.2);
   color: var(--color-success);
 }
 
-.dark .plan-selection-card__badge-hint {
+html[data-theme="dark"] .plan-selection-card__badge-hint {
   color: var(--color-success);
 }
 
 /* Profile summary & recommendation cards - use DashboardCard which has dark, but ensure nested text */
-.dark .profile-summary-card,
-.dark .recommendation-insight-card {
+html[data-theme="dark"] .profile-summary-card,
+html[data-theme="dark"] .recommendation-insight-card {
   color: var(--color-text);
 }
 
 /* ========== Contribution Page ========== */
-.dark .contrib-section-card {
+html[data-theme="dark"] .contrib-section-card {
   background: var(--color-surface);
   box-shadow: var(--shadow-md);
 }
 
-.dark .contrib-card {
+html[data-theme="dark"] .contrib-card {
   background: var(--color-surface);
   border-color: var(--color-border);
   box-shadow: var(--shadow-md);
 }
 
-.dark .contrib-card:hover {
+html[data-theme="dark"] .contrib-card:hover {
   box-shadow: var(--shadow-lg);
 }
 
-.dark .contrib-card__title,
-.dark .contrib-match__title,
-.dark .contrib-sources__title {
+html[data-theme="dark"] .contrib-card__title,
+html[data-theme="dark"] .contrib-match__title,
+html[data-theme="dark"] .contrib-sources__title {
   color: var(--color-text);
 }
 
-.dark .contrib-card__description,
-.dark .contrib-auto-increase__helper,
-.dark .contrib-inputs__helper {
+html[data-theme="dark"] .contrib-card__description,
+html[data-theme="dark"] .contrib-auto-increase__helper,
+html[data-theme="dark"] .contrib-inputs__helper {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-presets__label {
+html[data-theme="dark"] .contrib-presets__label {
   color: var(--color-text);
 }
 
-.dark .contrib-preset {
+html[data-theme="dark"] .contrib-preset {
   background: var(--color-background-tertiary);
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-preset:hover {
+html[data-theme="dark"] .contrib-preset:hover {
   background: var(--color-background-secondary);
 }
 
-.dark .contrib-preset--active.contrib-preset--safe {
+html[data-theme="dark"] .contrib-preset--active.contrib-preset--safe {
   background: rgb(var(--color-success-rgb) / 0.2);
   color: var(--color-success);
 }
 
-.dark .contrib-preset--active.contrib-preset--aggressive {
+html[data-theme="dark"] .contrib-preset--active.contrib-preset--aggressive {
   background: rgb(var(--color-warning-rgb) / 0.2);
   color: var(--color-warning);
 }
 
-.dark .contrib-auto-increase-inputs {
+html[data-theme="dark"] .contrib-auto-increase-inputs {
   border-top-color: var(--color-border);
 }
 
-.dark .contrib-auto-increase__label,
-.dark .contrib-inputs__label {
+html[data-theme="dark"] .contrib-auto-increase__label,
+html[data-theme="dark"] .contrib-inputs__label {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-input {
+html[data-theme="dark"] .contrib-input {
   background: var(--color-background);
   border-color: var(--color-border);
   color: var(--color-text);
 }
 
-.dark .contrib-input:focus {
+html[data-theme="dark"] .contrib-input:focus {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgb(var(--color-primary-rgb) / 0.25);
 }
 
-.dark .contrib-input--primary,
-.dark .contrib-input__suffix,
-.dark .contrib-input__prefix,
-.dark .contrib-input__inline-suffix {
+html[data-theme="dark"] .contrib-input--primary,
+html[data-theme="dark"] .contrib-input__suffix,
+html[data-theme="dark"] .contrib-input__prefix,
+html[data-theme="dark"] .contrib-input__inline-suffix {
   color: var(--color-text);
 }
 
-.dark .contrib-slider__input {
+html[data-theme="dark"] .contrib-slider__input {
   background: linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) var(--slider-pct, 0%), var(--color-border) var(--slider-pct, 0%), var(--color-border) 100%);
 }
 
-.dark .contrib-slider__input::-webkit-slider-thumb {
+html[data-theme="dark"] .contrib-slider__input::-webkit-slider-thumb {
   background: var(--color-primary);
   border-color: var(--color-surface);
 }
 
-.dark .contrib-slider__input::-moz-range-thumb {
+html[data-theme="dark"] .contrib-slider__input::-moz-range-thumb {
   background: var(--color-primary);
   border-color: var(--color-surface);
 }
 
-.dark .contrib-slider__labels,
-.dark .contrib-slider__match {
+html[data-theme="dark"] .contrib-slider__labels,
+html[data-theme="dark"] .contrib-slider__match {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-slider__match {
+html[data-theme="dark"] .contrib-slider__match {
   color: var(--color-primary);
 }
 
-.dark .contrib-pill {
+html[data-theme="dark"] .contrib-pill {
   background: var(--color-background-tertiary);
   border-color: var(--color-border);
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-pill:hover {
+html[data-theme="dark"] .contrib-pill:hover {
   background: var(--color-background-secondary);
   border-color: var(--color-border);
 }
 
-.dark .contrib-pill--active {
+html[data-theme="dark"] .contrib-pill--active {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-text-inverse);
 }
 
-.dark .contrib-toggle__slider {
+html[data-theme="dark"] .contrib-toggle__slider {
   background: var(--color-background-tertiary);
 }
 
-.dark .contrib-toggle__slider::before {
+html[data-theme="dark"] .contrib-toggle__slider::before {
   background: var(--color-text);
 }
 
-.dark .contrib-sources {
+html[data-theme="dark"] .contrib-sources {
   border-top-color: var(--color-border);
 }
 
-.dark .contrib-sources__header-right .contrib-sources__toggle-label {
+html[data-theme="dark"] .contrib-sources__header-right .contrib-sources__toggle-label {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-segmented {
+html[data-theme="dark"] .contrib-segmented {
   border-color: var(--color-border);
 }
 
-.dark .contrib-segmented__btn {
+html[data-theme="dark"] .contrib-segmented__btn {
   background: var(--color-background);
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-segmented__btn:hover {
+html[data-theme="dark"] .contrib-segmented__btn:hover {
   background: var(--color-background-tertiary);
 }
 
-.dark .contrib-segmented__btn--active {
+html[data-theme="dark"] .contrib-segmented__btn--active {
   background: var(--color-background-tertiary);
   color: var(--color-text);
 }
 
-.dark .contrib-sources__checkbox-label {
+html[data-theme="dark"] .contrib-sources__checkbox-label {
   color: var(--color-text);
 }
 
-.dark .contrib-sources__min-max {
+html[data-theme="dark"] .contrib-sources__min-max {
   color: var(--color-text-tertiary);
 }
 
-.dark .contrib-sources__input {
+html[data-theme="dark"] .contrib-sources__input {
   background: var(--color-background);
   border-color: var(--color-border);
   color: var(--color-text);
 }
 
-.dark .contrib-sources__input:disabled {
+html[data-theme="dark"] .contrib-sources__input:disabled {
   background: var(--color-background-tertiary);
 }
 
-.dark .contrib-sources__suffix {
+html[data-theme="dark"] .contrib-sources__suffix {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-sources__error {
+html[data-theme="dark"] .contrib-sources__error {
   color: var(--color-error);
 }
 
 /* Paycheck impact panel - adjust for dark */
-.dark .contrib-paycheck-panel {
+html[data-theme="dark"] .contrib-paycheck-panel {
   background: rgb(var(--color-primary-rgb) / 0.12);
   border: 1px solid rgb(var(--color-primary-rgb) / 0.25);
 }
 
-.dark .contrib-paycheck-panel__label {
+html[data-theme="dark"] .contrib-paycheck-panel__label {
   color: var(--color-primary);
 }
 
-.dark .contrib-paycheck-panel__value {
+html[data-theme="dark"] .contrib-paycheck-panel__value {
   color: var(--color-text);
 }
 
-.dark .contrib-paycheck-panel__helper {
+html[data-theme="dark"] .contrib-paycheck-panel__helper {
   color: var(--color-text-secondary);
   opacity: 0.9;
 }
 
 /* Chart */
-.dark .contrib-chart-assumptions {
+html[data-theme="dark"] .contrib-chart-assumptions {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-chart-empty {
+html[data-theme="dark"] .contrib-chart-empty {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-chart text {
+html[data-theme="dark"] .contrib-chart text {
   fill: var(--color-text-secondary);
 }
 
-.dark .contrib-chart-legend {
+html[data-theme="dark"] .contrib-chart-legend {
   color: var(--color-text);
 }
 
-.dark .contrib-chart-legend__item--baseline::before {
+html[data-theme="dark"] .contrib-chart-legend__item--baseline::before {
   background: var(--color-primary);
 }
 
-.dark .contrib-chart-legend__item--auto::before {
+html[data-theme="dark"] .contrib-chart-legend__item--auto::before {
   border-bottom-color: var(--color-primary);
 }
 
 /* Footer */
-.dark .contrib-footer {
+html[data-theme="dark"] .contrib-footer {
   background: var(--color-background-secondary);
   border-top-color: var(--color-border);
   box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
-.dark .contrib-footer__label {
+html[data-theme="dark"] .contrib-footer__label {
   color: var(--color-text-secondary);
 }
 
-.dark .contrib-footer__value {
+html[data-theme="dark"] .contrib-footer__value {
   color: var(--color-text);
 }
 
-.dark .contrib-footer__value--total {
+html[data-theme="dark"] .contrib-footer__value--total {
   color: var(--color-primary);
 }
 
-.dark .contrib-footer__btn--secondary {
+html[data-theme="dark"] .contrib-footer__btn--secondary {
   color: var(--color-text-secondary);
   border-color: var(--color-border);
 }
 
-.dark .contrib-footer__btn--secondary:hover:not(:disabled) {
+html[data-theme="dark"] .contrib-footer__btn--secondary:hover:not(:disabled) {
   background: var(--color-background-tertiary);
   color: var(--color-text);
   border-color: var(--color-border);
 }
 
-.dark .contrib-footer__btn--primary {
+html[data-theme="dark"] .contrib-footer__btn--primary {
   background: var(--color-primary);
   color: var(--color-text-inverse);
 }
 
-.dark .contrib-footer__btn--primary:hover:not(:disabled) {
+html[data-theme="dark"] .contrib-footer__btn--primary:hover:not(:disabled) {
   background: var(--color-primary-hover);
 }
 
 /* ========== Investments Page ========== */
-.dark .fund-allocation-row {
+html[data-theme="dark"] .fund-allocation-row {
   background-color: var(--color-background-tertiary);
   border-color: var(--color-border);
 }
 
-.dark .fund-allocation-row__name {
+html[data-theme="dark"] .fund-allocation-row__name {
   color: var(--color-text);
 }
 
-.dark .fund-allocation-row__ticker-pill {
+html[data-theme="dark"] .fund-allocation-row__ticker-pill {
   background-color: var(--color-background-secondary);
   color: var(--color-text-secondary);
 }
 
-.dark .fund-allocation-row__detail-inline {
+html[data-theme="dark"] .fund-allocation-row__detail-inline {
   color: var(--color-text-secondary);
 }
 
-.dark .fund-allocation-row__slider {
+html[data-theme="dark"] .fund-allocation-row__slider {
   background: linear-gradient(
     to right,
     var(--color-primary) 0%,
@@ -387,224 +387,208 @@
   );
 }
 
-.dark .fund-allocation-row__slider::-webkit-slider-thumb {
+html[data-theme="dark"] .fund-allocation-row__slider::-webkit-slider-thumb {
   background: var(--color-primary);
   border-color: var(--color-background-tertiary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-.dark .fund-allocation-row__slider::-moz-range-thumb {
+html[data-theme="dark"] .fund-allocation-row__slider::-moz-range-thumb {
   background: var(--color-primary);
   border-color: var(--color-background-tertiary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-.dark .fund-allocation-row__slider:disabled {
+html[data-theme="dark"] .fund-allocation-row__slider:disabled {
   opacity: 0.5;
 }
 
-.dark .fund-allocation-row__remove {
+html[data-theme="dark"] .fund-allocation-row__remove {
   color: var(--color-danger);
 }
 
-.dark .fund-allocation-row__remove:hover {
+html[data-theme="dark"] .fund-allocation-row__remove:hover {
   background-color: rgb(var(--color-danger-rgb) / 0.15);
 }
 
-.dark .fund-allocation-row .input,
-.dark .fund-allocation-row .input-wrapper input {
+html[data-theme="dark"] .fund-allocation-row .input,
+html[data-theme="dark"] .fund-allocation-row .input-wrapper input {
   background-color: var(--color-background);
   border-color: var(--color-border);
   color: var(--color-text);
 }
 
-.dark .fund-allocation-row .input:focus {
+html[data-theme="dark"] .fund-allocation-row .input:focus {
   border-color: var(--color-primary);
 }
 
 /* Source Accordion */
-.dark .source-accordion {
+html[data-theme="dark"] .source-accordion {
   border-color: var(--color-border);
 }
 
-.dark .source-accordion__trigger {
+html[data-theme="dark"] .source-accordion__trigger {
   background-color: var(--color-background-secondary);
   color: var(--color-text);
 }
 
-.dark .source-accordion__trigger:hover {
+html[data-theme="dark"] .source-accordion__trigger:hover {
   background-color: var(--color-background-tertiary);
 }
 
-.dark .source-accordion__title,
-.dark .source-accordion__total {
+html[data-theme="dark"] .source-accordion__title,
+html[data-theme="dark"] .source-accordion__total {
   color: var(--color-text);
 }
 
-.dark .source-accordion__meta,
-.dark .source-accordion__chevron {
+html[data-theme="dark"] .source-accordion__meta,
+html[data-theme="dark"] .source-accordion__chevron {
   color: var(--color-text-secondary);
 }
 
-.dark .source-accordion__description {
+html[data-theme="dark"] .source-accordion__description {
   color: var(--color-text-secondary);
 }
 
-.dark .source-accordion__add-btn {
+html[data-theme="dark"] .source-accordion__add-btn {
   border-color: var(--color-border);
   color: var(--color-text-secondary);
 }
 
-.dark .source-accordion__add-btn:hover {
+html[data-theme="dark"] .source-accordion__add-btn:hover {
   background-color: var(--color-background-tertiary);
   border-color: var(--color-primary);
   color: var(--color-text);
 }
 
-.dark .source-accordion__add-btn--primary {
+html[data-theme="dark"] .source-accordion__add-btn--primary {
   background: var(--color-primary);
   color: var(--color-text-inverse);
 }
 
-.dark .source-accordion__add-btn--primary:hover {
+html[data-theme="dark"] .source-accordion__add-btn--primary:hover {
   background: var(--color-primary-hover);
 }
 
-.dark .source-accordion__success {
+html[data-theme="dark"] .source-accordion__success {
   color: var(--color-text);
 }
 
-.dark .source-accordion__success-icon {
+html[data-theme="dark"] .source-accordion__success-icon {
   color: var(--color-success);
 }
 
-.dark .source-accordion__error {
+html[data-theme="dark"] .source-accordion__error {
   color: var(--color-danger);
 }
 
 /* Allocation Summary */
-.dark .allocation-summary__title {
+html[data-theme="dark"] .allocation-summary__title {
   color: var(--color-text);
 }
 
-.dark .allocation-summary__subtitle {
+html[data-theme="dark"] .allocation-summary__subtitle {
   color: var(--color-text-secondary);
 }
 
-.dark .allocation-summary__metric-label {
+html[data-theme="dark"] .allocation-summary__metric-label {
   color: var(--color-text-secondary);
 }
 
-.dark .allocation-summary__metric-value {
+html[data-theme="dark"] .allocation-summary__metric-value {
   color: var(--color-text);
 }
 
-.dark .allocation-summary__validation {
+html[data-theme="dark"] .allocation-summary__validation {
   background-color: var(--color-background-secondary);
 }
 
-.dark .allocation-summary__total-label {
+html[data-theme="dark"] .allocation-summary__total-label {
   color: var(--color-text);
 }
 
-.dark .allocation-summary__total-value--valid {
+html[data-theme="dark"] .allocation-summary__total-value--valid {
   color: var(--color-success);
 }
 
-.dark .allocation-summary__total-value--invalid {
+html[data-theme="dark"] .allocation-summary__total-value--invalid {
   color: var(--color-danger);
 }
 
-.dark .allocation-summary__error {
+html[data-theme="dark"] .allocation-summary__error {
   color: var(--color-danger);
 }
 
-.dark .allocation-summary__risk-labels {
+html[data-theme="dark"] .allocation-summary__risk-labels {
   color: var(--color-text-secondary);
 }
 
-.dark .allocation-summary__risk-value {
+html[data-theme="dark"] .allocation-summary__risk-value {
   color: var(--color-text-secondary);
 }
 
-.dark .allocation-summary__risk-marker {
+html[data-theme="dark"] .allocation-summary__risk-marker {
   background: var(--color-text);
   border-color: var(--color-background);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-.dark .advisor-help-card {
+html[data-theme="dark"] .advisor-help-card {
   background: linear-gradient(135deg, rgb(var(--color-primary-rgb) / 0.15) 0%, rgb(var(--color-primary-rgb) / 0.1) 100%);
   border-color: rgb(var(--color-primary-rgb) / 0.25);
 }
 
-.dark .advisor-help-card__icon {
+html[data-theme="dark"] .advisor-help-card__icon {
   color: var(--color-primary);
 }
 
-.dark .advisor-help-card__title {
+html[data-theme="dark"] .advisor-help-card__title {
   color: var(--color-text);
 }
 
-.dark .advisor-help-card__text {
+html[data-theme="dark"] .advisor-help-card__text {
   color: var(--color-text-secondary);
 }
 
-.dark .advisor-help-card__btn {
+html[data-theme="dark"] .advisor-help-card__btn {
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-active) 100%);
   color: var(--color-text-inverse);
 }
 
-.dark .advisor-help-card__btn:hover {
+html[data-theme="dark"] .advisor-help-card__btn:hover {
   opacity: 0.95;
 }
 
-.dark .allocation-chart__center-value {
+html[data-theme="dark"] .allocation-chart__center-value {
   color: var(--color-success);
 }
 
-.dark .allocation-summary__metric-value--success {
+html[data-theme="dark"] .allocation-summary__metric-value--success {
   color: var(--color-success);
 }
 
 /* Manual Builder */
-.dark .manual-builder__edit-toggle-text {
+html[data-theme="dark"] .manual-builder__edit-toggle-text {
   color: var(--color-text);
 }
 
-.dark .manual-builder__edit-toggle-hint {
+html[data-theme="dark"] .manual-builder__edit-toggle-hint {
   color: var(--color-text-secondary);
 }
 
-.dark .manual-builder__allocation-title {
+html[data-theme="dark"] .manual-builder__allocation-title {
   color: var(--color-text);
 }
 
 /* Allocation Chart */
-.dark .allocation-chart__background {
+html[data-theme="dark"] .allocation-chart__background {
   stroke: var(--color-border);
 }
 
 /* Investments Layout */
-.dark .investments-footer {
+html[data-theme="dark"] .investments-footer {
   background-color: var(--color-background);
   border-top-color: var(--color-border);
 }
 
-/* ========== Review Page (Step 4/4) ========== */
-.dark {
-  --enroll-plan-overview-bg: linear-gradient(134deg, rgb(30 58 95 / 0.4) 0%, rgb(15 23 42 / 0.5) 100%);
-  --enroll-risk-badge-bg: rgb(var(--enroll-brand-rgb) / 0.15);
-  --enroll-risk-badge-border: rgb(var(--enroll-brand-rgb) / 0.3);
-  --enroll-table-header-bg: var(--color-background-tertiary);
-  --enroll-next-steps-bg: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
-  --enroll-next-steps-text: #e2e8f0;
-  --enroll-next-steps-heading: #f8fafc;
-  --enroll-success-tint-bg: rgb(var(--color-success-rgb) / 0.08);
-  --enroll-success-tint-border: rgb(var(--color-success-rgb) / 0.2);
-  --enroll-active-badge-bg: rgb(var(--color-success-rgb) / 0.15);
-  --enroll-active-badge-border: rgb(var(--color-success-rgb) / 0.25);
-  --enroll-donut-track: var(--color-border);
-  --enroll-donut-fill: var(--color-primary);
-  --enroll-donut-text: var(--color-primary);
-}
+/* Review page dark enroll tokens live in `features/enrollment/theme/enrollment-tokens.css` under `.enrollment-theme` */

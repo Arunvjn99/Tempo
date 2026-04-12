@@ -18,7 +18,7 @@ export function FloatingObjects({ className, variant = "default" }: FloatingObje
   if (reduce) {
     return (
       <div
-        className={cn("pointer-events-none absolute inset-0 overflow-hidden bg-muted/25", className)}
+        className={cn("pointer-events-none absolute inset-0 overflow-hidden bg-background ring-1 ring-border/25", className)}
         aria-hidden
       />
     );
@@ -43,7 +43,7 @@ export function FloatingObjects({ className, variant = "default" }: FloatingObje
       />
       <div
         className={cn(
-          "absolute animate-float rounded-2xl bg-muted/60 shadow-lg ring-1 ring-border/50 [animation-delay:0.5s] [transform-style:preserve-3d]",
+          "absolute animate-float rounded-2xl bg-surface-card shadow-sm ring-1 ring-border/60 shadow-lg ring-1 ring-border/50 [animation-delay:0.5s] [transform-style:preserve-3d]",
           isCompact ? "bottom-1 left-1/2 size-10 -translate-x-1/2" : "bottom-[14%] left-[20%] h-16 w-20 md:h-20 md:w-24",
         )}
         style={{ animationDuration: "7s" }}

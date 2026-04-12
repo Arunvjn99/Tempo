@@ -28,16 +28,16 @@ export function ContributionSavingsLeftPanel({
   proTipAdd,
 }: ContributionSavingsLeftPanelProps) {
   return (
-    <div className="space-y-6 rounded-2xl border border-border bg-card p-6 shadow-lg">
-      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-        <p className="text-center text-[0.75rem] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="card-standard space-y-6 p-6">
+      <div className="rounded-xl border border-primary/20 bg-primary/[0.06] p-4 dark:border-primary/30 dark:bg-primary/10">
+        <p className="text-center text-[0.75rem] font-semibold uppercase tracking-wider text-secondary">
           Monthly Paycheck
         </p>
-        <p className="mt-1 text-center text-[1.75rem] font-black text-foreground">{formatCurrency(monthlyPaycheck)}</p>
+        <p className="mt-1 text-center text-[1.75rem] font-black text-primary">{formatCurrency(monthlyPaycheck)}</p>
       </div>
 
       <div className="text-center">
-        <p className="mb-3 text-[0.75rem] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="mb-3 text-[0.75rem] font-semibold uppercase tracking-wider text-secondary">
           Your Contribution
         </p>
         <div className="flex items-center justify-center gap-4">
@@ -49,9 +49,9 @@ export function ContributionSavingsLeftPanel({
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 transition-colors hover:bg-primary/20"
             aria-label="Decrease percentage"
           >
-            <Minus className="h-5 w-5 text-primary" aria-hidden />
+            <Minus className="h-5 w-5 text-brand" aria-hidden />
           </Button>
-          <span className="text-[4rem] font-black leading-none text-primary" style={{ letterSpacing: "-0.02em" }}>
+          <span className="text-[4rem] font-black leading-none text-brand" style={{ letterSpacing: "-0.02em" }}>
             {contributionPercent}%
           </span>
           <Button
@@ -62,14 +62,14 @@ export function ContributionSavingsLeftPanel({
             className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/30 bg-primary/10 transition-colors hover:bg-primary/20"
             aria-label="Increase percentage"
           >
-            <Plus className="h-5 w-5 text-primary" aria-hidden />
+            <Plus className="h-5 w-5 text-brand" aria-hidden />
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="mb-1.5 block text-[0.7rem] font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className="mb-1.5 block text-[0.7rem] font-semibold uppercase tracking-wider text-secondary">
             Percentage
           </label>
           <input
@@ -79,24 +79,24 @@ export function ContributionSavingsLeftPanel({
             step={0.5}
             value={percentInput}
             onChange={(e) => onPercentInputChange(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-default bg-surface-section px-3 py-2.5 text-sm font-medium text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-[0.7rem] font-semibold uppercase tracking-wider text-muted-foreground">
+          <label className="mb-1.5 block text-[0.7rem] font-semibold uppercase tracking-wider text-secondary">
             Annual ($)
           </label>
           <input
             type="number"
             value={dollarInput}
             onChange={(e) => onDollarInputChange(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-full rounded-xl border border-default bg-surface-section px-3 py-2.5 text-sm font-medium text-primary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>
       </div>
 
       <div>
-        <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wider text-muted-foreground">Quick Select</p>
+        <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wider text-secondary">Quick Select</p>
         <div className="flex flex-wrap gap-2">
           {QUICK_OPTIONS.map((q) => (
             <Button
@@ -108,8 +108,8 @@ export function ContributionSavingsLeftPanel({
               className={cn(
                 "rounded-lg px-2.5 py-1.5 text-[0.75rem] font-semibold transition-colors",
                 contributionPercent === q.value
-                  ? "border border-primary bg-primary/10 text-primary"
-                  : "border border-border bg-muted text-foreground hover:border-primary/40 hover:bg-primary/5",
+                  ? "border border-primary bg-primary/10 text-brand"
+                  : "border border-default bg-surface-soft text-primary hover:border-primary/40 hover:bg-primary/5",
               )}
             >
               {q.icon ? `${q.icon} ` : ""}
@@ -120,12 +120,12 @@ export function ContributionSavingsLeftPanel({
       </div>
 
       <div>
-        <div className="mb-1 flex justify-between text-[0.7rem] text-muted-foreground">
+        <div className="mb-1 flex justify-between text-[0.7rem] text-secondary">
           <span>1%</span>
-          <span className="font-medium text-foreground">{contributionPercent}%</span>
+          <span className="font-medium text-primary">{contributionPercent}%</span>
           <span>25%</span>
         </div>
-        <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-border">
           <div
             className="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-200"
             style={{ width: `${((contributionPercent - 1) / 24) * 100}%` }}
@@ -143,11 +143,11 @@ export function ContributionSavingsLeftPanel({
         />
       </div>
 
-      <div className="rounded-xl border border-purple-200/40 bg-gradient-to-br from-purple-50/60 to-purple-100/20 p-3.5 dark:border-purple-800/30 dark:from-purple-950/20 dark:to-purple-900/10">
+      <div className="rounded-xl border border-default/50 bg-surface-soft p-3.5 dark:border-default/40">
         <div className="flex items-start gap-2.5">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-purple-500" aria-hidden />
-          <p className="text-[0.8rem] text-muted-foreground">
-            <span className="font-semibold text-foreground">Pro Tip: </span>
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-accent)]" aria-hidden />
+          <p className="text-[0.8rem] text-secondary">
+            <span className="font-semibold text-primary">Pro Tip: </span>
             Increasing just 1% could add ~{formatCurrency(proTipAdd * 12)} more per year to your retirement.
           </p>
         </div>

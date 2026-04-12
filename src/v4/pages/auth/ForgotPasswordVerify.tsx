@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuthLayout } from "@/ui/auth/AuthLayout";
 import { AuthFormShell, AuthOTPInput, AuthButton } from "@/ui/auth";
-import { Logo } from "@/ui/brand/Logo";
+import { CoreLogo } from "@/components/ui/CoreLogo";
 
 export const ForgotPasswordVerify = () => {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ export const ForgotPasswordVerify = () => {
     navigate("/");
   };
 
-  const headerSlot = <Logo className="h-10 w-auto" />;
+  const headerSlot = <CoreLogo />;
 
   const bodySlot = (
     <>

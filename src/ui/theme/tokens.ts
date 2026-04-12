@@ -1,6 +1,6 @@
 /**
  * Design system — semantic token names (map to CSS variables from core styles).
- * Prefer Tailwind semantic classes (bg-card, text-foreground) in components; use these for programmatic access.
+ * Prefer Tailwind semantic classes (bg-surface-card, text-foreground) in components; use these for programmatic access.
  */
 export const cssVar = {
   background: "var(--color-background)",

@@ -43,7 +43,7 @@ export function MessageBubbleContentCard({
               variant="custom"
               size="custom"
               onClick={() => onAction(primaryAction.route)}
-              className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary-hover transition-colors"
             >
               {primaryAction.label}
             </Button>

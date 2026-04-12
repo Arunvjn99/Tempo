@@ -18,7 +18,7 @@ export const AdvisorSection: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {ADVISORS.map((advisor) => (
-            <div key={advisor.id} className="flex flex-col items-center text-center p-8 rounded-3xl bg-slate-50 hover:bg-brand-50/50 transition-colors border border-transparent hover:border-brand-100 group">
+            <div key={advisor.id} className="flex flex-col items-center text-center p-8 rounded-3xl bg-surface-card border border-border hover:bg-brand-50/50 transition-colors hover:border-brand-100 group">
               <div className="relative mb-6">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                   <img src={advisor.image} alt={advisor.name} className="w-full h-full object-cover" />

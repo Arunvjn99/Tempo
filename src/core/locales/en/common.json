@@ -436,7 +436,8 @@
     "searchCompactAria": "Open search",
     "logoAria": "Go to dashboard",
     "companyLogoAlt": "Company logo",
-    "profileAria": "Open profile"
+    "profileAria": "Open profile",
+    "startEnrollmentButton": "Start Enrollment"
   },
   "dashboardOverview": {
     "pageTitle": "Overview",

@@ -7,7 +7,7 @@ import { CommandSearch } from "./CommandSearch";
 export function GlobalSearchHost() {
   const { open, closeSearch, initialQuery } = useGlobalSearch();
 
-  if (!open) return null;
-
-  return <CommandSearch initialQuery={initialQuery} onClose={closeSearch} />;
+  return open ? (
+    <CommandSearch open={open} initialQuery={initialQuery} onClose={closeSearch} />
+  ) : null;
 }

@@ -14,7 +14,7 @@ export function EmptyState({ query, listLabelId }: EmptyStateProps) {
 
   return (
     <div className="ai-command-empty" role="status" aria-labelledby={listLabelId}>
-      <div className="relative mx-auto mb-3 h-16 max-w-[200px] overflow-hidden rounded-xl border border-border/50 bg-muted/20">
+      <div className="relative mx-auto mb-3 h-16 max-w-[200px] overflow-hidden rounded-xl border border-default/50 bg-background ring-1 ring-border/30">
         <LazyFloatingObjects variant="compact" className="opacity-90" />
       </div>
       <span className="ai-command-empty__icon-wrap" aria-hidden>

@@ -72,20 +72,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const initSession = async () => {
-      if (import.meta.env.DEV) console.log("[auth-diag] getSession: requesting…");
-      const { data, error } = await getSession();
-      if (import.meta.env.DEV) console.log("[auth-diag] getSession:", { session: data.session, error });
-      if (cancelled) return;
-      if (error) {
-        if (import.meta.env.DEV) console.error("[auth-diag] getSession error:", error);
-        setSession(null);
-        setUser(null);
-        setLoading(false);
-        return;
+      try {
+        if (import.meta.env.DEV) console.log("[auth-diag] getSession: requesting…");
+        const { data, error } = await getSession();
+        if (import.meta.env.DEV) console.log("[auth-diag] getSession:", { session: data.session, error });
+        if (cancelled) return;
+        if (error) {
+          if (import.meta.env.DEV) console.error("[auth-diag] getSession error:", error);
+          setSession(null);
+          setUser(null);
+          return;
+        }
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      } catch (e) {
+        if (!cancelled) {
+          setSession(null);
+          setUser(null);
+        }
+        if (import.meta.env.DEV) console.error("[auth-diag] getSession exception:", e);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      setLoading(false);
     };
 
     initSession();

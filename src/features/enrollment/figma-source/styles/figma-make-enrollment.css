@@ -1,0 +1,66 @@
+/**
+ * Scoped extras for Figma Make enrollment (range inputs).
+ * Track / thumb use theme tokens so controls match light + dark.
+ * Prefixed with `.enrollment-theme` — must match `EnrollmentThemeScope` on `/enrollment`.
+ */
+
+.enrollment-theme .enrollment-figma-flow input[type="range"] {
+  accent-color: var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--surface-section);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--surface-card);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-moz-range-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--surface-section);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--surface-card);
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+/* WCAG: visible focus (matches focus:outline-none + ring-2 ring-[var(--color-primary)]; no layout change) */
+.enrollment-theme .enrollment-figma-flow a[href]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow button:focus-visible:not(:disabled) {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="range"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.enrollment-theme .enrollment-figma-flow input[type="radio"]:focus-visible,
+.enrollment-theme .enrollment-figma-flow input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-primary);
+}

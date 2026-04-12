@@ -98,7 +98,7 @@ export function ReviewCard({ payload, onAction }: ReviewCardProps) {
         variant="custom"
         size="custom"
         onClick={() => onAction({ action: "SUBMIT_LOAN" })}
-        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+        className="mt-5 w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
       >
         Submit loan
       </Button>

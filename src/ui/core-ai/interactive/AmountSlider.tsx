@@ -84,7 +84,7 @@ export function AmountSlider({
             initial={reduced ? false : { scale: 1.08 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.15 }}
-            className="text-sm font-semibold tabular-nums text-primary"
+            className="text-sm font-semibold tabular-nums text-brand"
           >
             {display}
           </motion.span>

@@ -14,44 +14,41 @@ import {
 export function PreEnrollmentLearningSection() {
   return (
     <section className="relative z-10">
-      <div className="bg-gradient-to-r from-[#2F6BFF] to-[#6FA8FF] rounded-[40px] p-8 md:p-12 text-white shadow-2xl shadow-blue-200/50 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_50%)] pointer-events-none" />
-
+      <div className="dashboard-marketing-gradient relative overflow-hidden bg-gradient-to-r from-[var(--color-primary)] to-[color-mix(in_srgb,var(--color-primary)_65%,var(--surface-card))] p-8 text-[var(--primary-foreground)] group md:p-12">
         <div className="relative z-10 max-w-3xl text-left flex flex-col items-start gap-8">
           <div className="flex flex-col gap-6 items-start">
-            <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20 w-fit">
-              <span className="text-[11px] font-bold text-white uppercase tracking-[0.15em]">Step 1</span>
+            <div className="inline-flex w-fit items-center rounded-full border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--text-primary)]">
+                Step 1
+              </span>
             </div>
 
             <div className="flex flex-col gap-3">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-[1.1]">
+              <h2 className="text-3xl font-bold tracking-tight leading-[1.1] text-[var(--primary-foreground)] md:text-4xl">
                 Learn how your <br />
                 retirement plan works
               </h2>
-              <p className="text-base text-blue-50/80 max-w-md font-medium leading-relaxed">
+              <p className="max-w-md text-base font-medium leading-relaxed text-[var(--primary-foreground)]">
                 Understand contributions, employer match, and how your savings grow over time.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-6 pt-4">
+            <div className="flex flex-col gap-6 pt-4 sm:flex-row">
               {[
                 "What is a 401(k) and how it works",
                 "How much you should contribute",
                 "How employer matching impacts your savings",
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 group/item">
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center border border-white/30 group-hover/item:bg-white/30 transition-colors shrink-0">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                <div key={i} className="group/item flex items-center gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--surface-card)] transition-colors">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[var(--text-primary)]" />
                   </div>
-                  <span className="text-sm font-semibold text-white/90">{item}</span>
+                  <span className="text-sm font-semibold text-[var(--primary-foreground)]">{item}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-[80px]" />
-        <div className="absolute -top-20 -left-20 w-48 h-48 bg-blue-400/20 rounded-full blur-[60px]" />
       </div>
     </section>
   );
@@ -60,23 +57,19 @@ export function PreEnrollmentLearningSection() {
 /** Bento feature grid — RetireWise reference. */
 export function PreEnrollmentBentoSection() {
   return (
-    <section className="grid md:grid-cols-2 gap-8 relative z-10">
+    <section className="relative z-10 grid gap-8 md:grid-cols-2">
       <motion.div
         whileHover={{ y: -8 }}
-        className="bg-[#0a0a0a] rounded-[32px] border border-white/5 shadow-2xl transition-all flex flex-col group overflow-hidden"
+        className="group flex flex-col overflow-hidden rounded-[32px] border border-[var(--border-default)] bg-[var(--surface-section)] transition-all"
       >
-        <div className="aspect-[16/9] relative bg-[#0d0d0d] flex items-center justify-center overflow-hidden border-b border-white/5">
-          <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.1),transparent_70%)]" />
-
+        <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden border-b border-[var(--border-default)] bg-[var(--surface-soft)]">
           <div className="relative z-10 flex items-center justify-center">
-            <div className="w-32 h-32 bg-blue-600/20 rounded-full blur-3xl absolute" />
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="w-20 h-20 bg-blue-500/30 rounded-full flex items-center justify-center border border-white/20 shadow-[0_0_50px_rgba(59,130,246,0.4)] backdrop-blur-sm"
+              className="flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--surface-card)]"
             >
-              <Sparkles className="w-10 h-10 text-white" />
+              <Sparkles className="h-10 w-10 text-[var(--text-primary)]" />
             </motion.div>
 
             {[BookOpen, Calculator, TrendingUp, ShieldCheck].map((Icon, i) => (
@@ -84,29 +77,32 @@ export function PreEnrollmentBentoSection() {
                 key={i}
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute w-full h-full flex items-center justify-center"
+                className="absolute flex h-full w-full items-center justify-center"
                 style={{ rotate: `${i * 90}deg` }}
               >
                 <div
-                  className="w-12 h-12 bg-white/5 rounded-full border border-white/10 flex items-center justify-center backdrop-blur-md shadow-xl"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--surface-card)]"
                   style={{ transform: `rotate(-${i * 90}deg) translateY(-80px)` }}
                 >
-                  <Icon className="w-6 h-6 text-slate-400" />
+                  <Icon className="h-6 w-6 text-[var(--text-secondary)]" />
                 </div>
               </motion.div>
             ))}
 
-            <svg className="absolute w-64 h-64 opacity-20" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="40" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="1 4" />
-              <circle cx="50" cy="50" r="30" fill="none" stroke="white" strokeWidth="0.5" strokeDasharray="1 4" />
+            <svg
+              className="absolute h-64 w-64 text-[var(--border-default)]"
+              viewBox="0 0 100 100"
+            >
+              <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1 4" />
+              <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="1 4" />
             </svg>
           </div>
         </div>
 
-        <div className="p-8 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 p-8">
           <div className="flex flex-col gap-2">
-            <h3 className="text-2xl font-bold text-white tracking-tight">How much is enough for retirement?</h3>
-            <p className="text-slate-400 text-base leading-relaxed font-medium">
+            <h3 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">How much is enough for retirement?</h3>
+            <p className="text-base font-medium leading-relaxed text-[var(--text-secondary)]">
               Finding the right contribution rate for your goals.
             </p>
           </div>
@@ -114,56 +110,50 @@ export function PreEnrollmentBentoSection() {
             type="button"
             variant="custom"
             size="custom"
-            className="flex items-center gap-2 text-white/60 hover:text-white font-bold text-sm transition-colors group/btn w-fit"
+            className="group/btn flex w-fit items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
           >
             Know more
-            <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+            <ChevronRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
           </Button>
         </div>
       </motion.div>
 
       <motion.div
         whileHover={{ y: -8 }}
-        className="bg-[#0a0a0a] rounded-[32px] border border-white/5 shadow-2xl transition-all flex flex-col group overflow-hidden"
+        className="group flex flex-col overflow-hidden rounded-[32px] border border-[var(--border-default)] bg-[var(--surface-section)] transition-all"
       >
-        <div className="aspect-[16/9] relative bg-[#0d0d0d] flex items-center justify-center overflow-hidden border-b border-white/5">
-          <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(139,92,246,0.1),transparent_70%)]" />
-
-          <div className="relative z-10 flex flex-col items-center gap-8 w-full px-16">
+        <div className="relative flex aspect-[16/9] items-center justify-center overflow-hidden border-b border-[var(--border-default)] bg-[var(--surface-soft)]">
+          <div className="relative z-10 flex w-full flex-col items-center gap-8 px-16">
             <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="w-full h-14 bg-white/5 rounded-full border border-white/10 flex items-center px-5 gap-4 backdrop-blur-xl shadow-2xl"
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              className="flex h-14 w-full items-center gap-4 rounded-full border border-[var(--border-default)] bg-[var(--surface-card)] px-5"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-lg">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-primary)_85%,var(--surface-card))]">
+                <Sparkles className="h-4 w-4 text-[var(--primary-foreground)]" />
               </div>
-              <div className="h-2.5 w-40 bg-white/20 rounded-full" />
+              <div className="h-2.5 w-40 rounded-full bg-[var(--surface-soft)]" />
             </motion.div>
 
-            <div className="flex flex-col gap-3 w-full max-w-[280px]">
-              {[1, 0.6, 0.3].map((opacity, i) => (
+            <div className="flex w-full max-w-[280px] flex-col gap-3">
+              {[100, 88, 76].map((widthPct, i) => (
                 <motion.div
                   key={i}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity }}
+                  initial={{ x: -20 }}
+                  animate={{ x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="h-12 bg-white/5 rounded-2xl border border-white/10 w-full backdrop-blur-sm"
-                  style={{
-                    transform: `scale(${1 - i * 0.05}) translateY(${i * 4}px)`,
-                    zIndex: 10 - i,
-                  }}
+                  className="h-12 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-card)]"
+                  style={{ width: `${widthPct}%`, zIndex: 10 - i }}
                 />
               ))}
             </div>
           </div>
         </div>
 
-        <div className="p-8 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 p-8">
           <div className="flex flex-col gap-2">
-            <h3 className="text-2xl font-bold text-white tracking-tight">Ask Core AI</h3>
-            <p className="text-slate-400 text-base leading-relaxed font-medium">
+            <h3 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Ask Core AI</h3>
+            <p className="text-base font-medium leading-relaxed text-[var(--text-secondary)]">
               Get instant answers and personalized retirement guidance.
             </p>
           </div>
@@ -171,10 +161,10 @@ export function PreEnrollmentBentoSection() {
             type="button"
             variant="custom"
             size="custom"
-            className="flex items-center gap-2 text-white/60 hover:text-white font-bold text-sm transition-colors group/btn w-fit"
+            className="group/btn flex w-fit items-center gap-2 text-sm font-bold text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
           >
             Start chatting
-            <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+            <ChevronRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
           </Button>
         </div>
       </motion.div>
@@ -184,28 +174,30 @@ export function PreEnrollmentBentoSection() {
 
 export function PreEnrollmentFooter() {
   return (
-    <footer className="max-w-6xl mx-auto px-6 py-20 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-10">
+    <footer className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-10 border-t border-[var(--border-default)] bg-[var(--surface-section)] px-6 py-20 md:flex-row">
       <div className="flex flex-col gap-4 items-center md:items-start">
-        <div className="flex items-center gap-2.5 opacity-40 grayscale">
-          <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center">
-            <div className="w-3.5 h-3.5 bg-white rounded-sm rotate-45" />
+        <div className="flex items-center gap-2.5 text-[var(--text-secondary)]">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)]">
+            <div className="h-3.5 w-3.5 rotate-45 rounded-sm bg-[var(--surface-page)]" />
           </div>
-          <span className="font-bold text-lg tracking-tight text-slate-900">RetireWise</span>
+          <span className="font-bold text-lg tracking-tight text-[var(--text-primary)]">RetireWise</span>
         </div>
-        <p className="text-[13px] text-slate-400 font-medium">© 2026 RetireWise Technologies Inc. All rights reserved.</p>
+        <p className="text-[13px] font-medium text-[var(--text-secondary)]">
+          © 2026 RetireWise Technologies Inc. All rights reserved.
+        </p>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-10 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
-        <a href="#" className="hover:text-slate-900 transition-colors">
+      <div className="flex flex-wrap justify-center gap-10 text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--text-secondary)]">
+        <a href="#" className="transition-colors hover:text-[var(--text-primary)]">
           Privacy Policy
         </a>
-        <a href="#" className="hover:text-slate-600 transition-colors">
+        <a href="#" className="transition-colors hover:text-[var(--text-primary)]">
           Terms of Service
         </a>
-        <a href="#" className="hover:text-slate-600 transition-colors">
+        <a href="#" className="transition-colors hover:text-[var(--text-primary)]">
           Help Center
         </a>
-        <a href="#" className="hover:text-slate-600 transition-colors">
+        <a href="#" className="transition-colors hover:text-[var(--text-primary)]">
           Status
         </a>
       </div>

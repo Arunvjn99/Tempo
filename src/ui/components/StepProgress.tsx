@@ -19,7 +19,10 @@ export function StepProgress({ steps, currentStep, className }: StepProgressProp
             <li key={step.label} className="flex flex-1 items-center">
               {idx > 0 && (
                 <div
-                  className={cn("h-0.5 flex-1 transition-colors", isCompleted ? "bg-primary" : "bg-border")}
+                  className={cn(
+                    "h-0.5 flex-1 transition-colors",
+                    isCompleted ? "bg-[var(--color-primary)]" : "bg-border",
+                  )}
                   aria-hidden
                 />
               )}
@@ -28,9 +31,10 @@ export function StepProgress({ steps, currentStep, className }: StepProgressProp
                 <div
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors",
-                    isCompleted && "border-primary bg-primary text-primary-foreground",
-                    isActive && "border-primary bg-primary/10 text-primary",
-                    !isCompleted && !isActive && "border-border bg-background text-muted-foreground",
+                    isCompleted &&
+                      "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--primary-foreground)]",
+                    isActive && "border-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_12%,var(--surface-card))] text-brand",
+                    !isCompleted && !isActive && "border-default bg-surface-soft text-secondary",
                   )}
                   aria-current={isActive ? "step" : undefined}
                 >
@@ -39,7 +43,7 @@ export function StepProgress({ steps, currentStep, className }: StepProgressProp
                 <span
                   className={cn(
                     "hidden text-xs font-medium sm:block",
-                    isActive ? "text-primary" : "text-muted-foreground",
+                    isActive ? "text-brand" : "text-secondary",
                   )}
                 >
                   {step.label}

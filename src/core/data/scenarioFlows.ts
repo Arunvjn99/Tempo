@@ -90,8 +90,8 @@ export const scenarioFlows: Record<ScenarioId, ScenarioFlowConfig> = {
     start: "/dashboard",
     allowedRoutes: [
       "/dashboard",
-      "/transactions/withdraw",
-      "/transactions/withdraw/*",
+      "/transactions/withdrawal",
+      "/transactions/withdrawal/*",
       "/profile",
       "/profile/*",
       "/demo",
@@ -100,7 +100,7 @@ export const scenarioFlows: Record<ScenarioId, ScenarioFlowConfig> = {
     redirectIfInvalid: "/dashboard",
     primaryCTA: {
       titleKey: "demo.primaryCTA.linda",
-      to: "/transactions/withdraw",
+      to: "/transactions/withdrawal",
     },
   },
 };

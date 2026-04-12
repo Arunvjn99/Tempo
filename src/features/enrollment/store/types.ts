@@ -143,6 +143,14 @@ export interface EnrollmentActions {
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (id: EnrollmentStepId) => void;
+  /** Flow API aliases (non–URL-driven; same as nextStep/prevStep/goToStep). */
+  next: () => void;
+  back: () => void;
+  goTo: (id: EnrollmentStepId) => void;
+  /** Jump to a main stepper step by 0-based index (main flow steps only). */
+  goToMainStepIndex: (index: number) => void;
+  /** 0-based index into main flow, or -1 if current step is branch/wizard/success. */
+  getMainFlowStepIndex: () => number;
   canProceed: () => boolean;
   validate: () => ValidationResult;
   applySuggestion: (type: SuggestionType) => void;

@@ -19,7 +19,7 @@ export function ThemeToggle({ mode, onToggle, className }: ThemeToggleProps) {
       size="iconMd"
       onClick={onToggle}
       className={cn(
-        "rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]",
+        "rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--brand-primary)]",
         "focus:ring-[var(--color-primary)] focus:ring-offset-[var(--color-background)]",
         className,
       )}

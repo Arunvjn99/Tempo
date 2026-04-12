@@ -38,7 +38,7 @@ export function InteractiveOption({
         w-full rounded-lg border-2 p-3 text-left transition-all duration-200
         focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-white
         ${selected
-          ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/30"
+          ? "border-primary bg-primary/10 text-brand ring-1 ring-primary/30"
           : "border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] hover:border-[var(--color-border)] hover:bg-[var(--color-background)]"
         }
       `}
@@ -51,7 +51,7 @@ export function InteractiveOption({
           {hint && <span className="block text-[11px] text-[var(--color-textSecondary)] mt-0.5">{hint}</span>}
         </div>
         {badge && (
-          <span className="shrink-0 rounded-full bg-primary/10 border border-primary/30 px-2 py-0.5 text-[10px] font-medium text-primary">
+          <span className="shrink-0 rounded-full bg-primary/10 border border-primary/30 px-2 py-0.5 text-[10px] font-medium text-brand">
             {badge}
           </span>
         )}

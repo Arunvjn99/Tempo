@@ -31,12 +31,12 @@ export function StepLayout({
     <StaggerRoot className={cn("w-full space-y-xl", className)} stagger={motionStagger.normal}>
       <StaggerItem className="space-y-xs">
         {stepNumber != null && totalSteps != null && (
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-widest text-secondary">
             Step {stepNumber} of {totalSteps}
           </p>
         )}
-        <h1 className="text-2xl font-bold text-foreground md:text-3xl">{title}</h1>
-        {description && <p className="text-sm text-muted-foreground md:text-base">{description}</p>}
+        <h1 className="text-2xl font-bold text-primary md:text-3xl">{title}</h1>
+        {description && <p className="text-sm text-secondary md:text-base">{description}</p>}
         {headerExtra}
       </StaggerItem>
 

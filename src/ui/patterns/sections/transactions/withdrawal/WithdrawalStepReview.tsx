@@ -1,6 +1,6 @@
 import type { WithdrawalData } from "@/features/transactions/store/types";
 import { WD_TYPES, PAY } from "@/features/transactions/store/constants/withdrawalFlowConstants";
-import { ActionBar, ReviewCard, ReviewSection } from "@/ui/components";
+import { ActionBar, CardReviewSection, ReviewCard } from "@/ui/components";
 import { StepLayout } from "@/ui/patterns";
 import { formatCurrency } from "@/features/transactions/services/format";
 
@@ -28,7 +28,7 @@ export function WithdrawalStepReview({
       stepNumber={6}
       totalSteps={totalSteps}
     >
-      <ReviewSection title="Details">
+      <CardReviewSection title="Details">
         <ReviewCard
           label="Type"
           value={WD_TYPES.find((t) => t.id === w.withdrawalType)?.label ?? "—"}
@@ -50,7 +50,7 @@ export function WithdrawalStepReview({
           }
           onEdit={() => goToStep(4)}
         />
-      </ReviewSection>
+      </CardReviewSection>
       <ActionBar onNext={onNext} onBack={onBack} nextDisabled={nextDisabled} nextLabel="Submit withdrawal" />
     </StepLayout>
   );

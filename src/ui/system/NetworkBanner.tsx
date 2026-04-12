@@ -31,10 +31,9 @@ export function NetworkBanner() {
     <div
       role="alert"
       aria-live="polite"
-      className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-medium text-white shadow-md"
-      style={{
-        backgroundColor: isOffline ? "#b91c1c" : "#c2410c",
-      }}
+      className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-md ${
+        isOffline ? "bg-[var(--color-danger)]" : "bg-[var(--color-warning)]"
+      }`}
     >
       <span className="flex-1">{message}</span>
       <Button
@@ -42,7 +41,7 @@ export function NetworkBanner() {
         variant="custom"
         size="iconSm"
         onClick={() => setDismissed(true)}
-        className="shrink-0 rounded text-white/90 hover:bg-white/20 focus-visible:ring-white/50"
+        className="shrink-0 rounded text-primary-foreground/90 hover:bg-[color-mix(in_srgb,var(--primary-foreground)_20%,transparent)] focus-visible:ring-primary-foreground/50"
         aria-label="Dismiss"
       >
         <svg

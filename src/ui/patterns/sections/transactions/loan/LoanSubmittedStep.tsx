@@ -22,7 +22,7 @@ export function LoanSubmittedStep({
       totalSteps={totalSteps}
     >
       <FormSection variant="highlight">
-        <p className="text-sm text-foreground">Reference time: {new Date(completedAt).toLocaleString()}</p>
+        <p className="text-sm text-primary">Reference time: {new Date(completedAt).toLocaleString()}</p>
       </FormSection>
       <ActionBar onNext={onFinish} hideBack nextLabel="Back to transactions" />
     </StepLayout>

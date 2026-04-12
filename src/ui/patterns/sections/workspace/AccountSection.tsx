@@ -37,7 +37,7 @@ export function AccountSection({
                   type="email"
                   value={contact.email}
                   onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))}
-                  className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
               </FieldGroup>
               <FieldGroup label="Phone">
@@ -45,7 +45,7 @@ export function AccountSection({
                   type="tel"
                   value={contact.phone}
                   onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
-                  className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
               </FieldGroup>
               <FieldGroup label="Address">
@@ -53,7 +53,7 @@ export function AccountSection({
                   value={contact.address}
                   onChange={(e) => setContact((c) => ({ ...c, address: e.target.value }))}
                   rows={2}
-                  className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
               </FieldGroup>
               <div className="flex gap-sm">
@@ -72,7 +72,7 @@ export function AccountSection({
                   variant="custom"
                   size="custom"
                   onClick={() => setEditingContact(false)}
-                  className="rounded-button border border-border px-md py-sm text-sm font-medium text-foreground hover:bg-muted"
+                  className="rounded-button border border-default px-md py-sm text-sm font-medium text-primary hover:bg-primary/5"
                 >
                   Cancel
                 </Button>
@@ -86,10 +86,10 @@ export function AccountSection({
                 { icon: MapPin, label: "Address", value: contact.address },
               ].map((row) => (
                 <div key={row.label} className="flex items-center gap-md">
-                  <row.icon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <row.icon className="h-4 w-4 shrink-0 text-secondary" aria-hidden />
                   <div>
-                    <p className="text-xs text-muted-foreground">{row.label}</p>
-                    <p className="text-sm font-medium text-foreground">{row.value}</p>
+                    <p className="text-xs text-secondary">{row.label}</p>
+                    <p className="text-sm font-medium text-primary">{row.value}</p>
                   </div>
                 </div>
               ))}
@@ -98,7 +98,7 @@ export function AccountSection({
                 variant="ghost"
                 size="custom"
                 onClick={() => setEditingContact(true)}
-                className="inline-flex h-auto min-h-0 items-center gap-xs px-0 py-0 text-sm font-medium text-primary hover:bg-transparent hover:underline"
+                className="inline-flex h-auto min-h-0 items-center gap-xs px-0 py-0 text-sm font-medium text-brand hover:bg-transparent hover:underline"
               >
                 <Pencil className="h-3.5 w-3.5" aria-hidden />
                 Edit contact info
@@ -118,8 +118,8 @@ export function AccountSection({
               { label: "Employee ID", value: mock.employeeId },
             ].map((m) => (
               <div key={m.label}>
-                <p className="text-xs text-muted-foreground">{m.label}</p>
-                <p className="mt-xs text-sm font-medium text-foreground">{m.value}</p>
+                <p className="text-xs text-secondary">{m.label}</p>
+                <p className="mt-xs text-sm font-medium text-primary">{m.value}</p>
               </div>
             ))}
           </div>
@@ -132,21 +132,21 @@ export function AccountSection({
             {mock.beneficiaries.map((b) => (
               <div
                 key={b.name}
-                className="flex items-center justify-between rounded-card border border-border bg-surface px-md py-sm"
+                className="flex items-center justify-between rounded-card border border-default bg-surface px-md py-sm"
               >
                 <div className="flex items-center gap-md">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-brand">
                     {b.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{b.name}</p>
-                    <p className="text-xs text-muted-foreground">{b.relationship}</p>
+                    <p className="text-sm font-medium text-primary">{b.name}</p>
+                    <p className="text-xs text-secondary">{b.relationship}</p>
                   </div>
                 </div>
-                <span className="rounded-full bg-primary/10 px-sm py-0.5 text-xs font-semibold text-primary">
+                <span className="rounded-full bg-primary/10 px-sm py-0.5 text-xs font-semibold text-brand">
                   {b.percentage}%
                 </span>
               </div>
@@ -169,17 +169,17 @@ export function AccountSection({
             ).map((pref) => (
               <label
                 key={pref.key}
-                className="flex cursor-pointer items-center justify-between rounded-card border border-border bg-surface px-md py-sm"
+                className="flex cursor-pointer items-center justify-between rounded-card border border-default bg-surface px-md py-sm"
               >
                 <div>
-                  <p className="text-sm font-medium text-foreground">{pref.label}</p>
-                  <p className="text-xs text-muted-foreground">{pref.description}</p>
+                  <p className="text-sm font-medium text-primary">{pref.label}</p>
+                  <p className="text-xs text-secondary">{pref.description}</p>
                 </div>
                 <input
                   type="checkbox"
                   checked={notifications[pref.key]}
                   onChange={(e) => setNotifications((n) => ({ ...n, [pref.key]: e.target.checked }))}
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded border-default text-brand focus:ring-primary"
                 />
               </label>
             ))}

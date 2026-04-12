@@ -2,14 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* Surfaces + default text: `src/core/theme/tokens.css` (html[data-theme] + body) */
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    opacity: 1;
+    filter: none;
+  }
+
+  #root {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@layer components {
+  /**
+   * Structural shell — primary card surface (`--surface-card` + `--border-default` + `--shadow-card`).
+   * Do NOT use for nested panels, info callouts, metrics grids, or tinted blocks; those keep
+   * explicit functional colors (primary/blue/green/success) per Figma Make.
+   * Nested neutral panels: `rounded-xl|rounded-2xl border border-border bg-surface-card` (no shadow).
+   * Wells: `rounded-lg border border-border bg-surface-soft` or `bg-primary/[0.06]` etc.
+   */
+  .card-standard {
+    @apply rounded-xl;
+    background: var(--surface-card);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-card);
+  }
+
+  /** Pre-enrollment marketing — blue gradient block (gradient colors stay on element; radius + depth from tokens) */
+  .dashboard-marketing-gradient {
+    border-radius: var(--radius-dashboard-gradient);
+    box-shadow: var(--shadow-gradient-block);
+  }
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: var(--color-text);
-  background-color: var(--color-background);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -36,12 +72,6 @@ a:hover {
   color: var(--color-primary-hover);
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -52,36 +82,22 @@ button {
   color: inherit;
 }
 
-/* ── Global animation utilities ── */
-@keyframes g-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* ── Global animation utilities (transform-only; no opacity keyframes) ── */
 @keyframes g-slide-up {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(12px); }
+  to   { transform: translateY(0); }
 }
 @keyframes g-scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+  from { transform: scale(0.96); }
+  to   { transform: scale(1); }
 }
 
-.anim-fade-in   { animation: g-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-slide-up  { animation: g-slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
 .anim-scale-in  { animation: g-scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .anim-fade-in,
   .anim-slide-up,
   .anim-scale-in { animation: none; }
-}
-
-/* Pre-enrollment (Future Activation Hub) */
-.glass-card {
-  background: color-mix(in srgb, var(--enroll-card-bg) 72%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid color-mix(in srgb, var(--enroll-card-bg) 85%, transparent);
 }
 
 /* ── 3-tier elevation system (dashboard floating elements) ── */
@@ -104,35 +120,6 @@ button {
     0px 8px 24px rgba(16, 24, 40, 0.12),
     0px 2px 8px rgba(16, 24, 40, 0.08);
   border: 1px solid rgba(16, 24, 40, 0.04);
-}
-
-/* Hero background depth – radial + mesh, subtle */
-.pre-enrollment-hero-bg {
-  background:
-    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 80% at 20% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
-}
-
-.dark .pre-enrollment-hero-bg {
-  background:
-    radial-gradient(ellipse 80% 60% at 70% 40%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 80% at 20% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(15, 23, 42, 0.4) 0%, transparent 70%);
-}
-
-/* Optional very subtle noise overlay */
-.pre-enrollment-hero-noise::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-}
-
-.dark .pre-enrollment-hero-noise::after {
-  opacity: 0.05;
 }
 
 /* Button Styles */
@@ -913,9 +900,7 @@ button {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+  background-color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -946,20 +931,20 @@ button {
 
 /* Enrollment step modals (e.g. skip auto-increase) — use enroll tokens */
 .modal-dialog.enrollment-modal {
-  background: var(--enroll-card-bg);
-  border: 1px solid var(--enroll-card-border);
-  border-radius: var(--enroll-card-radius);
-  box-shadow: var(--enroll-elevation-3);
-  color: var(--enroll-text-primary);
+  background: var(--color-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-primary);
 }
 .modal-dialog.enrollment-modal .enrollment-modal__title {
-  color: var(--enroll-text-primary);
+  color: var(--text-primary);
 }
 .modal-dialog.enrollment-modal .enrollment-modal__body {
-  color: var(--enroll-text-secondary);
+  color: var(--text-secondary);
 }
 .modal-dialog.enrollment-modal .enrollment-modal__primary {
-  background-color: var(--enroll-brand);
+  background-color: var(--color-primary);
   color: var(--color-text-on-primary);
   min-height: 44px;
   padding: 10px 20px;
@@ -971,8 +956,8 @@ button {
   filter: brightness(1.05);
 }
 .modal-dialog.enrollment-modal .enrollment-modal__secondary {
-  border: 1px solid var(--enroll-card-border);
-  color: var(--enroll-text-secondary);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
   background: transparent;
   min-height: 44px;
   padding: 10px 20px;
@@ -981,7 +966,7 @@ button {
   transition: background-color 0.15s, border-color 0.15s;
 }
 .modal-dialog.enrollment-modal .enrollment-modal__secondary:hover {
-  background: var(--enroll-soft-bg);
+  background: var(--surface-section);
 }
 
 /* Personalize plan wizard slider (Figma step 2, node 688:715) */
@@ -1070,7 +1055,7 @@ button {
   background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 8%, transparent) 0%, color-mix(in srgb, var(--color-primary) 3%, transparent) 50%, transparent 100%);
 }
 
-.dark .premium-wizard__header-bg {
+[data-theme="dark"] .premium-wizard__header-bg {
   background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, transparent) 0%, color-mix(in srgb, var(--color-primary) 5%, transparent) 50%, transparent 100%);
 }
 
@@ -1134,7 +1119,7 @@ button {
   border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
 }
 
-.dark .premium-wizard__info-card {
+[data-theme="dark"] .premium-wizard__info-card {
   background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
   border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
@@ -2044,7 +2029,7 @@ button {
   opacity: 0.08;
   background: radial-gradient(
     ellipse 80% 60% at 50% 50%,
-    rgb(var(--enroll-brand-rgb) / 0.25) 0%,
+    rgb(var(--color-primary-rgb) / 0.25) 0%,
     transparent 70%
   );
 }
@@ -2245,13 +2230,13 @@ button {
 /* Blue highlight box inside banner */
 .auto-increase-confirmation .auto-increase-highlight-box {
   padding: 16px 20px;
-  background: rgb(var(--enroll-accent-rgb) / 0.08);
-  border: 1px solid rgb(var(--enroll-accent-rgb) / 0.2);
+  background: rgb(var(--color-accent-rgb) / 0.08);
+  border: 1px solid rgb(var(--color-accent-rgb) / 0.2);
   border-radius: var(--radius-lg, 8px);
 }
-.dark .auto-increase-confirmation .auto-increase-highlight-box {
-  background: rgb(var(--enroll-accent-rgb) / 0.12);
-  border-color: rgb(var(--enroll-accent-rgb) / 0.25);
+[data-theme="dark"] .auto-increase-confirmation .auto-increase-highlight-box {
+  background: rgb(var(--color-accent-rgb) / 0.12);
+  border-color: rgb(var(--color-accent-rgb) / 0.25);
 }
 
 /* Main content grid — 65/35 to align with banner, 48–56px margin-top */
@@ -2299,10 +2284,10 @@ button {
 }
 .auto-increase-settings-cards-wrap .auto-increase-settings-group {
   padding: 24px 32px;
-  background: var(--enroll-card-bg);
-  border: 1px solid var(--enroll-card-border);
-  border-radius: var(--enroll-card-radius, 16px);
-  box-shadow: var(--enroll-elevation-2);
+  background: var(--color-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl, 16px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Left column first card (Current Contribution) — consistent spacing from banner */
@@ -2322,7 +2307,7 @@ button {
   margin-bottom: 40px;
 }
 .auto-increase-confirmation-card-inner {
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-stat-block {
   flex: 0 0 auto;
@@ -2356,13 +2341,13 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 8px;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
 }
 .auto-increase-impact__number-wrap {
   font-size: clamp(2.25rem, 6vw, 3.25rem);
   font-weight: 700;
   line-height: 1.15;
-  color: var(--enroll-text-primary);
+  color: var(--text-primary);
   margin-bottom: 12px;
 }
 .auto-increase-impact__number-wrap p {
@@ -2385,9 +2370,9 @@ button {
 /* Chart only: subtle background, rounded corners, no heavy card */
 .auto-increase-impact-chart {
   padding: 24px;
-  background: var(--enroll-soft-bg);
-  border: 1px solid var(--enroll-card-border);
-  border-radius: var(--enroll-card-radius, 16px);
+  background: var(--surface-section);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl, 16px);
 }
 
 /* Section 3 — Customization: header + settings groups */
@@ -2403,40 +2388,40 @@ button {
 }
 .auto-increase-settings-group {
   padding: 24px 32px;
-  background: var(--enroll-soft-bg);
-  border: 1px solid var(--enroll-card-border);
-  border-radius: var(--enroll-card-radius, 16px);
+  background: var(--surface-section);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl, 16px);
 }
 
 
 .auto-increase-confirmation-card .rounded-2xl {
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-settings {
   margin-top: 8px;
 }
 .auto-increase-hero-card {
-  background: var(--enroll-card-bg);
-  border: 1px solid var(--enroll-card-border);
-  border-radius: var(--enroll-card-radius, 16px);
-  box-shadow: var(--enroll-elevation-2), 0 0 0 1px rgb(0 0 0 / 0.02);
+  background: var(--color-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl, 16px);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgb(0 0 0 / 0.02);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .auto-increase-hero-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--enroll-elevation-3), 0 0 0 1px rgb(0 0 0 / 0.03);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgb(0 0 0 / 0.03);
 }
 .auto-increase-hero-card .auto-increase-hero-gradient {
-  background: linear-gradient(135deg, rgb(var(--enroll-brand-rgb) / 0.08) 0%, rgb(var(--enroll-brand-rgb) / 0.02) 40%, transparent 60%);
+  background: linear-gradient(135deg, rgb(var(--color-primary-rgb) / 0.08) 0%, rgb(var(--color-primary-rgb) / 0.02) 40%, transparent 60%);
   pointer-events: none;
 }
-.dark .auto-increase-hero-card .auto-increase-hero-gradient {
-  background: linear-gradient(135deg, rgb(var(--enroll-brand-rgb) / 0.12) 0%, rgb(var(--enroll-brand-rgb) / 0.04) 40%, transparent 60%);
+[data-theme="dark"] .auto-increase-hero-card .auto-increase-hero-gradient {
+  background: linear-gradient(135deg, rgb(var(--color-primary-rgb) / 0.12) 0%, rgb(var(--color-primary-rgb) / 0.04) 40%, transparent 60%);
 }
-.dark .auto-increase-delta-badge {
-  background: rgb(var(--enroll-accent-rgb) / 0.22);
-  border-color: rgb(var(--enroll-accent-rgb) / 0.35);
-  color: var(--enroll-accent);
+[data-theme="dark"] .auto-increase-delta-badge {
+  background: rgb(var(--color-accent-rgb) / 0.22);
+  border-color: rgb(var(--color-accent-rgb) / 0.35);
+  color: var(--color-accent);
 }
 /* Delta badge compact pill — defined in hero CTA block below; this block kept for dark override only */
 .auto-increase-mini-card {
@@ -2451,22 +2436,22 @@ button {
   transform: translateY(-2px);
 }
 .auto-increase-mini-card--muted {
-  background: var(--enroll-soft-bg);
-  border: 1px solid var(--enroll-card-border);
-  box-shadow: var(--enroll-elevation-1);
+  background: var(--surface-section);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-card);
 }
 .auto-increase-mini-card--elevated {
-  background: var(--enroll-card-bg);
-  border: 1px solid rgb(var(--enroll-brand-rgb) / 0.2);
-  box-shadow: var(--enroll-elevation-2);
+  background: var(--color-card);
+  border: 1px solid rgb(var(--color-primary-rgb) / 0.2);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-mini-card--accent {
-  background: rgb(var(--enroll-accent-rgb) / 0.14);
-  border: 1px solid rgb(var(--enroll-accent-rgb) / 0.28);
-  box-shadow: var(--enroll-elevation-2);
+  background: rgb(var(--color-accent-rgb) / 0.14);
+  border: 1px solid rgb(var(--color-accent-rgb) / 0.28);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-mini-card--accent .auto-increase-mini-card__value {
-  color: var(--enroll-accent);
+  color: var(--color-accent);
   font-size: 1.125rem;
   font-weight: 700;
 }
@@ -2475,30 +2460,30 @@ button {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
   margin-bottom: var(--spacing-1, 4px);
 }
 .auto-increase-mini-card__amount {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--enroll-text-primary);
+  color: var(--text-primary);
 }
 .auto-increase-reinforcement {
   width: 100%;
   margin-top: 32px;
   margin-bottom: 32px;
   padding: 16px 24px;
-  background: rgb(var(--enroll-brand-rgb) / 0.06);
-  border: 1px solid rgb(var(--enroll-brand-rgb) / 0.12);
+  background: rgb(var(--color-primary-rgb) / 0.06);
+  border: 1px solid rgb(var(--color-primary-rgb) / 0.12);
   border-radius: var(--radius-lg, 8px);
-  color: var(--enroll-text-secondary);
+  color: var(--text-secondary);
   font-size: 0.9375rem;
   line-height: 1.5;
   text-align: center;
 }
-.dark .auto-increase-reinforcement {
-  background: rgb(var(--enroll-brand-rgb) / 0.08);
-  border-color: rgb(var(--enroll-brand-rgb) / 0.15);
+[data-theme="dark"] .auto-increase-reinforcement {
+  background: rgb(var(--color-primary-rgb) / 0.08);
+  border-color: rgb(var(--color-primary-rgb) / 0.15);
 }
 
 /* Section 5 — In-page CTA (scrolls with content, not sticky) */
@@ -2510,7 +2495,7 @@ button {
   gap: 16px;
   padding-top: 32px;
   margin-top: 32px;
-  border-top: 1px solid var(--enroll-card-border);
+  border-top: 1px solid var(--border-default);
 }
 .auto-increase-actions__right {
   display: flex;
@@ -2540,13 +2525,13 @@ button {
   padding: 12px 24px;
   max-width: 280px;
   width: auto;
-  background-color: var(--enroll-brand);
+  background-color: var(--color-primary);
   color: var(--color-text-on-primary);
   border: none;
   border-radius: 12px;
   font-size: 0.9375rem;
   font-weight: 600;
-  box-shadow: var(--enroll-elevation-1);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
   display: inline-flex;
@@ -2555,10 +2540,10 @@ button {
 }
 .auto-increase-hero-cta-primary:hover:not(:disabled) {
   filter: brightness(1.04);
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-hero-cta-primary:focus-visible {
-  outline: 2px solid var(--enroll-brand);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 .auto-increase-hero-cta-secondary {
@@ -2567,8 +2552,8 @@ button {
   max-width: 280px;
   width: auto;
   background: transparent;
-  border: 1px solid var(--enroll-card-border);
-  color: var(--enroll-text-secondary);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
   border-radius: 12px;
   font-size: 0.9375rem;
   font-weight: 600;
@@ -2579,17 +2564,17 @@ button {
   justify-content: center;
 }
 .auto-increase-hero-cta-secondary:hover:not(:disabled) {
-  background: var(--enroll-soft-bg);
-  border-color: var(--enroll-card-border);
-  color: var(--enroll-text-primary);
+  background: var(--surface-section);
+  border-color: var(--border-default);
+  color: var(--text-primary);
 }
 .auto-increase-hero-cta-secondary:focus-visible {
-  outline: 2px solid var(--enroll-brand);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 .auto-increase-hero-trust {
   font-size: 0.75rem;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
   margin-top: var(--spacing-1, 4px);
 }
 @media (max-width: 767px) {
@@ -2612,7 +2597,7 @@ button {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
   margin-bottom: var(--spacing-2, 8px);
 }
 .auto-increase-hero-title {
@@ -2620,7 +2605,7 @@ button {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: var(--enroll-text-primary);
+  color: var(--text-primary);
   margin-bottom: var(--spacing-2, 8px);
 }
 @media (min-width: 768px) {
@@ -2631,7 +2616,7 @@ button {
 .auto-increase-hero-subtext {
   font-size: 1rem;
   line-height: 1.5;
-  color: var(--enroll-text-secondary);
+  color: var(--text-secondary);
   margin-bottom: var(--spacing-6, 24px);
   max-width: 32rem;
 }
@@ -2644,18 +2629,18 @@ button {
 .auto-increase-projection-with-auto {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--enroll-text-primary);
+  color: var(--text-primary);
   line-height: 1.25;
 }
 .auto-increase-projection-with-auto-label {
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
   margin-left: var(--spacing-2, 8px);
 }
 .auto-increase-projection-baseline {
   font-size: 0.875rem;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
 }
 .auto-increase-projection-row {
   display: flex;
@@ -2667,24 +2652,24 @@ button {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-1, 4px);
-  background: rgb(var(--enroll-accent-rgb) / 0.16);
-  color: var(--enroll-accent);
+  background: rgb(var(--color-accent-rgb) / 0.16);
+  color: var(--color-accent);
   border-radius: var(--radius-lg, 8px);
   font-weight: 600;
   font-size: 0.9375rem;
   padding: var(--spacing-1, 4px) var(--spacing-3, 12px);
   line-height: 1.25;
-  border: 1px solid rgb(var(--enroll-accent-rgb) / 0.25);
+  border: 1px solid rgb(var(--color-accent-rgb) / 0.25);
 }
 .auto-increase-delta-badge svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
 }
-.dark .auto-increase-delta-badge {
-  background: rgb(var(--enroll-accent-rgb) / 0.22);
-  border-color: rgb(var(--enroll-accent-rgb) / 0.35);
-  color: var(--enroll-accent);
+[data-theme="dark"] .auto-increase-delta-badge {
+  background: rgb(var(--color-accent-rgb) / 0.22);
+  border-color: rgb(var(--color-accent-rgb) / 0.35);
+  color: var(--color-accent);
 }
 /* Override old delta badge rules that used larger padding */
 .auto-increase-hero-card .auto-increase-delta-badge {
@@ -2697,22 +2682,22 @@ button {
 }
 .auto-increase-btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-btn-secondary:hover:not(:disabled) {
-  background: var(--enroll-soft-bg);
+  background: var(--surface-section);
 }
 
 /* Chart section in Auto Increase step — elevation and spacing */
 .auto-increase-chart-section {
   padding: var(--spacing-6, 24px);
-  background: var(--enroll-card-bg);
-  border: 1px solid var(--enroll-card-border);
-  border-radius: var(--enroll-card-radius);
-  box-shadow: var(--enroll-elevation-2);
+  background: var(--color-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
 }
 .auto-increase-chart-section .auto-increase-chart-heading {
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2885,7 +2870,7 @@ button {
   margin-bottom: var(--spacing-4);
 }
 
-.dark .future-contributions__info-card {
+[data-theme="dark"] .future-contributions__info-card {
   background: rgba(59, 130, 246, 0.1);
 }
 
@@ -2996,7 +2981,7 @@ button {
   border-color: var(--color-primary);
 }
 
-.dark .future-contributions__checkbox-box {
+[data-theme="dark"] .future-contributions__checkbox-box {
   border-color: var(--color-border);
 }
 
@@ -3049,7 +3034,7 @@ button {
   padding: var(--spacing-4);
 }
 
-.dark .future-contributions__metric-box {
+[data-theme="dark"] .future-contributions__metric-box {
   background: rgba(59, 130, 246, 0.08);
 }
 
@@ -3084,7 +3069,7 @@ button {
   line-height: 1.5;
 }
 
-.dark .future-contributions__disclaimer {
+[data-theme="dark"] .future-contributions__disclaimer {
   background: rgba(234, 179, 8, 0.2);
 }
 
@@ -3120,7 +3105,7 @@ button {
   stroke-opacity: 0.5;
 }
 
-.dark .future-contributions__chart-grid {
+[data-theme="dark"] .future-contributions__chart-grid {
   stroke: #475569;
   stroke-opacity: 0.4;
 }
@@ -3531,7 +3516,7 @@ button {
 .plan-selection-card__spotlight-bg {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--enroll-brand) 6%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary) 6%, transparent) 0%,
     color-mix(in srgb, var(--color-success) 8%, transparent) 50%,
     transparent 100%
   );
@@ -3549,7 +3534,7 @@ button {
   border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
-.dark .plan-selection-card__spotlight-indicator {
+[data-theme="dark"] .plan-selection-card__spotlight-indicator {
   background-color: rgba(16, 185, 129, 0.15);
   border-color: rgba(16, 185, 129, 0.3);
 }
@@ -3561,7 +3546,7 @@ button {
   letter-spacing: 0.02em;
 }
 
-.dark .plan-selection-card__spotlight-indicator-text {
+[data-theme="dark"] .plan-selection-card__spotlight-indicator-text {
   color: rgb(52 211 153);
 }
 
@@ -3598,7 +3583,7 @@ button {
   color: var(--color-success);
 }
 
-.dark .plan-selection-card__recommendation-label {
+[data-theme="dark"] .plan-selection-card__recommendation-label {
   color: rgb(52 211 153);
 }
 
@@ -3618,7 +3603,7 @@ button {
   line-height: 1.4;
 }
 
-.dark .plan-selection-card__value-prop {
+[data-theme="dark"] .plan-selection-card__value-prop {
   color: var(--color-text);
 }
 
@@ -3628,7 +3613,7 @@ button {
   color: var(--color-success);
 }
 
-.dark .plan-selection-card__benefit-chip--recommended {
+[data-theme="dark"] .plan-selection-card__benefit-chip--recommended {
   background-color: rgba(16, 185, 129, 0.2);
   color: rgb(52 211 153);
 }
@@ -3752,13 +3737,13 @@ button {
   color: var(--color-text-secondary);
 }
 
-.dark .plan-selection-card__benefit-chip {
+[data-theme="dark"] .plan-selection-card__benefit-chip {
   background-color: #334155;
   border-color: #475569;
   color: #e2e8f0;
 }
 
-.dark .plan-selection-card--standard .plan-selection-card__benefit-chip {
+[data-theme="dark"] .plan-selection-card--standard .plan-selection-card__benefit-chip {
   background-color: #1e293b;
   border-color: #334155;
   color: #cbd5e1;
@@ -4118,8 +4103,8 @@ button {
   height: 28px;
   margin-top: -7px;
   border-radius: 50%;
-  background: var(--enroll-brand);
-  border: 2px solid var(--enroll-card-bg);
+  background: var(--color-primary);
+  border: 2px solid var(--color-card);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
@@ -4146,8 +4131,8 @@ button {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--enroll-brand);
-  border: 2px solid var(--enroll-card-bg);
+  background: var(--color-primary);
+  border: 2px solid var(--color-card);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
@@ -4187,8 +4172,8 @@ button {
   height: 22px;
   width: 22px;
   border-radius: 9999px;
-  background: var(--enroll-brand);
-  border: 2px solid var(--enroll-card-bg);
+  background: var(--color-primary);
+  border: 2px solid var(--color-card);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   margin-top: -5px;
@@ -4211,8 +4196,8 @@ button {
   height: 22px;
   width: 22px;
   border-radius: 9999px;
-  background: var(--enroll-brand);
-  border: 2px solid var(--enroll-card-bg);
+  background: var(--color-primary);
+  border: 2px solid var(--color-card);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
@@ -4260,7 +4245,7 @@ button {
   width: calc(100% - var(--fs-thumb-size));
   height: 100%;
   border-radius: var(--radius-full);
-  background: var(--enroll-bg);
+  background: var(--surface-page);
   pointer-events: none;
 }
 
@@ -4271,7 +4256,7 @@ button {
   height: 100%;
   width: calc((100% - var(--fs-thumb-size)) * var(--fill-pct, 0) / 100);
   border-radius: var(--radius-full);
-  background: var(--enroll-brand);
+  background: var(--color-primary);
   pointer-events: none;
   transition: width 0.2s ease;
 }
@@ -4307,16 +4292,16 @@ button {
   height: var(--fs-thumb-size);
   margin-top: calc((var(--fs-track-height) - var(--fs-thumb-size)) / 2);
   border-radius: var(--radius-full);
-  background: var(--enroll-brand);
-  border: 2px solid var(--enroll-card-bg);
-  box-shadow: var(--enroll-elevation-1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  background: var(--color-primary);
+  border: 2px solid var(--color-card);
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .financial-slider__input::-webkit-slider-thumb:hover {
   filter: brightness(1.08);
-  box-shadow: var(--enroll-elevation-2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 .financial-slider__input::-webkit-slider-thumb:active {
@@ -4324,7 +4309,7 @@ button {
 }
 
 .financial-slider__input:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 var(--financial-slider-thumb-focus-ring, 2px) var(--enroll-brand), var(--enroll-elevation-1);
+  box-shadow: 0 0 0 var(--financial-slider-thumb-focus-ring, 2px) var(--color-primary), var(--shadow-card);
 }
 
 .financial-slider__input::-moz-range-track {
@@ -4338,16 +4323,16 @@ button {
   width: var(--fs-thumb-size);
   height: var(--fs-thumb-size);
   border-radius: var(--radius-full);
-  background: var(--enroll-brand);
-  border: 2px solid var(--enroll-card-bg);
-  box-shadow: var(--enroll-elevation-1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  background: var(--color-primary);
+  border: 2px solid var(--color-card);
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .financial-slider__input::-moz-range-thumb:hover {
   filter: brightness(1.08);
-  box-shadow: var(--enroll-elevation-2), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md), 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 .financial-slider__input::-moz-range-thumb:active {
@@ -4355,7 +4340,7 @@ button {
 }
 
 .financial-slider__input:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 var(--financial-slider-thumb-focus-ring, 2px) var(--enroll-brand), var(--enroll-elevation-1);
+  box-shadow: 0 0 0 var(--financial-slider-thumb-focus-ring, 2px) var(--color-primary), var(--shadow-card);
 }
 
 .financial-slider__input:disabled {
@@ -4378,7 +4363,7 @@ button {
   margin-top: var(--spacing-1);
   font-size: 0.75rem;
   line-height: 1.2;
-  color: var(--enroll-text-muted);
+  color: var(--text-secondary);
 }
 
 .financial-slider__label-min,
@@ -4389,12 +4374,12 @@ button {
 /* SegmentedToggle: focus ring and hover (tokens only) */
 .segmented-toggle__option:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--enroll-card-bg), 0 0 0 4px var(--enroll-brand);
+  box-shadow: 0 0 0 2px var(--color-card), 0 0 0 4px var(--color-primary);
 }
 
 .segmented-toggle__option:hover:not(:disabled):not([aria-checked="true"]) {
-  color: var(--enroll-text-secondary);
-  background: rgb(var(--enroll-brand-rgb) / 0.04);
+  color: var(--text-secondary);
+  background: rgb(var(--color-primary-rgb) / 0.04);
 }
 
 .contrib-slider {
@@ -4406,7 +4391,7 @@ button {
   height: 10px;
   -webkit-appearance: none;
   appearance: none;
-  background: linear-gradient(to right, var(--enroll-brand) 0%, var(--enroll-brand) var(--slider-pct, 0%), var(--enroll-card-border) var(--slider-pct, 0%), var(--enroll-card-border) 100%);
+  background: linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) var(--slider-pct, 0%), var(--border-default) var(--slider-pct, 0%), var(--border-default) 100%);
   border-radius: 9999px;
   margin-bottom: 8px;
 }
@@ -4415,17 +4400,17 @@ button {
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  background: var(--enroll-brand);
+  background: var(--color-primary);
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid var(--enroll-card-bg);
+  border: 2px solid var(--color-card);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .contrib-slider__input::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: var(--enroll-brand);
+  background: var(--color-primary);
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid white;
@@ -4750,7 +4735,7 @@ button {
   stroke-opacity: 0.5;
 }
 
-.dark .contrib-chart .contrib-chart-grid-line {
+[data-theme="dark"] .contrib-chart .contrib-chart-grid-line {
   stroke: #475569;
   stroke-opacity: 0.4;
 }
@@ -5021,15 +5006,15 @@ button {
 }
 
 /* Dark mode */
-.dark .enrollment-stepper__ring-center {
+[data-theme="dark"] .enrollment-stepper__ring-center {
   background-color: transparent;
 }
 
-.dark .enrollment-stepper__ring-fill {
+[data-theme="dark"] .enrollment-stepper__ring-fill {
   stroke: #34d399;
 }
 
-.dark .enrollment-stepper__step-count {
+[data-theme="dark"] .enrollment-stepper__step-count {
   color: var(--color-text);
 }
 
@@ -5589,14 +5574,14 @@ button {
 
 .transaction-flow-footer__save-exit:hover:not(:disabled) {
   background-color: var(--color-background-secondary);
-  border-color: var(--enroll-brand);
+  border-color: var(--color-primary);
 }
 
 .transaction-flow-footer__primary {
   min-height: 44px;
   min-width: 160px;
   padding: 10px 24px;
-  background-color: var(--enroll-brand);
+  background-color: var(--color-primary);
   color: var(--color-text-inverse);
   border: none;
   font-size: 0.9375em;
@@ -5608,11 +5593,11 @@ button {
 
 .transaction-flow-footer__primary:hover:not(:disabled) {
   background-color: var(--color-primary-hover);
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 
 .transaction-flow-footer__primary:focus-visible {
-  outline: 2px solid var(--enroll-brand);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -6959,24 +6944,24 @@ button {
 
 /* Activity insight cards — enrollment elevation on hover */
 .activity-insight-card:hover {
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 
 /* Transaction widgets (Loan, Withdrawal, Rollover) — enrollment tokens */
 .transaction-widget-button:hover {
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 .transaction-widget-button:focus-visible {
-  outline: 2px solid var(--enroll-brand);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
-  box-shadow: var(--enroll-elevation-2);
+  box-shadow: var(--shadow-md);
 }
 
 /* Transaction form inputs — enrollment focus ring */
 .transaction-form-input:focus {
   outline: none;
-  border-color: var(--enroll-brand);
-  box-shadow: 0 0 0 2px rgb(var(--enroll-brand-rgb) / 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgb(var(--color-primary-rgb) / 0.2);
 }
 
 /* PresetPills Styles */
@@ -7302,18 +7287,18 @@ button {
 /* Secondary button for Start Auto Increase */
 .auto-increase-panel__btn--secondary {
   background-color: transparent;
-  color: var(--enroll-text-secondary, var(--color-text-secondary));
-  border: 1px solid var(--enroll-card-border, var(--color-border));
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
 }
 
 .auto-increase-panel__btn--secondary:hover:not(:disabled) {
-  background-color: var(--enroll-soft-bg, var(--color-background-secondary));
-  color: var(--enroll-text-primary, var(--color-text));
-  border-color: var(--enroll-card-border, var(--color-border));
+  background-color: var(--surface-section);
+  color: var(--text-primary);
+  border-color: var(--border-default);
 }
 
 .auto-increase-panel__btn--secondary:focus-visible {
-  outline: 2px solid var(--enroll-accent);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
@@ -8830,7 +8815,7 @@ button {
   position: relative;
 }
 
-.dark .investment-portfolio-ai-panel {
+[data-theme="dark"] .investment-portfolio-ai-panel {
   background: linear-gradient(
     145deg,
     color-mix(in srgb, var(--ai-primary, #7c3aed) 22%, var(--card)) 0%,
@@ -11167,9 +11152,9 @@ button {
 /* Advisor Help Card - separate card per Figma */
 .advisor-help-card {
   padding: var(--spacing-5);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--ai-primary) 6%, var(--enroll-card-bg)) 0%, color-mix(in srgb, var(--ai-primary) 12%, var(--enroll-card-bg)) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ai-primary) 6%, var(--color-card)) 0%, color-mix(in srgb, var(--ai-primary) 12%, var(--color-card)) 100%);
   border-radius: var(--radius-lg);
-  border: 1px solid color-mix(in srgb, var(--ai-primary) 20%, var(--enroll-card-border));
+  border: 1px solid color-mix(in srgb, var(--ai-primary) 20%, var(--border-default));
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
@@ -12658,7 +12643,7 @@ button {
   min-height: 140px;
 }
 
-.dark .review-page__contribution-card {
+[data-theme="dark"] .review-page__contribution-card {
   background: var(--color-surface);
   border-color: var(--color-border);
 }
@@ -12670,7 +12655,7 @@ button {
   margin-bottom: var(--spacing-3);
 }
 
-.dark .review-page__contribution-source {
+[data-theme="dark"] .review-page__contribution-source {
   color: var(--color-text);
 }
 
@@ -12693,11 +12678,11 @@ button {
   color: #212529;
 }
 
-.dark .review-page__contribution-value {
+[data-theme="dark"] .review-page__contribution-value {
   color: var(--color-text-tertiary);
 }
 
-.dark .review-page__contribution-value--active {
+[data-theme="dark"] .review-page__contribution-value--active {
   color: var(--color-text);
 }
 
@@ -12707,7 +12692,7 @@ button {
   color: #6c757d;
 }
 
-.dark .review-page__contribution-label {
+[data-theme="dark"] .review-page__contribution-label {
   color: var(--color-text-secondary);
 }
 
@@ -12727,11 +12712,11 @@ button {
   color: #3b82f6;
 }
 
-.dark .review-page__contribution-edit {
+[data-theme="dark"] .review-page__contribution-edit {
   color: var(--color-text-tertiary);
 }
 
-.dark .review-page__contribution-edit:hover {
+[data-theme="dark"] .review-page__contribution-edit:hover {
   color: var(--color-primary);
 }
 
@@ -12750,7 +12735,7 @@ button {
   text-decoration: underline;
 }
 
-.dark .review-page__edit-link {
+[data-theme="dark"] .review-page__edit-link {
   color: var(--color-primary);
 }
 
@@ -12789,11 +12774,11 @@ button {
   text-decoration: underline;
 }
 
-.dark .review-page__increase-contribution {
+[data-theme="dark"] .review-page__increase-contribution {
   color: var(--color-primary);
 }
 
-.dark .review-page__increase-icon {
+[data-theme="dark"] .review-page__increase-icon {
   background: var(--color-primary);
   color: #ffffff;
 }
@@ -12820,7 +12805,7 @@ button {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.08), 0 4px 5px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
-.dark .review-page__block--investments {
+[data-theme="dark"] .review-page__block--investments {
   background: var(--color-surface) !important;
   border-color: var(--color-border) !important;
 }
@@ -13151,7 +13136,7 @@ button {
   box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.08), 0 4px 5px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
-.dark .review-page__block--plan {
+[data-theme="dark"] .review-page__block--plan {
   background: var(--color-surface) !important;
   border-color: var(--color-border) !important;
 }
@@ -13170,7 +13155,7 @@ button {
   color: #333333;
 }
 
-.dark .review-page__plan-title {
+[data-theme="dark"] .review-page__plan-title {
   color: var(--color-text);
 }
 
@@ -13184,7 +13169,7 @@ button {
   text-decoration: underline;
 }
 
-.dark .review-page__plan-view {
+[data-theme="dark"] .review-page__plan-view {
   color: var(--color-primary);
 }
 
@@ -13229,7 +13214,7 @@ button {
   letter-spacing: 0;
 }
 
-.dark .review-page__plan-label {
+[data-theme="dark"] .review-page__plan-label {
   color: var(--color-text-secondary);
 }
 
@@ -13239,7 +13224,7 @@ button {
   color: #212529;
 }
 
-.dark .review-page__plan-value {
+[data-theme="dark"] .review-page__plan-value {
   color: var(--color-text);
 }
 
@@ -13253,7 +13238,7 @@ button {
   margin: var(--spacing-2) 0;
 }
 
-.dark .review-page__plan-separator {
+[data-theme="dark"] .review-page__plan-separator {
   background: var(--color-border);
 }
 
@@ -13273,7 +13258,7 @@ button {
   font-weight: 500;
 }
 
-.dark .review-page__plan-risk-pill {
+[data-theme="dark"] .review-page__plan-risk-pill {
   background: rgba(59, 130, 246, 0.2);
   color: #93c5fd;
 }
@@ -14957,11 +14942,11 @@ button {
   background: var(--color-background-tertiary);
   border-color: var(--accent-primary, var(--color-primary));
 }
-.dark .ped-qa-btn {
+[data-theme="dark"] .ped-qa-btn {
   background: var(--color-background-tertiary);
   border-color: var(--color-border);
 }
-.dark .ped-qa-btn:hover {
+[data-theme="dark"] .ped-qa-btn:hover {
   border-color: var(--accent-primary, var(--color-primary));
 }
 .ped-qa-icon {
@@ -18067,10 +18052,10 @@ button {
   cursor: pointer;
   background: linear-gradient(
     to right,
-    var(--slider-color, var(--enroll-brand)) 0%,
-    var(--slider-color, var(--enroll-brand)) var(--slider-pct, 0%),
-    var(--enroll-card-border) var(--slider-pct, 0%),
-    var(--enroll-card-border) 100%
+    var(--slider-color, var(--color-primary)) 0%,
+    var(--slider-color, var(--color-primary)) var(--slider-pct, 0%),
+    var(--border-default) var(--slider-pct, 0%),
+    var(--border-default) 100%
   );
   transition: background 0.1s ease;
 }
@@ -18081,31 +18066,31 @@ button {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--enroll-brand);
-  border: 3px solid var(--enroll-card-bg);
-  box-shadow: var(--enroll-elevation-2);
+  background: var(--color-primary);
+  border: 3px solid var(--color-card);
+  box-shadow: var(--shadow-md);
   cursor: grab;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .fund-row-slider::-webkit-slider-thumb:hover {
   transform: scale(1.15);
-  box-shadow: 0 0 0 6px rgb(var(--enroll-brand-rgb) / 0.12);
+  box-shadow: 0 0 0 6px rgb(var(--color-primary-rgb) / 0.12);
 }
 
 .fund-row-slider::-webkit-slider-thumb:active {
   transform: scale(1.2);
   cursor: grabbing;
-  box-shadow: 0 0 0 8px rgb(var(--enroll-brand-rgb) / 0.15);
+  box-shadow: 0 0 0 8px rgb(var(--color-primary-rgb) / 0.15);
 }
 
 .fund-row-slider::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--enroll-brand);
-  border: 3px solid var(--enroll-card-bg);
-  box-shadow: var(--enroll-elevation-2);
+  background: var(--color-primary);
+  border: 3px solid var(--color-card);
+  box-shadow: var(--shadow-md);
   cursor: grab;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -18449,7 +18434,7 @@ button {
 }
 
 .transactions-figma__icon-wrap--primary {
-  background: rgba(var(--enroll-brand-rgb, 55, 19, 236), 0.1);
+  background: rgb(var(--color-primary-rgb) / 0.1);
   color: var(--color-primary);
 }
 
@@ -18780,4 +18765,11 @@ button {
 
 .loan-flow-stepper__label--upcoming {
   color: var(--color-text-secondary);
+}
+
+/* Shell: never dim the app from global styles (overrides accidental opacity/filter on body/root). */
+body,
+#root {
+  opacity: 1 !important;
+  filter: none !important;
 }

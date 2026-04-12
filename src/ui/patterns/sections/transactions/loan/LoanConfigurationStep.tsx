@@ -93,7 +93,7 @@ export function LoanConfigurationStep({
           value={loan.reason}
           onChange={(e) => updateLoan({ reason: e.target.value })}
           rows={3}
-          className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary placeholder:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           placeholder="Brief description"
         />
       </FieldGroup>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AuthLayout } from "@/ui/auth/AuthLayout";
 import { AuthFormShell, AuthPasswordInput, AuthButton } from "@/ui/auth";
-import { Logo } from "@/ui/brand/Logo";
+import { CoreLogo } from "@/components/ui/CoreLogo";
 import { PasswordStrength } from "@/ui/components/PasswordStrength";
 
 export const ResetPassword = () => {
@@ -20,9 +20,7 @@ export const ResetPassword = () => {
     navigate("/");
   };
 
-  const headerSlot = (
-    <Logo className="h-10 w-auto" />
-  );
+  const headerSlot = <CoreLogo />;
 
   const bodySlot = (
     <>

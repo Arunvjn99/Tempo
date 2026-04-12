@@ -30,7 +30,7 @@ export function WithdrawalStepSourcesAmounts({
       totalSteps={totalSteps}
     >
       <FormSection title="Available balances">
-        <dl className="mb-lg grid gap-xs text-xs text-muted-foreground sm:grid-cols-2">
+        <dl className="mb-lg grid gap-xs text-xs text-secondary sm:grid-cols-2">
           <div>Pre-tax: {formatCurrency(w.availableSources.preTax)}</div>
           <div>Roth: {formatCurrency(w.availableSources.roth)}</div>
           <div>Employer: {formatCurrency(w.availableSources.employer)}</div>
@@ -57,7 +57,7 @@ export function WithdrawalStepSourcesAmounts({
                   selectedSources: { ...w.selectedSources, [key]: v },
                 });
               }}
-              className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </FieldGroup>
         ))}
@@ -66,7 +66,7 @@ export function WithdrawalStepSourcesAmounts({
             {errors.sources}
           </p>
         )}
-        <p className="text-sm font-medium text-foreground">
+        <p className="text-sm font-medium text-primary">
           Total withdrawal: {formatCurrency(w.totalAmount)}
         </p>
       </FormSection>

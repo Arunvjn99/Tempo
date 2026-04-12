@@ -49,7 +49,7 @@ export function buildReadinessSuggestions(
     const newPct = contributionPercent + 2;
     suggestions.push({
       type: "boost-contribution",
-      icon: <TrendingUp className="h-4 w-4 text-primary" />,
+      icon: <TrendingUp className="h-4 w-4 text-[var(--enroll-primary)]" />,
       title: "Boost Contribution by 2%",
       description: `Increase from ${formatPercent(contributionPercent)} to ${formatPercent(newPct)}`,
       scoreIncrease: computeScore({ contributionPercent: newPct }) - currentScore,
@@ -66,7 +66,7 @@ export function buildReadinessSuggestions(
   if (!autoIncrease) {
     suggestions.push({
       type: "enable-auto-increase",
-      icon: <Zap className="h-4 w-4 text-primary" />,
+      icon: <Zap className="h-4 w-4 text-[var(--enroll-primary)]" />,
       title: "Enable Auto-Increase",
       description: "Grow contributions 1% per year automatically",
       scoreIncrease: computeScore({ autoIncrease: true }) - currentScore,
@@ -84,7 +84,7 @@ export function buildReadinessSuggestions(
     const newRisk = riskLevel === "conservative" ? "balanced" : "growth";
     suggestions.push({
       type: "increase-risk",
-      icon: <TrendingUp className="h-4 w-4 text-primary" />,
+      icon: <TrendingUp className="h-4 w-4 text-[var(--enroll-primary)]" />,
       title: "Increase Risk Level",
       description: "Move to growth strategy for higher long-term returns",
       scoreIncrease: computeScore({ riskLevel: newRisk }) - currentScore,

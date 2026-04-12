@@ -44,7 +44,7 @@ export function DocumentUploadCard({ payload, onAction }: DocumentUploadCardProp
           variant="custom"
           size="custom"
           onClick={() => onAction({ action: "document_upload_card_continue", deferred: false })}
-          className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+          className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
         >
           Continue to review
         </Button>

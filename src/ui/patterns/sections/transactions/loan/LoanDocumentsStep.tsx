@@ -24,7 +24,7 @@ export function LoanDocumentsStep({
       totalSteps={totalSteps}
     >
       <FormSection title="Required documents">
-        <p className="mb-md text-sm text-muted-foreground">
+        <p className="mb-md text-sm text-secondary">
           In production, files upload here. For this flow, mark documents as complete to continue.
         </p>
         <label className="flex cursor-pointer items-start gap-md">
@@ -37,9 +37,9 @@ export function LoanDocumentsStep({
                 documentsUploaded: e.target.checked ? ["loan-agreement.pdf", "promissory-note.pdf"] : [],
               })
             }
-            className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            className="mt-0.5 h-4 w-4 rounded border-default text-brand focus:ring-primary"
           />
-          <span className="text-sm text-foreground">
+          <span className="text-sm text-primary">
             I confirm all required documents are uploaded and accurate.
           </span>
         </label>

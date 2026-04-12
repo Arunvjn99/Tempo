@@ -11,7 +11,7 @@ export function LoanConfirmStep({ totalSteps, onNext, onBack, nextDisabled }: Lo
       totalSteps={totalSteps}
     >
       <FormSection variant="highlight">
-        <p className="text-sm text-foreground">
+        <p className="text-sm text-primary">
           By continuing, you authorize processing of this loan according to plan rules and the summary on the
           previous step.
         </p>

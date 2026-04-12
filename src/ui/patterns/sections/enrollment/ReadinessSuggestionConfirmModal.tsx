@@ -39,34 +39,31 @@ export function ReadinessSuggestionConfirmModal({
   const balanceDiff = suggestion.projectedBalance - currentBalance;
 
   return (
-    <motion.div
+    <div
       ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
-      initial={{ opacity: reduce ? 1 : 0 }}
-      animate={{ opacity: 1 }}
-      transition={motionTransition({ duration: "fast", ease: "smooth" })}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)] p-4"
       onClick={(e) => {
         if (e.target === backdropRef.current) onCancel();
       }}
     >
       <motion.div
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
-        initial={{ opacity: reduce ? 1 : 0, scale: reduce ? 1 : 0.96, y: reduce ? 0 : 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="card-standard w-full max-w-md overflow-hidden"
+        initial={{ scale: reduce ? 1 : 0.96, y: reduce ? 0 : 10 }}
+        animate={{ scale: 1, y: 0 }}
         transition={motionTransition({ duration: "normal", ease: "snappy" })}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between border-b border-default px-6 py-4">
           <div>
-            <p className="text-[1rem] font-semibold text-foreground">Confirm Change</p>
-            <p className="mt-0.5 text-[0.75rem] text-muted-foreground">Review the impact before applying.</p>
+            <p className="text-[1rem] font-semibold text-primary">Confirm Change</p>
+            <p className="mt-0.5 text-[0.75rem] text-secondary">Review the impact before applying.</p>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="iconSm"
             onClick={onCancel}
-            className="rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="rounded-lg text-secondary hover:bg-primary/5 hover:text-primary"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -74,30 +71,30 @@ export function ReadinessSuggestionConfirmModal({
 
         <div className="space-y-5 px-6 py-5">
           <div>
-            <p className="mb-3 text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="mb-3 text-[0.68rem] font-semibold uppercase tracking-wide text-secondary">
               What&apos;s changing
             </p>
             <div className="flex items-center gap-3">
-              <div className="flex-1 rounded-xl bg-muted p-3 text-center">
-                <p className="text-[0.68rem] font-medium text-muted-foreground">{suggestion.currentLabel}</p>
-                <p className="mt-0.5 text-[1.1rem] font-bold text-foreground">{suggestion.currentValue}</p>
+              <div className="flex-1 rounded-xl border border-default bg-surface-soft p-3 text-center">
+                <p className="text-[0.68rem] font-medium text-secondary">{suggestion.currentLabel}</p>
+                <p className="mt-0.5 text-[1.1rem] font-bold text-primary">{suggestion.currentValue}</p>
               </div>
-              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-secondary" />
               <div className="flex-1 rounded-xl border border-primary/30 bg-primary/5 p-3 text-center">
-                <p className="text-[0.68rem] font-medium text-primary">{suggestion.newLabel}</p>
-                <p className="mt-0.5 text-[1.1rem] font-bold text-primary">{suggestion.newValue}</p>
+                <p className="text-[0.68rem] font-medium text-brand">{suggestion.newLabel}</p>
+                <p className="mt-0.5 text-[1.1rem] font-bold text-brand">{suggestion.newValue}</p>
               </div>
             </div>
           </div>
 
           <div>
-            <p className="mb-3 text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">Impact</p>
+            <p className="mb-3 text-[0.68rem] font-semibold uppercase tracking-wide text-secondary">Impact</p>
             <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-xl bg-muted px-4 py-3">
-                <span className="text-[0.82rem] text-foreground">Readiness score</span>
+              <div className="flex items-center justify-between rounded-xl border border-default bg-surface-soft px-4 py-3">
+                <span className="text-[0.82rem] text-primary">Readiness score</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.9rem] font-semibold text-muted-foreground tabular-nums">{currentScore}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[0.9rem] font-semibold text-secondary tabular-nums">{currentScore}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-secondary" />
                   <span className="text-[0.9rem] font-bold text-success tabular-nums">{suggestion.newScore}</span>
                   <span className="flex items-center gap-0.5 rounded bg-success/10 px-1.5 py-0.5 text-[0.68rem] font-semibold text-success">
                     <ArrowUpRight className="h-2.5 w-2.5" />+{scoreDiff}
@@ -105,21 +102,21 @@ export function ReadinessSuggestionConfirmModal({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl bg-muted px-4 py-3">
-                <span className="text-[0.82rem] text-foreground">Additional annual savings</span>
+              <div className="flex items-center justify-between rounded-xl border border-default bg-surface-soft px-4 py-3">
+                <span className="text-[0.82rem] text-primary">Additional annual savings</span>
                 <span className="text-[0.9rem] font-bold text-success tabular-nums">
                   +{formatCurrency(suggestion.additionalAnnualSavings)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between rounded-xl bg-muted px-4 py-3">
-                <span className="text-[0.82rem] text-foreground">Projected retirement balance</span>
+              <div className="flex items-center justify-between rounded-xl border border-default bg-surface-soft px-4 py-3">
+                <span className="text-[0.82rem] text-primary">Projected retirement balance</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.82rem] text-muted-foreground tabular-nums">
+                  <span className="text-[0.82rem] text-secondary tabular-nums">
                     {formatCurrency(currentBalance)}
                   </span>
-                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-[0.9rem] font-bold text-foreground tabular-nums">
+                  <ArrowRight className="h-3.5 w-3.5 text-secondary" />
+                  <span className="text-[0.9rem] font-bold text-primary tabular-nums">
                     {formatCurrency(suggestion.projectedBalance)}
                   </span>
                 </div>
@@ -136,13 +133,13 @@ export function ReadinessSuggestionConfirmModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-border px-6 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-default px-6 py-4">
           <Button
             type="button"
             variant="custom"
             size="custom"
             onClick={onCancel}
-            className="rounded-xl border border-border px-5 py-2.5 text-[0.85rem] font-medium text-foreground transition-colors hover:bg-muted"
+            className="rounded-xl border border-default px-5 py-2.5 text-[0.85rem] font-medium text-primary transition-colors hover:bg-primary/5"
           >
             Cancel
           </Button>
@@ -157,6 +154,6 @@ export function ReadinessSuggestionConfirmModal({
           </Button>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }

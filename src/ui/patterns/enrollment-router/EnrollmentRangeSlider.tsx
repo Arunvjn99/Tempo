@@ -29,9 +29,9 @@ export function EnrollmentRangeSlider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label={ariaLabel}
-        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-border accent-primary [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md"
+        className="h-2 w-full cursor-pointer appearance-none rounded-full bg-border accent-primary [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
       />
-      <div className="mt-1 flex justify-between text-[0.7rem] text-muted-foreground">
+      <div className="mt-1 flex justify-between text-[0.7rem] text-secondary">
         <span>{min}</span>
         <span>{max}</span>
       </div>

@@ -15,6 +15,6 @@
   --ai-border: color-mix(in srgb, var(--ai-primary) 22%, transparent);
 }
 
-.dark {
+html[data-theme="dark"] {
   --ai-bg-soft: color-mix(in srgb, var(--ai-primary) 14%, var(--card, #141418));
 }

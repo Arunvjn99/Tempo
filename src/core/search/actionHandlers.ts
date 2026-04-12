@@ -12,9 +12,9 @@ export function buildActionHandlers(
   const v = (path: string) => navigate(withVersionIfEnrollment(routeVersion, path));
 
   return {
-    OPEN_LOAN_FLOW: () => v("/transactions/loan/eligibility"),
+    OPEN_LOAN_FLOW: () => v("/transactions/loan"),
     OPEN_CONTRIBUTION_FLOW: () => v("/enrollment/contribution"),
-    OPEN_WITHDRAWAL_FLOW: () => v("/transactions/withdraw"),
+    OPEN_WITHDRAWAL_FLOW: () => v("/transactions/withdrawal"),
     OPEN_REBALANCE_FLOW: () => v("/transactions/rebalance"),
     OPEN_TRANSFER_FLOW: () => v("/transactions/transfer"),
     OPEN_ROLLOVER_FLOW: () => v("/transactions/rollover"),

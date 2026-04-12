@@ -23,7 +23,7 @@ export const Navbar: React.FC = () => {
                 <p className="text-xs text-slate-400">Status</p>
                 <p className="text-sm font-semibold text-slate-700">Pre-Enrollment</p>
              </div>
-             <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg md:hidden">
+             <button className="p-2 text-muted-foreground hover:bg-primary/5 rounded-lg md:hidden">
                 <Menu size={24} />
              </button>
         </div>

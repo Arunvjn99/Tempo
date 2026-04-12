@@ -48,8 +48,8 @@ export function ReadinessAnimatedScoreRing({
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[2.8rem] font-bold tabular-nums text-foreground">{display}</span>
-        <span className="text-[0.75rem] text-muted-foreground">out of 100</span>
+        <span className="text-[2.8rem] font-bold tabular-nums text-primary">{display}</span>
+        <span className="text-[0.75rem] text-secondary">out of 100</span>
       </div>
     </div>
   );

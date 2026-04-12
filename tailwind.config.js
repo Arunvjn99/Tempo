@@ -4,7 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: "class",
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       keyframes: {
@@ -50,39 +50,84 @@ export default {
       },
       colors: {
         /* Theme engine: all colors from CSS variables (branding_json + dark mode) */
-        "surface-primary": "var(--surface-primary)",
-        "surface-secondary": "var(--surface-secondary)",
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          page: "var(--surface-page)",
+          card: "var(--surface-card)",
+          soft: "var(--surface-soft)",
+          elevated: "var(--surface-elevated)",
+          section: "var(--surface-section)",
+          primary: "var(--surface-primary)",
+          secondary: "var(--surface-secondary)",
+          tertiary: "var(--surface-tertiary)",
+        },
+        text: {
+          primary: "var(--text-primary)",
+          secondary: "var(--text-secondary)",
+        },
         "foreground-primary": "var(--text-primary)",
         "foreground-secondary": "var(--text-secondary)",
         "border-subtle": "var(--border-subtle)",
         "brand-primary": "var(--brand-primary)",
         "brand-hover": "var(--brand-hover)",
         "brand-active": "var(--brand-active)",
-        background: "var(--color-background)",
+        /** Page canvas — same as body; use `bg-canvas` or `bg-background` */
+        background: "var(--surface-page)",
+        canvas: "var(--color-background)",
         "background-secondary": "var(--color-background-secondary)",
         "background-tertiary": "var(--color-background-tertiary)",
-        card: "var(--card-bg)",
+        card: "var(--surface-card)",
         "card-foreground": "var(--color-text)",
-        surface: "var(--color-surface)",
         "surface-muted": "var(--bg-surface-muted)",
-        foreground: "var(--color-text)",
-        muted: "var(--color-text-secondary)",
-        "muted-foreground": "var(--color-text-tertiary)",
+        foreground: "var(--text-primary)",
+        /** Muted surfaces (chips, wells) — pair with border/shadow for depth */
+        muted: "var(--surface-muted)",
+        "muted-foreground": "var(--text-secondary)",
+        /** Secondary / accent surfaces (Figma Make + shadcn-style controls) */
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--accent-surface)",
+          foreground: "var(--accent-surface-foreground)",
+        },
+        "input-background": "var(--input-background)",
+        /** Brand CTA / links — prefer `text-brand` over `text-primary` (body = `text-primary` in token-utilities.css). */
+        brand: {
+          DEFAULT: "var(--brand-primary)",
+          hover: "var(--brand-hover)",
+          active: "var(--brand-active)",
+        },
         primary: {
-          DEFAULT: "var(--color-primary)",
-          hover: "var(--color-primary-hover)",
-          active: "var(--color-primary-active)",
+          DEFAULT: "var(--brand-primary)",
+          hover: "var(--brand-hover)",
+          active: "var(--brand-active)",
         },
         /** On-primary text (stepper, chips); maps to global --primary-foreground */
         "primary-foreground": "var(--primary-foreground)",
         border: {
-          DEFAULT: "var(--color-border)",
+          DEFAULT: "var(--border-default)",
           subtle: "var(--border-subtle)",
           muted: "var(--color-background-tertiary)",
         },
         danger: "var(--color-danger)",
         success: "var(--accent-success)",
         warning: "var(--accent-warning)",
+        /** RetireWise enrollment — scoped under `.enrollment-theme`; fallbacks use dashboard surfaces */
+        "enroll-bg": "var(--enroll-bg, var(--color-background))",
+        "enroll-card": "var(--enroll-card, var(--color-card))",
+        "enroll-text": "var(--enroll-text, var(--color-text))",
+        "enroll-muted": "var(--enroll-muted, var(--color-text-secondary))",
+        "enroll-border": "var(--enroll-border, var(--border-default))",
+        /** Page-level semantic aliases (see tokens.css --token-*) */
+        token: {
+          bg: "var(--token-background)",
+          card: "var(--token-card)",
+          text: "var(--token-text)",
+          muted: "var(--token-muted)",
+          border: "var(--token-border)",
+        },
       },
       backgroundImage: {
         "brand-gradient": "var(--brand-gradient)",
@@ -90,11 +135,19 @@ export default {
         "insight-gradient": "var(--insight-gradient)",
       },
       boxShadow: {
+        card: "var(--shadow-card)",
+        header: "var(--shadow-header)",
+        "gradient-block": "var(--shadow-gradient-block)",
         "elevation-sm": "var(--elevation-sm)",
         "elevation-md": "var(--elevation-md)",
+        "elevation-lg": "var(--shadow-lg)",
       },
       borderRadius: {
+        /** Marketing dashboard blue gradient block */
+        dashboard: "var(--radius-dashboard-gradient)",
         card: "var(--radius-2xl)",
+        /** 12px — nested wells inside enrollment cards (Figma) */
+        "enroll-inner": "var(--radius-xl)",
         button: "var(--radius-md)",
         input: "var(--radius-md)",
       },
@@ -117,6 +170,28 @@ export default {
         xl: "32px",
         "2xl": "48px",
         "3xl": "64px",
+      },
+      fontSize: {
+        /** Enrollment wizard — sizes from `src/core/theme/tokens.css` (--enroll-text-*) */
+        "enroll-micro": ["var(--enroll-text-micro, 0.625rem)", { lineHeight: "0.875rem" }],
+        "enroll-label": ["var(--enroll-text-label, 0.65rem)", { lineHeight: "1rem" }],
+        "enroll-caption": ["var(--enroll-text-caption, 0.75rem)", { lineHeight: "1rem" }],
+        "enroll-meta": ["var(--enroll-text-meta, 0.62rem)", { lineHeight: "1rem" }],
+        "enroll-body-sm": ["var(--enroll-text-body-sm, 0.8125rem)", { lineHeight: "1.25rem" }],
+        "enroll-body": ["var(--enroll-text-body, 0.875rem)", { lineHeight: "1.25rem" }],
+        "enroll-body-md": ["var(--enroll-text-body-md, 0.9rem)", { lineHeight: "1.375rem" }],
+        "enroll-subtitle": ["var(--enroll-text-subtitle, 0.95rem)", { lineHeight: "1.375rem" }],
+        "enroll-lead": ["var(--enroll-text-lead, 1rem)", { lineHeight: "1.5rem" }],
+        "enroll-stat": ["var(--enroll-text-stat, 1.05rem)", { lineHeight: "1.25rem" }],
+        "enroll-back": ["var(--enroll-text-back, 0.85rem)", { lineHeight: "1.25rem" }],
+        "enroll-footnote": ["var(--enroll-text-footnote, 0.8rem)", { lineHeight: "1.25rem" }],
+        "enroll-hero-display": ["var(--enroll-text-hero-display, 2.6rem)", { lineHeight: "1" }],
+        "enroll-metric-tiny": ["var(--enroll-text-metric-tiny, 0.6rem)", { lineHeight: "0.875rem" }],
+        "enroll-link": ["var(--enroll-text-link, 0.7rem)", { lineHeight: "1rem" }],
+      },
+      letterSpacing: {
+        "enroll-label": "var(--enroll-tracking-label, 0.04em)",
+        "enroll-overline": "var(--enroll-tracking-overline, 0.05em)",
       },
       fontFamily: {
         sans: ["system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"],

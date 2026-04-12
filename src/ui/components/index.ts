@@ -20,11 +20,37 @@ export { ActionBar } from "./ActionBar";
 export { SliderInput } from "./SliderInput";
 export { PercentageInput } from "./PercentageInput";
 export { AllocationEditor, type AllocationSlice } from "./AllocationEditor";
-export { ReviewCard, ReviewSection } from "./ReviewCard";
+export { ReviewCard, CardReviewSection } from "./ReviewCard";
 export { StepProgress } from "./StepProgress";
 export { FloatingCard } from "./FloatingCard";
 export { GlassCard, type GlassCardProps } from "./GlassCard";
-export { GradientBackground } from "./GradientBackground";
 export { HeroSection, type HeroSectionProps } from "./HeroSection";
 export { ChoiceButton, ChoiceGroup } from "./ChoiceButton";
 export { SummaryRow, SummaryList } from "./SummaryRow";
+export {
+  StepCard,
+  WizardFormSection,
+  InputField,
+  SelectionCard,
+  SelectableCard,
+  ProgressHeader,
+  CTAButton,
+  ContributionSection,
+  InvestmentSelectionSection,
+  ReviewSection,
+  type StepCardProps,
+  type WizardFormSectionProps,
+  type InputFieldProps,
+  type SelectionCardProps,
+  type SelectableCardProps,
+  type ProgressHeaderProps,
+  type ProgressHeaderStep,
+  type ProgressStepState,
+  type CTAButtonProps,
+  type CTAButtonVariant,
+  type ContributionSectionProps,
+  type InvestmentOptionPresentation,
+  type InvestmentSelectionSectionProps,
+  type ReviewRowPresentation,
+  type ReviewSectionProps,
+} from "./enrollment";

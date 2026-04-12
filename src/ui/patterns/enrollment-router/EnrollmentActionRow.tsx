@@ -24,14 +24,19 @@ export function EnrollmentActionRow({
   className,
 }: EnrollmentActionRowProps) {
   return (
-    <div className={cn("mt-8 flex items-center justify-between gap-4", className)}>
+    <div
+      className={cn(
+        "mt-8 flex items-center justify-between gap-4 border-t border-default bg-background/95 pt-6",
+        className,
+      )}
+    >
       {!hideBack && onBack ? (
         <Button
           type="button"
           variant="ghost"
           size="custom"
           onClick={onBack}
-          className="inline-flex h-auto min-h-0 items-center gap-1 px-0 py-0 text-[0.85rem] font-semibold text-muted-foreground hover:bg-transparent hover:text-foreground"
+          className="inline-flex h-auto min-h-0 items-center gap-1 px-0 py-0 text-enroll-back font-semibold text-secondary hover:bg-transparent hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back
@@ -41,15 +46,13 @@ export function EnrollmentActionRow({
       )}
       <Button
         type="button"
-        variant="custom"
-        size="custom"
+        variant="primary"
+        size="lg"
         onClick={onNext}
         disabled={nextDisabled}
         className={cn(
-          "inline-flex items-center gap-2 rounded-xl px-6 py-3 text-[0.9rem] font-medium transition-all active:scale-[0.98]",
-          nextDisabled
-            ? "cursor-not-allowed bg-muted text-muted-foreground"
-            : "bg-primary text-primary-foreground hover:opacity-90",
+          "inline-flex min-w-[8rem] items-center gap-2 font-semibold transition-all active:scale-[0.98]",
+          nextDisabled && "cursor-not-allowed border border-default bg-surface-card text-secondary hover:opacity-100",
         )}
       >
         {nextLabel}

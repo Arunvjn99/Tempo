@@ -1,6 +1,6 @@
 import type { RolloverData } from "@/features/transactions/store/types";
 import { ALLOCATION_OPTIONS, ROLLOVER_TYPES } from "@/features/transactions/store/constants/rolloverFlowConstants";
-import { ActionBar, ReviewCard, ReviewSection } from "@/ui/components";
+import { ActionBar, CardReviewSection, ReviewCard } from "@/ui/components";
 import { StepLayout } from "@/ui/patterns";
 import { formatCurrency } from "@/features/transactions/services/format";
 
@@ -28,7 +28,7 @@ export function RolloverStepReview({
       stepNumber={5}
       totalSteps={totalSteps}
     >
-      <ReviewSection title="Summary">
+      <CardReviewSection title="Summary">
         <ReviewCard label="Employer" value={r.previousEmployer} onEdit={() => goToStep(0)} />
         <ReviewCard label="Administrator" value={r.planAdministrator} onEdit={() => goToStep(0)} />
         <ReviewCard label="Account" value={r.accountNumber} onEdit={() => goToStep(0)} />
@@ -47,7 +47,7 @@ export function RolloverStepReview({
           value={ALLOCATION_OPTIONS.find((a) => a.id === r.allocationMethod)?.label ?? ""}
           onEdit={() => goToStep(3)}
         />
-      </ReviewSection>
+      </CardReviewSection>
       <ActionBar onNext={onNext} onBack={onBack} nextDisabled={nextDisabled} nextLabel="Submit rollover" />
     </StepLayout>
   );

@@ -28,9 +28,9 @@ export function StepHeading({
         className,
       )}
     >
-      <h2 className="text-lg font-semibold leading-snug text-foreground sm:text-xl">{title}</h2>
+      <h2 className="text-lg font-semibold leading-snug text-primary sm:text-xl">{title}</h2>
       {description && (
-        <p className="text-[0.85rem] leading-relaxed text-muted-foreground">{description}</p>
+        <p className="text-enroll-back leading-relaxed text-secondary">{description}</p>
       )}
       {children}
     </div>

@@ -41,7 +41,7 @@ export function InteractiveChipGroup({ chips, selectedValue, onSelect, label }: 
                 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
                 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-white
                 ${isSelected
-                  ? "bg-primary/10 border border-primary/50 text-primary"
+                  ? "bg-primary/10 border border-primary/50 text-brand"
                   : "bg-[var(--color-background)] border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]"
                 }
               `}

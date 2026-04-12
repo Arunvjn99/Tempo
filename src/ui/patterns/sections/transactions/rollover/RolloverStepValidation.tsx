@@ -30,7 +30,7 @@ export function RolloverStepValidation({
       totalSteps={totalSteps}
     >
       <FormSection title="Validation">
-        <p className="mb-md text-sm text-muted-foreground">
+        <p className="mb-md text-sm text-secondary">
           Run a mock validation against the account information you entered.
         </p>
         <div className="flex flex-wrap gap-sm">
@@ -47,7 +47,7 @@ export function RolloverStepValidation({
             type="button"
             variant="custom"
             size="custom"
-            className="rounded-button border border-border bg-surface px-md py-sm text-sm font-medium text-foreground hover:bg-muted"
+            className="rounded-button border border-default bg-surface px-md py-sm text-sm font-medium text-primary hover:bg-primary/5"
             onClick={() =>
               updateRollover({
                 accountValidated: false,

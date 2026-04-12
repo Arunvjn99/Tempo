@@ -21,22 +21,17 @@ export function CoreAssistantModal(props: CoreAssistantModalProps) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center">
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          <div
+            className="absolute inset-0 bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)]"
             onClick={props.onClose}
             aria-hidden
           />
 
           <motion.div
             key="modal"
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.97 }}
+            initial={{ y: 40, scale: 0.97 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 40, scale: 0.97 }}
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="relative z-10 flex flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl bg-[var(--color-surface)] text-[var(--color-text)] shadow-2xl w-full sm:w-[min(640px,calc(100vw-2rem))] md:w-[min(720px,calc(100vw-2rem))] h-[calc(100dvh-1rem)] sm:h-[min(620px,calc(100dvh-3rem))]"
             role="dialog"

@@ -81,7 +81,7 @@ export const FloatingCards: React.FC = () => {
           max="15" 
           value={contribution} 
           onChange={(e) => setContribution(parseInt(e.target.value))}
-          className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600 mb-4"
+          className="w-full h-2 bg-border rounded-lg appearance-none cursor-pointer accent-brand-600 mb-4"
         />
         
         <div className="flex items-center gap-2 text-xs text-slate-500">

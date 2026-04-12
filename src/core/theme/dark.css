@@ -1,37 +1,15 @@
-.dark {
-  --slider-track-unfilled: #475569;
-
-  --color-background: #111827;
-  --color-background-secondary: #1f2937;
-  --color-background-tertiary: #4b5563;
-
-  --color-text: #f9fafb;
-  --color-text-secondary: #d1d5db;
-  --color-text-tertiary: #6b7280;
-  --color-text-inverse: #111827;
-
-  --color-border: #4b5563;
-  --color-surface: #1a1f2e;
-  --color-surface-elevated: #0b1220;
-
-  --card-bg: var(--color-surface-elevated);
-  --card-border: rgb(255 255 255 / 0.10);
-  --card-shadow: var(--shadow-md);
-
+/* Dark mode — structural colors come from tokens.css `html[data-theme="dark"]`; this file adds charts, shadows, elevations. */
+html[data-theme="dark"] {
   /* Reduced shadows for dark mode */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  /* Cards: match light elevation pattern; uses reduced dark shadows above */
+  --shadow-card: var(--shadow-sm);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 
-  --bg: var(--color-background);
-  --surface: var(--color-surface);
-  --text-primary: var(--color-text);
-  --text-secondary: var(--color-text-secondary);
-  --border: var(--color-border);
-  --accent: var(--color-primary);
-  --bg-surface-muted: var(--color-background-secondary);
   --banner-gradient: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+
   /* Chart palette - slightly brighter for dark backgrounds */
   --chart-1: #60a5fa;
   --chart-2: #34d399;
@@ -43,16 +21,4 @@
   --chart-8: #a3e635;
   --chart-9: #fb923c;
   --chart-10: #818cf8;
-
-  /* ── Enrollment dark overrides ── */
-  --enroll-bg: #0f172a;
-  --enroll-card-bg: #1e293b;
-  --enroll-card-border: #334155;
-  --enroll-soft-bg: #1e293b;
-  --enroll-text-primary: #f1f5f9;
-  --enroll-text-secondary: #94a3b8;
-  --enroll-text-muted: #64748b;
-  --enroll-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --enroll-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --enroll-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.3);
 }

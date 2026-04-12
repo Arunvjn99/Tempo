@@ -24,6 +24,8 @@ import { SearchSmartInsight } from "./SearchSmartInsight";
 export type CommandSearchProps = {
   onClose: () => void;
   initialQuery?: string;
+  /** When false, render nothing (palette closed / safety guard). */
+  open?: boolean;
 };
 
 type UiPhase = "idle" | "focused" | "typing" | "results" | "no-results";
@@ -43,7 +45,7 @@ function useDebouncedTyping(query: string, ms: number) {
 /**
  * Global command palette: scripted scenarios + Core AI fallback (same engine as hero search).
  */
-export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps) {
+export function CommandSearch({ onClose, initialQuery = "", open = true }: CommandSearchProps) {
   const { query, setQuery, suggestions, answer, handleSelect, submitWithSuggestionRows, submitFreeform } = useSearch({
     initialQuery,
   });
@@ -287,6 +289,8 @@ export function CommandSearch({ onClose, initialQuery = "" }: CommandSearchProps
       </div>
     </SearchOverlay>
   );
+
+  if (!open) return null;
 
   return createPortal(overlay, document.body);
 }

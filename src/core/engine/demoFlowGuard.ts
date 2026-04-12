@@ -3,6 +3,7 @@
  */
 
 import { getRoutingVersion, withVersion } from "@/core/version";
+import { TEMP_BYPASS_DASHBOARD_REDIRECTS, TEMP_DEFAULT_APP_ROUTE } from "@/core/tempRoutingBypass";
 import type { Scenario } from "@/core/engine/scenarioEngine";
 import {
   enforceScenarioFlow,
@@ -16,7 +17,7 @@ export function isDemoScenarioPathAllowed(pathname: string, scenario: Scenario):
 /** Unversioned redirect target when the current path is outside the scenario flow. */
 export function resolveDemoScenarioRedirect(pathname: string, scenario: Scenario): string {
   const r = enforceScenarioFlow(pathname, scenario);
-  return typeof r === "string" ? r : "/dashboard";
+  return typeof r === "string" ? r : (TEMP_BYPASS_DASHBOARD_REDIRECTS ? TEMP_DEFAULT_APP_ROUTE : "/dashboard");
 }
 
 /**

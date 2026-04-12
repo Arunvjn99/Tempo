@@ -1,5 +1,7 @@
 import { motion } from "motion/react";
 import { CheckCircle2, TrendingUp } from "lucide-react";
+import { cn } from "@/core/lib/utils";
+import { typography } from "@/ui/tokens/typography";
 import { Button } from "./Button";
 import { FloatingCard } from "./FloatingCard";
 
@@ -12,19 +14,19 @@ export type HeroSectionProps = {
  */
 export function HeroSection({ onStartEnroll }: HeroSectionProps) {
   return (
-    <section className="grid lg:grid-cols-[1.1fr_1fr] gap-20 items-center">
+    <section className="grid items-center gap-12 rounded-2xl bg-[var(--surface-elevated)] px-6 py-10 opacity-100 text-[var(--color-text-inverse)] shadow-[var(--shadow-gradient-block)] md:gap-16 md:px-10 md:py-14 lg:grid-cols-[1.1fr_1fr] lg:gap-20 lg:px-12">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 20 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col gap-8"
+        className="flex flex-col gap-8 opacity-100 text-[var(--color-text-inverse)]"
       >
-        <h1 className="text-6xl md:text-7xl font-bold tracking-[-0.04em] text-slate-900 leading-[1.05]">
+        <h1 className={cn(typography.h1, "text-[var(--color-text-inverse)]")}>
           Let’s build your <br />
-          <span className="text-blue-600">future</span>, together.
+          <span className="text-brand">future</span>, together.
         </h1>
 
-        <p className="text-xl text-slate-500 max-w-lg leading-relaxed font-medium">
+        <p className={cn(typography.body, "max-w-lg font-medium text-[var(--color-text-inverse)] opacity-100")}>
           You&apos;re one step away from activating your 401(k). We&apos;ve simplified everything so you can focus on
           what matters.
         </p>
@@ -35,71 +37,71 @@ export function HeroSection({ onStartEnroll }: HeroSectionProps) {
             variant="custom"
             size="lg"
             onClick={onStartEnroll}
-            className="rounded-2xl border-0 bg-slate-900 px-10 text-base font-bold text-white shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] hover:bg-slate-800 active:scale-[0.98] group"
+            className="group rounded-2xl border-0 bg-[var(--surface-card)] px-10 text-base font-bold text-brand opacity-100 shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] dark:bg-[var(--text-primary)]"
           >
-            Start my enrollment →
+            Start Enrollment →
           </Button>
           <Button
             type="button"
             variant="secondary"
             size="lg"
-            className="rounded-2xl border-slate-200 px-10 font-bold text-slate-600 hover:scale-[1.02] active:scale-[0.98]"
+            className="rounded-2xl border border-[var(--border-default)] bg-transparent px-10 font-bold text-[var(--color-text-inverse)] opacity-100 hover:scale-[1.02] active:scale-[0.98]"
           >
             Learn about the plan
           </Button>
         </div>
 
-        <div className="flex items-center gap-3 text-sm text-slate-400 font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        <div className="flex items-center gap-3 text-sm font-semibold text-[var(--color-text-inverse)] opacity-100">
+          <CheckCircle2 className="h-4 w-4 text-success" />
           It only takes 5 minutes
         </div>
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ x: 20 }}
+        animate={{ x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="flex flex-col gap-8 items-center lg:items-end"
+        className="flex flex-col items-center gap-8 opacity-100 lg:items-end"
       >
-        <div className="relative w-full max-w-md aspect-[4/3] bg-white rounded-3xl overflow-hidden flex items-center justify-center">
+        <div className="relative flex aspect-[4/3] w-full max-w-md items-center justify-center overflow-hidden rounded-3xl border border-[var(--border-default)] bg-[color-mix(in_srgb,var(--surface-card)_88%,var(--color-primary))] opacity-100">
           <div className="relative w-full h-full flex items-center justify-center">
             <FloatingCard
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute left-10 top-20 w-48 h-64 border-2 border-slate-900 rounded-2xl bg-white flex flex-col p-4 gap-3"
+              className="absolute left-10 top-20 flex h-64 w-48 flex-col gap-3 rounded-2xl border-2 border-[var(--border-default)] bg-[var(--surface-card)] p-4 dark:bg-[var(--surface-page)]"
             >
-              <div className="w-8 h-8 bg-slate-100 rounded-lg" />
-              <div className="h-2 w-full bg-slate-100 rounded" />
-              <div className="h-2 w-2/3 bg-slate-100 rounded" />
-              <div className="mt-auto h-24 w-full border border-slate-100 rounded-xl flex items-end p-2 gap-1">
-                <div className="h-1/2 w-full bg-slate-100 rounded-sm" />
-                <div className="h-3/4 w-full bg-slate-100 rounded-sm" />
-                <div className="h-full w-full bg-slate-900 rounded-sm" />
+              <div className="w-8 h-8 rounded-lg bg-[var(--border-default)]" />
+              <div className="h-2 w-full rounded bg-[var(--border-default)]" />
+              <div className="h-2 w-2/3 rounded bg-[var(--border-default)]" />
+              <div className="mt-auto h-24 w-full rounded-xl border border-default flex items-end gap-1 p-2">
+                <div className="h-1/2 w-full rounded-sm bg-[var(--border-default)]" />
+                <div className="h-3/4 w-full rounded-sm bg-[var(--border-default)]" />
+                <div className="h-full w-full rounded-sm bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)]" />
               </div>
             </FloatingCard>
             <FloatingCard
               animate={{ y: [0, 10, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute right-10 bottom-10 w-56 h-72 border-2 border-slate-900 rounded-2xl bg-white flex flex-col p-6 gap-4 shadow-2xl shadow-slate-200"
+              className="absolute bottom-10 right-10 flex h-72 w-56 flex-col gap-4 rounded-2xl border-2 border-[var(--border-default)] bg-[var(--surface-card)] p-6 shadow-2xl dark:bg-[var(--surface-page)]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full" />
+                <div className="h-10 w-10 rounded-full bg-primary" />
                 <div className="flex flex-col gap-1">
-                  <div className="h-2 w-20 bg-slate-900 rounded" />
-                  <div className="h-1.5 w-12 bg-slate-200 rounded" />
+                  <div className="h-2 w-20 rounded bg-[color-mix(in_srgb,var(--text-primary)_50%,transparent)]" />
+                  <div className="h-1.5 w-12 rounded bg-border" />
                 </div>
               </div>
-              <div className="flex flex-col gap-2 mt-4">
-                <div className="h-2 w-full bg-slate-100 rounded" />
-                <div className="h-2 w-full bg-slate-100 rounded" />
-                <div className="h-2 w-3/4 bg-slate-100 rounded" />
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="h-2 w-full rounded bg-[var(--border-default)]" />
+                <div className="h-2 w-full rounded bg-[var(--border-default)]" />
+                <div className="h-2 w-3/4 rounded bg-[var(--border-default)]" />
               </div>
-              <div className="mt-auto flex justify-between items-end">
+              <div className="mt-auto flex items-end justify-between">
                 <div className="flex flex-col gap-1">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Growth</div>
-                  <div className="text-xl font-black text-slate-900">+24%</div>
+                  <div className="text-[10px] font-bold uppercase text-[var(--text-secondary)] opacity-100">Growth</div>
+                  <div className="text-xl font-black text-primary opacity-100">+24%</div>
                 </div>
-                <TrendingUp className="w-8 h-8 text-blue-600" />
+                <TrendingUp className="h-8 w-8 text-brand" />
               </div>
             </FloatingCard>
           </div>

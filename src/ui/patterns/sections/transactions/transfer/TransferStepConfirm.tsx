@@ -17,7 +17,7 @@ export function TransferStepConfirm({ totalSteps, onNext, onBack, nextDisabled }
       totalSteps={totalSteps}
     >
       <FormSection variant="highlight">
-        <p className="text-sm text-foreground">Trades typically process within 1–2 business days.</p>
+        <p className="text-sm text-primary">Trades typically process within 1–2 business days.</p>
       </FormSection>
       <ActionBar onNext={onNext} onBack={onBack} nextDisabled={nextDisabled} nextLabel="Submit" />
     </StepLayout>

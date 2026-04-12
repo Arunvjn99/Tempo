@@ -1,0 +1,92 @@
+/**
+ * Enrollment-only design tokens.
+ * Defined ONLY under `.enrollment-theme` — never on :root / html / body (see `EnrollmentThemeScope`).
+ * Brand hue: `--enroll-primary` bridges to global `var(--color-primary)`.
+ */
+
+.enrollment-theme {
+  --enroll-primary: var(--color-primary);
+  --enroll-on-primary: var(--primary-foreground, #ffffff);
+  --enroll-primary-hover: color-mix(in srgb, var(--color-primary) 88%, #000000);
+
+  --enroll-bg: var(--surface-page);
+  --enroll-card: var(--surface-card);
+  --enroll-text: var(--text-primary);
+  --enroll-muted: var(--text-secondary);
+  --enroll-border: var(--border-default);
+
+  --enroll-card-bg: var(--enroll-card);
+  --enroll-card-border: var(--enroll-border);
+  --enroll-soft-bg: var(--surface-tertiary);
+  --enroll-text-primary: var(--enroll-text);
+  --enroll-text-secondary: var(--enroll-muted);
+  --enroll-text-muted: var(--enroll-muted);
+
+  --enroll-brand: var(--color-primary);
+  --enroll-brand-rgb: var(--color-primary-rgb);
+  --enroll-accent: var(--color-accent);
+  --enroll-accent-rgb: var(--color-accent-rgb);
+
+  --enroll-card-radius: 16px;
+  --enroll-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --enroll-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --enroll-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  --enroll-plan-overview-bg: linear-gradient(134deg, #f0f7ff 0%, #e0effe 100%);
+  --enroll-risk-badge-bg: #eff6ff;
+  --enroll-risk-badge-border: #dbeafe;
+  --enroll-table-header-bg: rgba(248, 250, 252, 0.5);
+  --enroll-next-steps-bg: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+  --enroll-next-steps-text: #e2e8f0;
+  --enroll-next-steps-heading: #f8fafc;
+  --enroll-success-tint-bg: rgba(16, 185, 129, 0.05);
+  --enroll-success-tint-border: rgba(16, 185, 129, 0.1);
+  --enroll-active-badge-bg: rgba(16, 185, 129, 0.1);
+  --enroll-active-badge-border: rgba(16, 185, 129, 0.2);
+
+  --enroll-text-micro: 0.625rem;
+  --enroll-text-label: 0.65rem;
+  --enroll-text-caption: 0.75rem;
+  --enroll-text-meta: 0.62rem;
+  --enroll-text-body-sm: 0.8125rem;
+  --enroll-text-body: 0.875rem;
+  --enroll-text-body-md: 0.9rem;
+  --enroll-text-subtitle: 0.95rem;
+  --enroll-text-lead: 1rem;
+  --enroll-text-stat: 1.05rem;
+  --enroll-text-back: 0.85rem;
+  --enroll-text-footnote: 0.8rem;
+  --enroll-text-hero-display: 2.6rem;
+  --enroll-text-metric-tiny: 0.6rem;
+  --enroll-text-link: 0.7rem;
+  --enroll-tracking-label: 0.04em;
+  --enroll-tracking-overline: 0.05em;
+
+  --enroll-insight-border: color-mix(in srgb, var(--color-warning) 24%, var(--color-border));
+  --enroll-insight-bg: color-mix(in srgb, var(--color-warning) 8%, var(--color-background));
+  --enroll-insight-text: color-mix(in srgb, var(--color-text) 72%, var(--color-warning) 28%);
+  --enroll-insight-icon: var(--color-warning);
+
+  --enroll-donut-track: var(--enroll-card-border);
+  --enroll-donut-fill: var(--enroll-brand);
+  --enroll-donut-text: var(--enroll-brand);
+
+  --enroll-slider-track: var(--surface-section);
+  --enroll-slider-fill: var(--enroll-primary);
+
+  isolation: isolate;
+}
+
+html[data-theme="dark"] .enrollment-theme {
+  --enroll-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --enroll-elevation-2: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --enroll-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+  --enroll-plan-overview-bg: linear-gradient(134deg, rgb(30 58 95 / 0.4) 0%, rgb(15 23 42 / 0.5) 100%);
+  --enroll-risk-badge-bg: rgb(var(--color-primary-rgb) / 0.15);
+  --enroll-risk-badge-border: rgb(var(--color-primary-rgb) / 0.3);
+  --enroll-table-header-bg: var(--color-background-tertiary);
+  --enroll-donut-track: var(--color-border);
+  --enroll-donut-fill: var(--color-primary);
+  --enroll-donut-text: var(--color-primary);
+}

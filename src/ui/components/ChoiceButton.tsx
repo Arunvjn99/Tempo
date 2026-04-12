@@ -14,18 +14,18 @@ interface ChoiceButtonProps {
 const VARIANTS: Record<string, { base: string; on: string; off: string }> = {
   card: {
     base: "rounded-card border px-md py-sm text-left text-sm font-medium transition-colors",
-    on: "border-primary bg-primary/10 text-primary",
-    off: "border-border bg-surface text-foreground hover:bg-muted",
+    on: "border-primary bg-primary/10 text-brand",
+    off: "border-default bg-surface text-primary hover:bg-primary/5",
   },
   pill: {
     base: "rounded-full px-md py-sm text-sm font-medium transition-colors",
     on: "bg-primary text-primary-foreground shadow-sm",
-    off: "text-muted-foreground hover:text-foreground",
+    off: "text-secondary hover:text-primary",
   },
   radio: {
     base: "flex w-full items-center gap-md rounded-card border p-md text-left transition-colors",
     on: "border-primary bg-primary/5",
-    off: "border-border bg-surface hover:bg-muted",
+    off: "border-default bg-surface hover:bg-primary/5",
   },
 };
 
@@ -92,7 +92,7 @@ export function ChoiceGroup<T extends string>({
         >
           <span className="block font-semibold">{opt.label}</span>
           {opt.description && (
-            <span className="mt-xs block text-xs font-normal text-muted-foreground">{opt.description}</span>
+            <span className="mt-xs block text-xs font-normal text-secondary">{opt.description}</span>
           )}
         </ChoiceButton>
       ))}

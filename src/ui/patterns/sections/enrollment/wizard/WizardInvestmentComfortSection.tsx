@@ -15,10 +15,10 @@ export function WizardInvestmentComfortSection({
   return (
     <div className="mt-6 space-y-5">
       <div>
-        <h2 className="text-lg font-semibold text-foreground sm:text-xl">
+        <h2 className="text-lg font-semibold text-primary sm:text-xl">
           How comfortable are you with investment risk?
         </h2>
-        <p className="mt-1 text-[0.875rem] text-muted-foreground">
+        <p className="mt-1 text-[0.875rem] text-secondary">
           This helps us recommend a portfolio that matches your style.
         </p>
       </div>
@@ -35,11 +35,11 @@ export function WizardInvestmentComfortSection({
               "relative rounded-xl border-2 p-4 text-left transition-all",
               personalization.investmentComfort === level.key
                 ? "border-primary bg-primary/5"
-                : "border-border bg-card hover:border-primary/30",
+                : "border-default bg-surface-card hover:border-primary/30",
             )}
           >
             {level.popular && (
-              <span className="absolute -top-2.5 right-3 rounded-full bg-amber-100 px-2 py-0.5 text-[0.65rem] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+              <span className="absolute -top-2.5 right-3 rounded-full bg-[color-mix(in_srgb,var(--color-warning)_14%,var(--surface-card))] px-2 py-0.5 text-[0.65rem] font-semibold text-[color-mix(in_srgb,var(--color-warning)_65%,var(--text-primary))] dark:bg-[color-mix(in_srgb,var(--color-warning)_22%,var(--surface-page))] dark:text-[color-mix(in_srgb,var(--color-warning)_85%,var(--surface-card))]">
                 Most common
               </span>
             )}
@@ -47,19 +47,19 @@ export function WizardInvestmentComfortSection({
               <level.icon
                 className={cn(
                   "h-4 w-4",
-                  personalization.investmentComfort === level.key ? "text-primary" : "text-muted-foreground",
+                  personalization.investmentComfort === level.key ? "text-brand" : "text-secondary",
                 )}
               />
               <span
                 className={cn(
                   "text-[0.9rem] font-semibold",
-                  personalization.investmentComfort === level.key ? "text-primary" : "text-foreground",
+                  personalization.investmentComfort === level.key ? "text-brand" : "text-primary",
                 )}
               >
                 {level.label}
               </span>
             </div>
-            <p className="text-[0.8rem] text-muted-foreground">{level.desc}</p>
+            <p className="text-[0.8rem] text-secondary">{level.desc}</p>
           </Button>
         ))}
       </div>

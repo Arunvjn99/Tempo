@@ -1,6 +1,6 @@
 import type { TransferData } from "@/features/transactions/store/types";
 import { TRANSFER_TYPES } from "@/features/transactions/store/constants/transferFlowConstants";
-import { ActionBar, ReviewCard, ReviewSection } from "@/ui/components";
+import { ActionBar, CardReviewSection, ReviewCard } from "@/ui/components";
 import { StepLayout } from "@/ui/patterns";
 import { formatCurrency, formatPercent } from "@/features/transactions/services/format";
 
@@ -28,7 +28,7 @@ export function TransferStepReview({
       stepNumber={6}
       totalSteps={totalSteps}
     >
-      <ReviewSection title="Summary">
+      <CardReviewSection title="Summary">
         <ReviewCard
           label="Type"
           value={TRANSFER_TYPES.find((x) => x.id === t.transferType)?.label ?? "—"}
@@ -41,7 +41,7 @@ export function TransferStepReview({
           onEdit={() => goToStep(2)}
         />
         <ReviewCard label="To" value={t.destinationFundName || "—"} onEdit={() => goToStep(3)} />
-      </ReviewSection>
+      </CardReviewSection>
       <ActionBar onNext={onNext} onBack={onBack} nextDisabled={nextDisabled} nextLabel="Submit transfer" />
     </StepLayout>
   );

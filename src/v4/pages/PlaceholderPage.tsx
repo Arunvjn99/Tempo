@@ -10,10 +10,10 @@ export function PlaceholderPage({ titleKey, defaultTitle }: PlaceholderPageProps
   const { t } = useTranslation();
   return (
     <PageLayout>
-      <h1 className="text-xl font-semibold text-foreground">
+      <h1 className="text-xl font-semibold text-primary">
         {t(titleKey, { defaultValue: defaultTitle })}
       </h1>
-      <p className="mt-md text-sm text-muted-foreground">
+      <p className="mt-md text-sm text-secondary">
         {t("v4.placeholderBody", {
           defaultValue: "This area will be implemented in a future release.",
         })}

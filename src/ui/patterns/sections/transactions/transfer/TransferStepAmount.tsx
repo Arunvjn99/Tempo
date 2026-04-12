@@ -58,7 +58,7 @@ export function TransferStepAmount({
               step={100}
               value={t.amount || ""}
               onChange={(e) => updateTransfer({ amount: parseFloat(e.target.value) || 0 })}
-              className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             />
           </FieldGroup>
         ) : (

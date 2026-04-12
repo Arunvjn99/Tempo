@@ -1,0 +1,29 @@
+/**
+ * Token-backed utility classes — always use CSS variables from tokens.css.
+ * All colors must use design tokens. No hardcoded values allowed.
+ * Imported from `main.tsx` after `index.css` so these override Tailwind’s
+ * generated `text-primary` (brand) with semantic body text.
+ *
+ * Brand-colored text: Tailwind `text-brand` / `bg-brand` (tailwind.config.js).
+ * Body copy: use `text-primary` / `text-secondary` here (theme-safe).
+ */
+
+.bg-surface-card {
+  background-color: var(--surface-card);
+}
+
+.bg-surface-page {
+  background-color: var(--surface-page);
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.border-default {
+  border-color: var(--border-default);
+}

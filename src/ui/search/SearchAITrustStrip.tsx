@@ -8,11 +8,11 @@ export function SearchAITrustStrip() {
     <div className="relative z-10 mt-3 px-0.5">
       <div className="flex items-center gap-1.5">
         <Zap
-          className="h-4 w-4 shrink-0 text-blue-500 opacity-100 dark:text-blue-400"
+          className="h-4 w-4 shrink-0 text-[var(--color-primary)] opacity-100 dark:text-[color-mix(in_srgb,var(--color-primary)_75%,var(--surface-card))]"
           strokeWidth={2.25}
           aria-hidden
         />
-        <span className="text-sm font-medium text-blue-500/90 dark:text-blue-400/95">
+        <span className="text-sm font-medium text-[var(--color-primary)]/90 dark:text-[color-mix(in_srgb,var(--color-primary)_75%,var(--surface-card))]/95">
           Powered by Core AI
         </span>
       </div>

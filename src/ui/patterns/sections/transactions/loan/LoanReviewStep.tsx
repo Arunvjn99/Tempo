@@ -1,4 +1,4 @@
-import { ActionBar, ReviewCard, ReviewSection } from "@/ui/components";
+import { ActionBar, CardReviewSection, ReviewCard } from "@/ui/components";
 import { StepLayout } from "@/ui/patterns";
 import { formatCurrency } from "@/features/transactions/services/format";
 import { DISBURSE, FREQ, LOAN_TYPES, REPAY } from "./loanConstants";
@@ -17,7 +17,7 @@ export function LoanReviewStep({ totalSteps, onNext, onBack, nextDisabled, store
       stepNumber={6}
       totalSteps={totalSteps}
     >
-      <ReviewSection title="Summary">
+      <CardReviewSection title="Summary">
         <ReviewCard label="Amount" value={formatCurrency(loan.amount)} onEdit={() => goToStep(1)} />
         <ReviewCard label="Term" value={`${loan.term} years`} onEdit={() => goToStep(1)} />
         <ReviewCard
@@ -41,7 +41,7 @@ export function LoanReviewStep({ totalSteps, onNext, onBack, nextDisabled, store
           value={formatCurrency(loan.monthlyPayment, 2)}
           onEdit={() => goToStep(1)}
         />
-      </ReviewSection>
+      </CardReviewSection>
       <ActionBar onNext={onNext} onBack={onBack} nextDisabled={nextDisabled} nextLabel="Submit loan" />
     </StepLayout>
   );

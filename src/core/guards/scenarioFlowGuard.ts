@@ -2,6 +2,7 @@ import type { Scenario } from "@/core/engine/scenarioEngine";
 import { stripRoutingVersionPrefix } from "@/core/version";
 import type { ScenarioId } from "@/core/data/scenarios";
 import { scenarioFlows } from "@/core/data/scenarioFlows";
+import { TEMP_BYPASS_DASHBOARD_REDIRECTS, TEMP_DEFAULT_APP_ROUTE } from "@/core/tempRoutingBypass";
 
 function normalizePath(pathname: string): string {
   let p = stripRoutingVersionPrefix(pathname);
@@ -38,5 +39,8 @@ export function enforceScenarioFlow(pathname: string, scenario: Scenario | null)
   if (!scenario) return true;
   if (isScenarioFlowPathAllowed(pathname, scenario)) return true;
   const id = scenario.id as ScenarioId;
-  return scenarioFlows[id]?.redirectIfInvalid ?? "/dashboard/post-enrollment";
+  return (
+    scenarioFlows[id]?.redirectIfInvalid ??
+    (TEMP_BYPASS_DASHBOARD_REDIRECTS ? TEMP_DEFAULT_APP_ROUTE : "/dashboard/post-enrollment")
+  );
 }

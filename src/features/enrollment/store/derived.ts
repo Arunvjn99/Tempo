@@ -3,57 +3,14 @@
 // ─────────────────────────────────────────────
 
 import type { EnrollmentDerived, EnrollmentState, PersonalizationState, RiskLevel } from "./types";
+import {
+  SAFETY_WITHDRAWAL_ANNUAL_RATE,
+  computeProjectedBalanceWithAutoIncrease,
+  computeProjectedBalanceWithoutAutoIncrease,
+  getGrowthRate,
+} from "@/utils/retirementCalculations";
 
-export const GROWTH_RATES: Record<RiskLevel, number> = {
-  conservative: 0.045,
-  balanced: 0.068,
-  growth: 0.082,
-  aggressive: 0.095,
-};
-
-export function getGrowthRate(risk: RiskLevel): number {
-  return GROWTH_RATES[risk];
-}
-
-export function computeProjectedBalance(params: {
-  salary: number;
-  contributionPercent: number;
-  currentSavings: number;
-  currentAge: number;
-  retirementAge: number;
-  growthRate: number;
-  autoIncrease: boolean;
-  autoIncreaseAmount: number;
-  autoIncreaseMax: number;
-}): number {
-  const {
-    salary,
-    contributionPercent,
-    currentSavings,
-    currentAge,
-    retirementAge,
-    growthRate,
-    autoIncrease,
-    autoIncreaseAmount,
-    autoIncreaseMax,
-  } = params;
-
-  const years = Math.max(0, retirementAge - currentAge);
-  let balance = currentSavings;
-  let currentPct = contributionPercent;
-
-  for (let y = 0; y < years; y++) {
-    const annualContribution = salary * (currentPct / 100);
-    const employerMatch = salary * (Math.min(currentPct, 6) / 100);
-    balance = (balance + annualContribution + employerMatch) * (1 + growthRate);
-
-    if (autoIncrease && currentPct < autoIncreaseMax) {
-      currentPct = Math.min(currentPct + autoIncreaseAmount, autoIncreaseMax);
-    }
-  }
-
-  return Math.round(balance);
-}
+export { GROWTH_RATES, getGrowthRate } from "@/utils/retirementCalculations";
 
 export function computeReadinessScore(params: {
   contributionPercent: number;
@@ -95,7 +52,7 @@ export function buildDerived(
   const yearsToRetirement = Math.max(0, retirementAge - currentAge);
   const growthRate = getGrowthRate(riskLevel);
 
-  const projectedBalance = computeProjectedBalance({
+  const projectedBalance = computeProjectedBalanceWithAutoIncrease({
     salary,
     contributionPercent,
     currentSavings,
@@ -107,19 +64,16 @@ export function buildDerived(
     autoIncreaseMax,
   });
 
-  const projectedBalanceNoAI = computeProjectedBalance({
+  const projectedBalanceNoAI = computeProjectedBalanceWithoutAutoIncrease({
     salary,
     contributionPercent,
     currentSavings,
     currentAge,
     retirementAge,
     growthRate,
-    autoIncrease: false,
-    autoIncreaseAmount: 0,
-    autoIncreaseMax: 0,
   });
 
-  const monthlyRetirementIncome = (projectedBalance * 0.04) / 12;
+  const monthlyRetirementIncome = (projectedBalance * SAFETY_WITHDRAWAL_ANNUAL_RATE) / 12;
 
   const readinessScore = computeReadinessScore({
     contributionPercent,

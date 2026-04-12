@@ -59,7 +59,7 @@ export function WithdrawalStepPaymentMethod({
             maxLength={4}
             value={w.bankAccountLast4}
             onChange={(e) => updateWithdrawal({ bankAccountLast4: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-            className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             placeholder="1234"
           />
         </FieldGroup>
@@ -70,7 +70,7 @@ export function WithdrawalStepPaymentMethod({
             value={w.mailingAddress}
             onChange={(e) => updateWithdrawal({ mailingAddress: e.target.value })}
             rows={3}
-            className="w-full rounded-md border border-border bg-background px-md py-sm text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="w-full rounded-md border border-default bg-background px-md py-sm text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           />
         </FieldGroup>
       )}

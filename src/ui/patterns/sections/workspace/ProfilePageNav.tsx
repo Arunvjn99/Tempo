@@ -24,8 +24,8 @@ export function ProfilePageNav({
             className={cn(
               "flex w-full items-center gap-sm rounded-card px-md py-sm text-sm font-medium transition-colors",
               activeSection === item.id
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                ? "bg-primary/10 text-brand"
+                : "text-secondary hover:bg-primary/5 hover:text-primary",
             )}
           >
             <item.icon className="h-4 w-4" aria-hidden />

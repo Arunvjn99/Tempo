@@ -11,12 +11,12 @@ interface SummaryRowProps {
 export function SummaryRow({ label, value, variant = "default", className }: SummaryRowProps) {
   return (
     <div className={cn("flex justify-between text-sm", className)}>
-      <dt className="text-muted-foreground">{label}</dt>
+      <dt className="text-secondary">{label}</dt>
       <dd
         className={cn(
-          variant === "highlight" && "text-lg font-bold text-primary",
-          variant === "bold" && "font-semibold text-foreground",
-          variant === "default" && "font-medium text-foreground",
+          variant === "highlight" && "text-lg font-bold text-brand",
+          variant === "bold" && "font-semibold text-primary",
+          variant === "default" && "font-medium text-primary",
         )}
       >
         {value}
@@ -36,7 +36,7 @@ export function SummaryList({ children, className, divider = false }: SummaryLis
     <dl
       className={cn(
         "grid gap-sm text-sm",
-        divider && "[&>*:not(:last-child)]:border-b [&>*:not(:last-child)]:border-border [&>*:not(:last-child)]:pb-sm",
+        divider && "[&>*:not(:last-child)]:border-b [&>*:not(:last-child)]:border-default [&>*:not(:last-child)]:pb-sm",
         className,
       )}
     >

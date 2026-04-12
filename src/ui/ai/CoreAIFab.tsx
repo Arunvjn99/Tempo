@@ -37,9 +37,9 @@ export const CoreAIFab = () => {
                 }
               : undefined
           }
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 16, transition: { duration: 0.15 } }}
+          initial={{ y: 24, scale: 0.96 }}
+          animate={{ y: 0, scale: 1 }}
+          exit={{ y: 16, scale: 0.98, transition: { duration: 0.15 } }}
           transition={{ duration: 0.45, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Glow pulse ring */}
@@ -54,7 +54,7 @@ export const CoreAIFab = () => {
             variant="custom"
             size="custom"
             onClick={open}
-            className="ai-assistant core-ai-fab-btn elevation-3 relative inline-flex items-center gap-2.5 rounded-full border-0 px-5 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
+            className="ai-assistant core-ai-fab-btn elevation-3 relative inline-flex items-center gap-2.5 rounded-full border-0 px-5 py-3 font-semibold text-primary-foreground transition-all duration-200 hover:-translate-y-0.5"
             aria-label={t("coreAi.fabAria")}
           >
             {aiAssistantUrl.trim() ? (
@@ -75,7 +75,7 @@ export const CoreAIFab = () => {
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Bot className="h-6 w-6 text-white" strokeWidth={2} />
+                <Bot className="h-6 w-6 text-primary-foreground" strokeWidth={2} />
               </motion.span>
             )}
             <span className="text-sm font-semibold">{t("coreAi.fabLabel")}</span>

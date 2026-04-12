@@ -25,14 +25,14 @@ export function AnimatedCard({
 
   if (reduce) {
     return (
-      <div className={cn("rounded-3xl border border-border bg-card shadow-sm", className)}>{children}</div>
+      <div className={cn("card-standard", className)}>{children}</div>
     );
   }
 
   return (
     <motion.div
       className={cn(
-        "rounded-3xl border border-border bg-card shadow-sm transition-shadow duration-200",
+        "card-standard transition-shadow duration-200",
         interactive && "hover:shadow-md",
         className,
       )}

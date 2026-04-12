@@ -42,7 +42,7 @@ export function WithdrawalStepWithdrawalType({
               onClick={() => updateWithdrawal({ withdrawalType: t.id })}
             >
               <span className="block font-semibold">{t.label}</span>
-              <span className="mt-xs block text-xs font-normal text-muted-foreground">{t.hint}</span>
+              <span className="mt-xs block text-xs font-normal text-secondary">{t.hint}</span>
             </Button>
           ))}
         </div>
