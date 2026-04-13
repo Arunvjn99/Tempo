@@ -10,43 +10,42 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-/** Step 1 gradient learning block — RetireWise reference. */
+/** Step 1 gradient learning block — left column + open right, horizontal feature row (reference layout). */
 export function PreEnrollmentLearningSection() {
+  const bullets = [
+    "What is a 401(k) and how it works",
+    "How much you should contribute",
+    "How employer matching impacts your savings",
+  ];
+
   return (
-    <section className="relative z-10">
-      <div className="dashboard-marketing-gradient relative overflow-hidden bg-gradient-to-r from-[var(--color-primary)] to-[color-mix(in_srgb,var(--color-primary)_65%,var(--surface-card))] p-8 text-[var(--primary-foreground)] group md:p-12">
-        <div className="relative z-10 max-w-3xl text-left flex flex-col items-start gap-8">
-          <div className="flex flex-col gap-6 items-start">
-            <div className="inline-flex w-fit items-center rounded-full border border-[var(--border-default)] bg-[var(--surface-card)] px-4 py-1.5">
-              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-[var(--text-primary)]">
-                Step 1
-              </span>
-            </div>
+    <section className="relative z-10 w-full">
+      <div className="relative overflow-hidden rounded-[24px] bg-[linear-gradient(90deg,var(--color-primary)_0%,color-mix(in_srgb,var(--color-primary)_68%,#7dd3fc)_100%)] p-8 text-[var(--primary-foreground)] shadow-[var(--shadow-lg)] md:rounded-[28px] md:p-10 lg:rounded-[32px] lg:p-12">
+        <div className="relative z-10 flex w-full flex-col gap-8 md:gap-10 lg:max-w-[58%] lg:pr-8">
+          <span className="inline-flex w-fit items-center rounded-full bg-[color-mix(in_srgb,var(--surface-page)_22%,transparent)] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--primary-foreground)] backdrop-blur-[2px]">
+            Step 1
+          </span>
 
-            <div className="flex flex-col gap-3">
-              <h2 className="text-3xl font-bold tracking-tight leading-[1.1] text-[var(--primary-foreground)] md:text-4xl">
-                Learn how your <br />
-                retirement plan works
-              </h2>
-              <p className="max-w-md text-base font-medium leading-relaxed text-[var(--primary-foreground)]">
-                Understand contributions, employer match, and how your savings grow over time.
-              </p>
-            </div>
+          <div className="flex flex-col gap-3 md:gap-4">
+            <h2 className="text-3xl font-bold leading-[1.15] tracking-tight text-[var(--primary-foreground)] md:text-4xl lg:text-[2.5rem] lg:leading-tight">
+              Learn how your retirement plan works
+            </h2>
+            <p className="max-w-xl text-base font-normal leading-relaxed text-[color-mix(in_srgb,var(--primary-foreground)_88%,transparent)] md:text-[17px]">
+              Understand contributions, employer match, and how your savings grow over time.
+            </p>
+          </div>
 
-            <div className="flex flex-col gap-6 pt-4 sm:flex-row">
-              {[
-                "What is a 401(k) and how it works",
-                "How much you should contribute",
-                "How employer matching impacts your savings",
-              ].map((item, i) => (
-                <div key={i} className="group/item flex items-center gap-3">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--surface-card)] transition-colors">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[var(--text-primary)]" />
-                  </div>
-                  <span className="text-sm font-semibold text-[var(--primary-foreground)]">{item}</span>
+          <div className="grid grid-cols-1 gap-5 border-t border-[color-mix(in_srgb,var(--primary-foreground)_18%,transparent)] pt-6 sm:grid-cols-3 sm:gap-6 md:gap-8">
+            {bullets.map((item, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-[color-mix(in_srgb,var(--primary-foreground)_55%,transparent)] bg-[color-mix(in_srgb,var(--surface-page)_12%,transparent)]">
+                  <CheckCircle2 className="h-4 w-4 text-[var(--primary-foreground)]" />
                 </div>
-              ))}
-            </div>
+                <span className="text-left text-[13px] font-medium leading-snug text-[var(--primary-foreground)] sm:text-sm">
+                  {item}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

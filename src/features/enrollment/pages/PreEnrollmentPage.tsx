@@ -39,8 +39,8 @@ export function PreEnrollmentPage() {
         />
       )}
       <div className="min-h-screen min-h-[100dvh] w-full opacity-100 bg-[var(--surface-page)] text-[var(--text-primary)]">
+        <HeroSection onStartEnroll={openModal} />
         <main className="mx-auto flex max-w-6xl flex-col gap-32 px-6 pb-20 pt-12 md:pt-16">
-          <HeroSection onStartEnroll={openModal} />
           <PreEnrollmentLearningSection />
           <PreEnrollmentBentoSection />
         </main>
